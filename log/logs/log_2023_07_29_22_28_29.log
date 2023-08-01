@@ -1,0 +1,246 @@
+2023-07-29 22:28:34 INFO: Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 22:28:38 WARNING: Deleted all files in ['./data/geometry', './data/outlines', './data/irradiance'] - in file: main.py - line: 56
+2023-07-29 22:28:50 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 22:28:50 INFO: Started computing patch[10]. - in file: main.py - line: 132
+2023-07-29 22:28:51 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:51 INFO: FSI_score 0.13 of sample 10 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:28:51 INFO: Finished computing patch[10] in 0.85s. - in file: main.py - line: 134
+2023-07-29 22:28:51 INFO: Started computing patch[11]. - in file: main.py - line: 132
+2023-07-29 22:28:51 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:52 INFO: FSI_score 0.08 of sample 11 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:28:52 INFO: Finished computing patch[11] in 0.66s. - in file: main.py - line: 134
+2023-07-29 22:28:52 INFO: Started computing patch[12]. - in file: main.py - line: 132
+2023-07-29 22:28:52 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:53 INFO: FSI_score 0.03 of sample 12 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:28:53 INFO: Finished computing patch[12] in 0.64s. - in file: main.py - line: 134
+2023-07-29 22:28:53 INFO: Started computing patch[13]. - in file: main.py - line: 132
+2023-07-29 22:28:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:53 INFO: FSI_score 0.07 of sample 13 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:28:53 INFO: Finished computing patch[13] in 0.8s. - in file: main.py - line: 134
+2023-07-29 22:28:53 INFO: Started computing patch[14]. - in file: main.py - line: 132
+2023-07-29 22:28:54 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:54 INFO: FSI_score 0.19 of sample 14 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:28:54 INFO: Finished computing patch[14] in 0.67s. - in file: main.py - line: 134
+2023-07-29 22:28:54 INFO: Started computing patch[15]. - in file: main.py - line: 132
+2023-07-29 22:28:54 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:28:55 INFO: Started computing mesh for mesh[15] with FSI value of 0.24 - in file: main.py - line: 79
+2023-07-29 22:28:55 INFO: Generating walls for mesh patch[15] - in file: main.py - line: 81
+2023-07-29 22:28:56 INFO: Generating ground and roofs for mesh patch[15] - in file: main.py - line: 83
+2023-07-29 22:29:00 INFO: Computing sensors for mesh patch[15] - in file: main.py - line: 86
+2023-07-29 22:29:07 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:33:18 INFO: Computed 20786 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:33:19 INFO: Mesh mesh_15 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:33:19 INFO: Array_list sensors_15 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:33:19 INFO: Polyines outlines_15 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:33:19 INFO: Finished computing patch[15] in 264.69s. - in file: main.py - line: 134
+2023-07-29 22:33:19 INFO: Started computing patch[16]. - in file: main.py - line: 132
+2023-07-29 22:33:19 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:33:20 INFO: Started computing mesh for mesh[16] with FSI value of 0.27 - in file: main.py - line: 79
+2023-07-29 22:33:20 INFO: Generating walls for mesh patch[16] - in file: main.py - line: 81
+2023-07-29 22:33:21 INFO: Generating ground and roofs for mesh patch[16] - in file: main.py - line: 83
+2023-07-29 22:33:26 INFO: Computing sensors for mesh patch[16] - in file: main.py - line: 86
+2023-07-29 22:33:36 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:38:34 INFO: Computed 22816 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:38:35 INFO: Mesh mesh_16 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:38:35 INFO: Array_list sensors_16 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:38:35 INFO: Polyines outlines_16 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:38:35 INFO: Finished computing patch[16] in 316.58s. - in file: main.py - line: 134
+2023-07-29 22:38:35 INFO: Started computing patch[17]. - in file: main.py - line: 132
+2023-07-29 22:38:36 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:38:36 INFO: Started computing mesh for mesh[17] with FSI value of 0.23 - in file: main.py - line: 79
+2023-07-29 22:38:36 INFO: Generating walls for mesh patch[17] - in file: main.py - line: 81
+2023-07-29 22:38:38 INFO: Generating ground and roofs for mesh patch[17] - in file: main.py - line: 83
+2023-07-29 22:38:43 INFO: Computing sensors for mesh patch[17] - in file: main.py - line: 86
+2023-07-29 22:38:53 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:43:32 INFO: Computed 21536 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:43:33 INFO: Mesh mesh_17 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:43:33 INFO: Array_list sensors_17 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:43:33 INFO: Polyines outlines_17 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:43:34 INFO: Finished computing patch[17] in 298.18s. - in file: main.py - line: 134
+2023-07-29 22:43:34 INFO: Started computing patch[18]. - in file: main.py - line: 132
+2023-07-29 22:43:34 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:34 INFO: FSI_score 0.15 of sample 18 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:34 INFO: Finished computing patch[18] in 0.79s. - in file: main.py - line: 134
+2023-07-29 22:43:34 INFO: Started computing patch[19]. - in file: main.py - line: 132
+2023-07-29 22:43:35 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:35 INFO: FSI_score 0.11 of sample 19 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:35 INFO: Finished computing patch[19] in 0.85s. - in file: main.py - line: 134
+2023-07-29 22:43:35 INFO: Started computing patch[20]. - in file: main.py - line: 132
+2023-07-29 22:43:35 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:36 INFO: FSI_score 0.09 of sample 20 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:36 INFO: Finished computing patch[20] in 0.96s. - in file: main.py - line: 134
+2023-07-29 22:43:36 INFO: Started computing patch[21]. - in file: main.py - line: 132
+2023-07-29 22:43:36 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:37 INFO: FSI_score 0.06 of sample 21 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:37 INFO: Finished computing patch[21] in 0.92s. - in file: main.py - line: 134
+2023-07-29 22:43:37 INFO: Started computing patch[22]. - in file: main.py - line: 132
+2023-07-29 22:43:37 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:38 INFO: FSI_score 0.02 of sample 22 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:38 INFO: Finished computing patch[22] in 1.3s. - in file: main.py - line: 134
+2023-07-29 22:43:38 INFO: Started computing patch[23]. - in file: main.py - line: 132
+2023-07-29 22:43:39 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:39 INFO: FSI_score 0.01 of sample 23 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:43:40 INFO: Finished computing patch[23] in 1.16s. - in file: main.py - line: 134
+2023-07-29 22:43:40 INFO: Started computing patch[24]. - in file: main.py - line: 132
+2023-07-29 22:43:40 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:43:41 INFO: Started computing mesh for mesh[24] with FSI value of 0.22 - in file: main.py - line: 79
+2023-07-29 22:43:41 INFO: Generating walls for mesh patch[24] - in file: main.py - line: 81
+2023-07-29 22:43:42 INFO: Generating ground and roofs for mesh patch[24] - in file: main.py - line: 83
+2023-07-29 22:43:48 INFO: Computing sensors for mesh patch[24] - in file: main.py - line: 86
+2023-07-29 22:43:58 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:49:51 INFO: Computed 24760 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:49:52 INFO: Mesh mesh_24 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:49:53 INFO: Array_list sensors_24 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:49:53 INFO: Polyines outlines_24 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:49:53 INFO: Finished computing patch[24] in 373.24s. - in file: main.py - line: 134
+2023-07-29 22:49:53 INFO: Started computing patch[25]. - in file: main.py - line: 132
+2023-07-29 22:49:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:49:54 INFO: FSI_score 0.17 of sample 25 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:49:54 INFO: Finished computing patch[25] in 0.94s. - in file: main.py - line: 134
+2023-07-29 22:49:54 INFO: Started computing patch[26]. - in file: main.py - line: 132
+2023-07-29 22:49:54 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:49:55 INFO: FSI_score 0.14 of sample 26 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:49:55 INFO: Finished computing patch[26] in 1.2s. - in file: main.py - line: 134
+2023-07-29 22:49:55 INFO: Started computing patch[27]. - in file: main.py - line: 132
+2023-07-29 22:49:55 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:49:56 INFO: FSI_score 0.15 of sample 27 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:49:56 INFO: Finished computing patch[27] in 0.83s. - in file: main.py - line: 134
+2023-07-29 22:49:56 INFO: Started computing patch[28]. - in file: main.py - line: 132
+2023-07-29 22:49:56 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:49:57 INFO: FSI_score 0.17 of sample 28 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:49:57 INFO: Finished computing patch[28] in 1.14s. - in file: main.py - line: 134
+2023-07-29 22:49:57 INFO: Started computing patch[29]. - in file: main.py - line: 132
+2023-07-29 22:49:57 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:49:58 INFO: Started computing mesh for mesh[29] with FSI value of 0.22 - in file: main.py - line: 79
+2023-07-29 22:49:58 INFO: Generating walls for mesh patch[29] - in file: main.py - line: 81
+2023-07-29 22:49:59 INFO: Generating ground and roofs for mesh patch[29] - in file: main.py - line: 83
+2023-07-29 22:50:01 INFO: Computing sensors for mesh patch[29] - in file: main.py - line: 86
+2023-07-29 22:50:09 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:53:02 INFO: Computed 18636 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:53:03 INFO: Mesh mesh_29 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:53:03 INFO: Array_list sensors_29 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:53:03 INFO: Polyines outlines_29 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:53:03 INFO: Finished computing patch[29] in 185.85s. - in file: main.py - line: 134
+2023-07-29 22:53:03 INFO: Started computing patch[30]. - in file: main.py - line: 132
+2023-07-29 22:53:03 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:53:04 INFO: Started computing mesh for mesh[30] with FSI value of 0.24 - in file: main.py - line: 79
+2023-07-29 22:53:04 INFO: Generating walls for mesh patch[30] - in file: main.py - line: 81
+2023-07-29 22:53:05 INFO: Generating ground and roofs for mesh patch[30] - in file: main.py - line: 83
+2023-07-29 22:53:11 INFO: Computing sensors for mesh patch[30] - in file: main.py - line: 86
+2023-07-29 22:53:22 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:57:02 INFO: Computed 20847 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:57:03 INFO: Mesh mesh_30 saved in 1s - in file: save.py - line: 50
+2023-07-29 22:57:03 INFO: Array_list sensors_30 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:57:03 INFO: Polyines outlines_30 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:57:03 INFO: Finished computing patch[30] in 240.19s. - in file: main.py - line: 134
+2023-07-29 22:57:03 INFO: Started computing patch[31]. - in file: main.py - line: 132
+2023-07-29 22:57:03 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:57:04 INFO: Started computing mesh for mesh[31] with FSI value of 0.24 - in file: main.py - line: 79
+2023-07-29 22:57:04 INFO: Generating walls for mesh patch[31] - in file: main.py - line: 81
+2023-07-29 22:57:06 INFO: Generating ground and roofs for mesh patch[31] - in file: main.py - line: 83
+2023-07-29 22:57:12 INFO: Computing sensors for mesh patch[31] - in file: main.py - line: 86
+2023-07-29 22:57:21 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 23:02:05 INFO: Computed 22861 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 23:02:07 INFO: Mesh mesh_31 saved in 1s - in file: save.py - line: 50
+2023-07-29 23:02:07 INFO: Array_list sensors_31 saved in 0s - in file: save.py - line: 86
+2023-07-29 23:02:07 INFO: Polyines outlines_31 saved in 0s - in file: save.py - line: 68
+2023-07-29 23:02:07 INFO: Finished computing patch[31] in 304.26s. - in file: main.py - line: 134
+2023-07-29 23:02:07 INFO: Started computing patch[32]. - in file: main.py - line: 132
+2023-07-29 23:02:08 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:08 INFO: FSI_score 0.2 of sample 32 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:08 INFO: Finished computing patch[32] in 1.18s. - in file: main.py - line: 134
+2023-07-29 23:02:08 INFO: Started computing patch[33]. - in file: main.py - line: 132
+2023-07-29 23:02:09 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:10 INFO: FSI_score 0.18 of sample 33 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:10 INFO: Finished computing patch[33] in 1.21s. - in file: main.py - line: 134
+2023-07-29 23:02:10 INFO: Started computing patch[34]. - in file: main.py - line: 132
+2023-07-29 23:02:10 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:11 INFO: FSI_score 0.12 of sample 34 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:11 INFO: Finished computing patch[34] in 0.96s. - in file: main.py - line: 134
+2023-07-29 23:02:11 INFO: Started computing patch[35]. - in file: main.py - line: 132
+2023-07-29 23:02:11 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:12 INFO: FSI_score 0.05 of sample 35 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:12 INFO: Finished computing patch[35] in 1.02s. - in file: main.py - line: 134
+2023-07-29 23:02:12 INFO: Started computing patch[36]. - in file: main.py - line: 132
+2023-07-29 23:02:12 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:12 INFO: FSI_score 0.02 of sample 36 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:12 INFO: Finished computing patch[36] in 0.85s. - in file: main.py - line: 134
+2023-07-29 23:02:12 INFO: Started computing patch[37]. - in file: main.py - line: 132
+2023-07-29 23:02:13 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:13 INFO: FSI_score 0.07 of sample 37 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:13 INFO: Finished computing patch[37] in 0.89s. - in file: main.py - line: 134
+2023-07-29 23:02:13 INFO: Started computing patch[38]. - in file: main.py - line: 132
+2023-07-29 23:02:14 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:14 INFO: FSI_score 0.18 of sample 38 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:02:14 INFO: Finished computing patch[38] in 1.16s. - in file: main.py - line: 134
+2023-07-29 23:02:14 INFO: Started computing patch[39]. - in file: main.py - line: 132
+2023-07-29 23:02:15 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:02:15 INFO: Started computing mesh for mesh[39] with FSI value of 0.21 - in file: main.py - line: 79
+2023-07-29 23:02:15 INFO: Generating walls for mesh patch[39] - in file: main.py - line: 81
+2023-07-29 23:02:17 INFO: Generating ground and roofs for mesh patch[39] - in file: main.py - line: 83
+2023-07-29 23:02:22 INFO: Computing sensors for mesh patch[39] - in file: main.py - line: 86
+2023-07-29 23:02:31 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 23:06:25 INFO: Computed 19268 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 23:06:26 INFO: Mesh mesh_39 saved in 1s - in file: save.py - line: 50
+2023-07-29 23:06:27 INFO: Array_list sensors_39 saved in 0s - in file: save.py - line: 86
+2023-07-29 23:06:27 INFO: Polyines outlines_39 saved in 0s - in file: save.py - line: 68
+2023-07-29 23:06:27 INFO: Finished computing patch[39] in 252.13s. - in file: main.py - line: 134
+2023-07-29 23:06:27 INFO: Started computing patch[40]. - in file: main.py - line: 132
+2023-07-29 23:06:27 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:06:28 INFO: Started computing mesh for mesh[40] with FSI value of 0.23 - in file: main.py - line: 79
+2023-07-29 23:06:28 INFO: Generating walls for mesh patch[40] - in file: main.py - line: 81
+2023-07-29 23:06:29 INFO: Generating ground and roofs for mesh patch[40] - in file: main.py - line: 83
+2023-07-29 23:06:33 INFO: Computing sensors for mesh patch[40] - in file: main.py - line: 86
+2023-07-29 23:06:42 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 23:10:45 INFO: Computed 20408 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 23:10:46 INFO: Mesh mesh_40 saved in 1s - in file: save.py - line: 50
+2023-07-29 23:10:46 INFO: Array_list sensors_40 saved in 0s - in file: save.py - line: 86
+2023-07-29 23:10:46 INFO: Polyines outlines_40 saved in 0s - in file: save.py - line: 68
+2023-07-29 23:10:46 INFO: Finished computing patch[40] in 259.9s. - in file: main.py - line: 134
+2023-07-29 23:10:46 INFO: Started computing patch[41]. - in file: main.py - line: 132
+2023-07-29 23:10:47 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:48 INFO: FSI_score 0.19 of sample 41 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:48 INFO: Finished computing patch[41] in 1.21s. - in file: main.py - line: 134
+2023-07-29 23:10:48 INFO: Started computing patch[42]. - in file: main.py - line: 132
+2023-07-29 23:10:48 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:49 INFO: FSI_score 0.09 of sample 42 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:49 INFO: Finished computing patch[42] in 1.03s. - in file: main.py - line: 134
+2023-07-29 23:10:49 INFO: Started computing patch[43]. - in file: main.py - line: 132
+2023-07-29 23:10:49 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:50 INFO: FSI_score 0.06 of sample 43 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:50 INFO: Finished computing patch[43] in 1.22s. - in file: main.py - line: 134
+2023-07-29 23:10:50 INFO: Started computing patch[44]. - in file: main.py - line: 132
+2023-07-29 23:10:50 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:51 INFO: FSI_score 0.04 of sample 44 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:51 INFO: Finished computing patch[44] in 0.85s. - in file: main.py - line: 134
+2023-07-29 23:10:51 INFO: Started computing patch[45]. - in file: main.py - line: 132
+2023-07-29 23:10:51 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:52 INFO: FSI_score 0.02 of sample 45 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:52 INFO: Finished computing patch[45] in 0.72s. - in file: main.py - line: 134
+2023-07-29 23:10:52 INFO: Started computing patch[46]. - in file: main.py - line: 132
+2023-07-29 23:10:52 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:52 INFO: FSI_score 0.0 of sample 46 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:52 INFO: Finished computing patch[46] in 0.95s. - in file: main.py - line: 134
+2023-07-29 23:10:52 INFO: Started computing patch[47]. - in file: main.py - line: 132
+2023-07-29 23:10:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:53 INFO: FSI_score 0.0 of sample 47 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:53 INFO: Finished computing patch[47] in 0.79s. - in file: main.py - line: 134
+2023-07-29 23:10:53 INFO: Started computing patch[48]. - in file: main.py - line: 132
+2023-07-29 23:10:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:54 INFO: FSI_score 0.2 of sample 48 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:54 INFO: Finished computing patch[48] in 0.78s. - in file: main.py - line: 134
+2023-07-29 23:10:54 INFO: Started computing patch[49]. - in file: main.py - line: 132
+2023-07-29 23:10:54 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:55 INFO: FSI_score 0.17 of sample 49 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:55 INFO: Finished computing patch[49] in 1.0s. - in file: main.py - line: 134
+2023-07-29 23:10:55 INFO: Started computing patch[50]. - in file: main.py - line: 132
+2023-07-29 23:10:55 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:56 INFO: FSI_score 0.16 of sample 50 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 23:10:56 INFO: Finished computing patch[50] in 1.18s. - in file: main.py - line: 134
+2023-07-29 23:10:56 INFO: Started computing patch[51]. - in file: main.py - line: 132
+2023-07-29 23:10:57 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 23:10:57 INFO: Started computing mesh for mesh[51] with FSI value of 0.23 - in file: main.py - line: 79
+2023-07-29 23:10:57 INFO: Generating walls for mesh patch[51] - in file: main.py - line: 81
+2023-07-29 23:10:58 INFO: Generating ground and roofs for mesh patch[51] - in file: main.py - line: 83
+2023-07-29 23:11:01 INFO: Computing sensors for mesh patch[51] - in file: main.py - line: 86
+2023-07-29 23:11:07 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44

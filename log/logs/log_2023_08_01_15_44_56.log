@@ -1,0 +1,27 @@
+2023-08-01 15:45:00 INFO: Finished loading rhinoinside... - in file: main.py - line: 19
+2023-08-01 15:46:42 WARNING: Deleting all files in ['./data/geometry/', './data/irradiance/', './data/outlines/'] - in file: main.py - line: 48
+2023-08-01 15:46:42 WARNING: Deletion successfull! - in file: main.py - line: 54
+2023-08-01 15:46:53 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-08-01 15:46:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-08-01 15:46:53 INFO: Started computing patch[0]. - in file: main.py - line: 189
+2023-08-01 15:46:54 INFO: Started computing mesh for mesh[0] with FSI value of 0.23 - in file: main.py - line: 79
+2023-08-01 15:46:54 INFO: Generating walls for mesh patch[0] - in file: main.py - line: 80
+2023-08-01 15:46:59 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 15:47:14 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 15:47:40 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 15:47:42 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 15:48:09 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 15:48:11 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 15:48:36 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 15:48:39 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 15:49:05 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 15:49:06 INFO: Mesh mesh_0 saved in 1s - in file: save.py - line: 50
+2023-08-01 15:49:06 INFO: Array_list sensors_0 saved in 0s - in file: save.py - line: 86
+2023-08-01 15:49:06 INFO: Polyines outlines_0 saved in 0s - in file: save.py - line: 68
+2023-08-01 15:49:06 INFO: Finished computing patch[0] in 132.97s. - in file: main.py - line: 194
+2023-08-01 15:49:06 INFO: Started computing patch[1]. - in file: main.py - line: 189
+2023-08-01 15:49:07 INFO: Started computing mesh for mesh[1] with FSI value of 0.21 - in file: main.py - line: 79
+2023-08-01 15:49:07 INFO: Generating walls for mesh patch[1] - in file: main.py - line: 80
+2023-08-01 15:49:10 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 15:49:11 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 15:49:11 WARNING: Point containment coincident - in file: meshing.py - line: 59

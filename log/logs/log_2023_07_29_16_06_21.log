@@ -1,0 +1,100 @@
+2023-07-29 16:06:24,525 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 16:06:40,052 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 16:06:40,135 - INFO - Started computing patch[0]. - in file: main.py - line: 117
+2023-07-29 16:06:40,346 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:06:44,855 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 16:06:54,424 - INFO - Mesh mesh_0 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:06:54,618 - INFO - Array_list sensors_0 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:06:54,627 - INFO - Polyines outlines_0 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:06:54,655 - INFO - Finished computing patch[0] in 14.52s. - in file: main.py - line: 119
+2023-07-29 16:06:54,655 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:06:54,655 - INFO - Started computing patch[1]. - in file: main.py - line: 117
+2023-07-29 16:06:54,839 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:07:11,395 - INFO - Mesh mesh_1 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:07:11,677 - INFO - Array_list sensors_1 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:07:11,688 - INFO - Polyines outlines_1 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:07:11,726 - INFO - Finished computing patch[1] in 17.07s. - in file: main.py - line: 119
+2023-07-29 16:07:11,726 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:07:11,727 - INFO - Started computing patch[2]. - in file: main.py - line: 117
+2023-07-29 16:07:11,923 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:07:14,608 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 16:07:28,698 - INFO - Mesh mesh_2 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:07:28,960 - INFO - Array_list sensors_2 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:07:28,970 - INFO - Polyines outlines_2 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:07:29,004 - INFO - Finished computing patch[2] in 17.28s. - in file: main.py - line: 119
+2023-07-29 16:07:29,005 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:07:29,005 - INFO - Started computing patch[3]. - in file: main.py - line: 117
+2023-07-29 16:07:29,233 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:07:39,252 - INFO - Mesh mesh_3 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:07:39,467 - INFO - Array_list sensors_3 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:07:39,476 - INFO - Polyines outlines_3 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:07:39,515 - INFO - Finished computing patch[3] in 10.51s. - in file: main.py - line: 119
+2023-07-29 16:07:39,517 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:07:39,517 - INFO - Started computing patch[4]. - in file: main.py - line: 117
+2023-07-29 16:07:39,808 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:07:47,072 - INFO - Mesh mesh_4 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:07:47,210 - INFO - Array_list sensors_4 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:07:47,217 - INFO - Polyines outlines_4 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:07:47,245 - INFO - Finished computing patch[4] in 7.73s. - in file: main.py - line: 119
+2023-07-29 16:07:47,245 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:07:47,246 - INFO - Started computing patch[5]. - in file: main.py - line: 117
+2023-07-29 16:07:47,510 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:07:54,918 - INFO - Mesh mesh_5 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:07:55,143 - INFO - Array_list sensors_5 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:07:55,148 - INFO - Polyines outlines_5 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:07:55,174 - INFO - Finished computing patch[5] in 7.93s. - in file: main.py - line: 119
+2023-07-29 16:07:55,174 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:07:55,175 - INFO - Started computing patch[6]. - in file: main.py - line: 117
+2023-07-29 16:07:55,423 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:08:02,965 - INFO - Mesh mesh_6 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:08:03,143 - INFO - Array_list sensors_6 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:08:03,150 - INFO - Polyines outlines_6 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:08:03,183 - INFO - Finished computing patch[6] in 8.01s. - in file: main.py - line: 119
+2023-07-29 16:08:03,184 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:08:03,184 - INFO - Started computing patch[7]. - in file: main.py - line: 117
+2023-07-29 16:08:03,550 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:08:12,320 - INFO - Mesh mesh_7 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:08:12,506 - INFO - Array_list sensors_7 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:08:12,514 - INFO - Polyines outlines_7 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:08:12,548 - INFO - Finished computing patch[7] in 9.36s. - in file: main.py - line: 119
+2023-07-29 16:08:12,548 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:08:12,549 - INFO - Started computing patch[8]. - in file: main.py - line: 117
+2023-07-29 16:08:12,807 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:08:24,072 - INFO - Mesh mesh_8 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:08:24,380 - INFO - Array_list sensors_8 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:08:24,393 - INFO - Polyines outlines_8 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:08:24,432 - INFO - Finished computing patch[8] in 11.88s. - in file: main.py - line: 119
+2023-07-29 16:08:24,433 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:08:24,434 - INFO - Started computing patch[9]. - in file: main.py - line: 117
+2023-07-29 16:08:24,759 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:08:29,019 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 16:08:29,019 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 16:08:37,280 - INFO - Mesh mesh_9 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:08:37,539 - INFO - Array_list sensors_9 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:08:37,547 - INFO - Polyines outlines_9 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:08:37,576 - INFO - Finished computing patch[9] in 13.14s. - in file: main.py - line: 119
+2023-07-29 16:08:37,577 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:08:37,577 - INFO - Started computing patch[10]. - in file: main.py - line: 117
+2023-07-29 16:08:37,797 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:08:51,390 - INFO - Mesh mesh_10 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:08:51,579 - INFO - Array_list sensors_10 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:08:51,595 - INFO - Polyines outlines_10 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:08:51,630 - INFO - Finished computing patch[10] in 14.05s. - in file: main.py - line: 119
+2023-07-29 16:08:51,630 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:08:51,630 - INFO - Started computing patch[11]. - in file: main.py - line: 117
+2023-07-29 16:08:51,840 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:09:05,664 - INFO - Mesh mesh_11 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:09:05,917 - INFO - Array_list sensors_11 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:09:05,927 - INFO - Polyines outlines_11 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:09:05,968 - INFO - Finished computing patch[11] in 14.34s. - in file: main.py - line: 119
+2023-07-29 16:09:05,969 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:09:05,970 - INFO - Started computing patch[12]. - in file: main.py - line: 117
+2023-07-29 16:09:06,195 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:09:09,683 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 16:09:17,482 - INFO - Mesh mesh_12 saved in 0s - in file: save.py - line: 50
+2023-07-29 16:09:17,675 - INFO - Array_list sensors_12 saved in 0s - in file: save.py - line: 86
+2023-07-29 16:09:17,684 - INFO - Polyines outlines_12 saved in 0s - in file: save.py - line: 68
+2023-07-29 16:09:17,716 - INFO - Finished computing patch[12] in 11.75s. - in file: main.py - line: 119
+2023-07-29 16:09:17,716 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 120
+2023-07-29 16:09:17,717 - INFO - Started computing patch[13]. - in file: main.py - line: 117
+2023-07-29 16:09:17,983 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128

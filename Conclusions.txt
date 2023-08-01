@@ -1,0 +1,2 @@
+* IronPython is faster
+* Memory corruption with garbage collection

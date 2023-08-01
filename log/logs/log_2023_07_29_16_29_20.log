@@ -1,0 +1,6 @@
+2023-07-29 16:29:23,970 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 16:29:37,865 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 16:29:37,943 - INFO - Started computing patch[1]. - in file: main.py - line: 122
+2023-07-29 16:29:38,144 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 16:29:53,189 - INFO - Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 16:30:54,164 - INFO - Computed 24275 solar irradiance values for model custom_name - in file: run.py - line: 47

@@ -1,0 +1,52 @@
+2023-08-01 16:04:14 INFO: Finished loading rhinoinside... - in file: main.py - line: 19
+2023-08-01 16:04:43 WARNING: Deleting all files in ['./data/geometry/', './data/irradiance/', './data/outlines/'] - in file: main.py - line: 48
+2023-08-01 16:04:43 WARNING: Deletion successfull! - in file: main.py - line: 54
+2023-08-01 16:04:52 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-08-01 16:04:53 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-08-01 16:04:53 INFO: Started computing patch[0]. - in file: main.py - line: 202
+2023-08-01 16:04:54 INFO: Started computing mesh for mesh[0] with FSI value of 0.23 - in file: main.py - line: 79
+2023-08-01 16:04:54 INFO: Generating walls for mesh patch[0] - in file: main.py - line: 80
+2023-08-01 16:04:58 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 16:05:08 INFO: Polyines outlines_0 saved in 0s - in file: save.py - line: 68
+2023-08-01 16:05:12 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:05:39 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:05:40 INFO: Mesh mesh_0_base saved in 1s - in file: save.py - line: 50
+2023-08-01 16:05:41 INFO: Array_list sensors_0_base saved in 0s - in file: save.py - line: 86
+2023-08-01 16:05:43 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:06:13 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:06:14 INFO: Mesh mesh_0_rot1 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:06:14 INFO: Array_list sensors_0_rot1 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:06:16 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:06:46 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:06:47 INFO: Mesh mesh_0_rot2 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:06:47 INFO: Array_list sensors_0_rot2 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:06:49 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:07:18 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:07:19 INFO: Mesh mesh_0_rot3 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:07:19 INFO: Array_list sensors_0_rot3 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:07:19 INFO: Finished computing patch[0] in 146.5s. - in file: main.py - line: 207
+2023-08-01 16:07:19 INFO: Started computing patch[1]. - in file: main.py - line: 202
+2023-08-01 16:07:20 INFO: Started computing mesh for mesh[1] with FSI value of 0.21 - in file: main.py - line: 79
+2023-08-01 16:07:20 INFO: Generating walls for mesh patch[1] - in file: main.py - line: 80
+2023-08-01 16:07:23 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 16:07:23 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 16:07:23 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 16:07:37 INFO: Polyines outlines_1 saved in 0s - in file: save.py - line: 68
+2023-08-01 16:07:42 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:08:09 INFO: Computed 23978 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:08:11 INFO: Mesh mesh_1_base saved in 1s - in file: save.py - line: 50
+2023-08-01 16:08:11 INFO: Array_list sensors_1_base saved in 0s - in file: save.py - line: 86
+2023-08-01 16:08:13 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:08:42 INFO: Computed 23978 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:08:44 INFO: Mesh mesh_1_rot1 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:08:44 INFO: Array_list sensors_1_rot1 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:08:47 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:09:15 INFO: Computed 23978 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:09:16 INFO: Mesh mesh_1_rot2 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:09:17 INFO: Array_list sensors_1_rot2 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:09:19 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 16:09:49 INFO: Computed 23978 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 16:09:50 INFO: Mesh mesh_1_rot3 saved in 1s - in file: save.py - line: 50
+2023-08-01 16:09:51 INFO: Array_list sensors_1_rot3 saved in 0s - in file: save.py - line: 86
+2023-08-01 16:09:51 INFO: Finished computing patch[1] in 151.26s. - in file: main.py - line: 207
+2023-08-01 16:09:51 INFO: Started computing patch[2]. - in file: main.py - line: 202

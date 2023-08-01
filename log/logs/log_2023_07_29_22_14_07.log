@@ -1,0 +1,78 @@
+2023-07-29 22:14:13 INFO: Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 22:14:17 WARNING: Deleted all files in ['./data/geometry', './data/outlines', './data/irradiance'] - in file: main.py - line: 56
+2023-07-29 22:14:31 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 22:14:33 INFO: Started computing patch[10]. - in file: main.py - line: 132
+2023-07-29 22:14:33 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:14:33 INFO: FSI_score 0.19 of sample 10 not high enough to continue generating sample. - in file: main.py - line: 123
+2023-07-29 22:14:33 INFO: Finished computing patch[10] in 0.89s. - in file: main.py - line: 134
+2023-07-29 22:14:33 INFO: Started computing patch[11]. - in file: main.py - line: 132
+2023-07-29 22:14:34 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:14:34 INFO: Started computing mesh for mesh[11] with FSI value of 0.31 - in file: main.py - line: 79
+2023-07-29 22:14:34 INFO: Generating walls for mesh patch[11] - in file: main.py - line: 81
+2023-07-29 22:14:34 INFO: Generating ground and roofs for mesh patch[11] - in file: main.py - line: 83
+2023-07-29 22:14:34 INFO: Computing sensors for mesh patch[11] - in file: main.py - line: 86
+2023-07-29 22:14:35 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:14:53 INFO: Computed 1942 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:14:53 INFO: Mesh mesh_11 saved in 0s - in file: save.py - line: 50
+2023-07-29 22:14:53 INFO: Array_list sensors_11 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:14:53 INFO: Polyines outlines_11 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:14:53 INFO: Finished computing patch[11] in 19.84s. - in file: main.py - line: 134
+2023-07-29 22:14:53 INFO: Started computing patch[12]. - in file: main.py - line: 132
+2023-07-29 22:14:54 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:14:54 INFO: Started computing mesh for mesh[12] with FSI value of 0.32 - in file: main.py - line: 79
+2023-07-29 22:14:54 INFO: Generating walls for mesh patch[12] - in file: main.py - line: 81
+2023-07-29 22:14:54 INFO: Generating ground and roofs for mesh patch[12] - in file: main.py - line: 83
+2023-07-29 22:14:54 WARNING: Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 22:14:54 INFO: Computing sensors for mesh patch[12] - in file: main.py - line: 86
+2023-07-29 22:14:56 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:15:16 INFO: Computed 2303 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:15:16 INFO: Mesh mesh_12 saved in 0s - in file: save.py - line: 50
+2023-07-29 22:15:16 INFO: Array_list sensors_12 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:15:16 INFO: Polyines outlines_12 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:15:16 INFO: Finished computing patch[12] in 22.59s. - in file: main.py - line: 134
+2023-07-29 22:15:16 INFO: Started computing patch[13]. - in file: main.py - line: 132
+2023-07-29 22:15:16 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:15:17 INFO: Started computing mesh for mesh[13] with FSI value of 0.34 - in file: main.py - line: 79
+2023-07-29 22:15:17 INFO: Generating walls for mesh patch[13] - in file: main.py - line: 81
+2023-07-29 22:15:17 INFO: Generating ground and roofs for mesh patch[13] - in file: main.py - line: 83
+2023-07-29 22:15:17 WARNING: Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 22:15:17 INFO: Computing sensors for mesh patch[13] - in file: main.py - line: 86
+2023-07-29 22:15:18 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:15:37 INFO: Computed 2409 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:15:37 INFO: Mesh mesh_13 saved in 0s - in file: save.py - line: 50
+2023-07-29 22:15:37 INFO: Array_list sensors_13 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:15:37 INFO: Polyines outlines_13 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:15:37 INFO: Finished computing patch[13] in 20.99s. - in file: main.py - line: 134
+2023-07-29 22:15:37 INFO: Started computing patch[14]. - in file: main.py - line: 132
+2023-07-29 22:15:37 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:15:38 INFO: Started computing mesh for mesh[14] with FSI value of 0.32 - in file: main.py - line: 79
+2023-07-29 22:15:38 INFO: Generating walls for mesh patch[14] - in file: main.py - line: 81
+2023-07-29 22:15:38 INFO: Generating ground and roofs for mesh patch[14] - in file: main.py - line: 83
+2023-07-29 22:15:38 WARNING: Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 22:15:38 WARNING: Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 22:15:38 INFO: Computing sensors for mesh patch[14] - in file: main.py - line: 86
+2023-07-29 22:15:39 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:15:59 INFO: Computed 2407 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:15:59 INFO: Mesh mesh_14 saved in 0s - in file: save.py - line: 50
+2023-07-29 22:15:59 INFO: Array_list sensors_14 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:15:59 INFO: Polyines outlines_14 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:15:59 INFO: Finished computing patch[14] in 22.38s. - in file: main.py - line: 134
+2023-07-29 22:15:59 INFO: Started computing patch[15]. - in file: main.py - line: 132
+2023-07-29 22:16:00 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:16:00 INFO: Started computing mesh for mesh[15] with FSI value of 0.28 - in file: main.py - line: 79
+2023-07-29 22:16:00 INFO: Generating walls for mesh patch[15] - in file: main.py - line: 81
+2023-07-29 22:16:00 INFO: Generating ground and roofs for mesh patch[15] - in file: main.py - line: 83
+2023-07-29 22:16:01 INFO: Computing sensors for mesh patch[15] - in file: main.py - line: 86
+2023-07-29 22:16:02 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-07-29 22:16:24 INFO: Computed 2507 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-07-29 22:16:24 INFO: Mesh mesh_15 saved in 0s - in file: save.py - line: 50
+2023-07-29 22:16:24 INFO: Array_list sensors_15 saved in 0s - in file: save.py - line: 86
+2023-07-29 22:16:24 INFO: Polyines outlines_15 saved in 0s - in file: save.py - line: 68
+2023-07-29 22:16:24 INFO: Finished computing patch[15] in 24.92s. - in file: main.py - line: 134
+2023-07-29 22:16:24 INFO: Started computing patch[16]. - in file: main.py - line: 132
+2023-07-29 22:16:24 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-07-29 22:16:25 INFO: Started computing mesh for mesh[16] with FSI value of 0.26 - in file: main.py - line: 79
+2023-07-29 22:16:25 INFO: Generating walls for mesh patch[16] - in file: main.py - line: 81
+2023-07-29 22:16:25 INFO: Generating ground and roofs for mesh patch[16] - in file: main.py - line: 83
+2023-07-29 22:16:25 INFO: Computing sensors for mesh patch[16] - in file: main.py - line: 86
+2023-07-29 22:16:27 INFO: Started solar irradiance simulation with arguments -ab 6 -ad 25000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44

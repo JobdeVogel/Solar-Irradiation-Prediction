@@ -1,0 +1,374 @@
+2023-07-29 14:13:01,432 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 14:13:15,579 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 14:13:15,907 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.0001 - in file: outlines.py - line: 126
+2023-07-29 14:13:16,019 - INFO - Started computing patch[0]. - in file: main.py - line: 113
+2023-07-29 14:13:20,919 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 14:13:31,126 - INFO - Mesh mesh_0 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:31,281 - INFO - Array_list sensors_0 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:31,292 - INFO - Polyines outlines_0 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:31,317 - INFO - Finished computing patch[0] in 15.3s. - in file: main.py - line: 115
+2023-07-29 14:13:31,317 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:31,318 - INFO - Started computing patch[1]. - in file: main.py - line: 113
+2023-07-29 14:13:37,484 - INFO - Mesh mesh_1 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:37,550 - INFO - Array_list sensors_1 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:37,554 - INFO - Polyines outlines_1 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:37,568 - INFO - Finished computing patch[1] in 6.25s. - in file: main.py - line: 115
+2023-07-29 14:13:37,569 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:37,569 - INFO - Started computing patch[2]. - in file: main.py - line: 113
+2023-07-29 14:13:43,552 - INFO - Mesh mesh_2 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:43,631 - INFO - Array_list sensors_2 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:43,637 - INFO - Polyines outlines_2 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:43,664 - INFO - Finished computing patch[2] in 6.09s. - in file: main.py - line: 115
+2023-07-29 14:13:43,664 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:43,665 - INFO - Started computing patch[3]. - in file: main.py - line: 113
+2023-07-29 14:13:47,868 - INFO - Mesh mesh_3 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:47,914 - INFO - Array_list sensors_3 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:47,917 - INFO - Polyines outlines_3 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:47,930 - INFO - Finished computing patch[3] in 4.27s. - in file: main.py - line: 115
+2023-07-29 14:13:47,931 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:47,931 - INFO - Started computing patch[4]. - in file: main.py - line: 113
+2023-07-29 14:13:51,939 - INFO - Mesh mesh_4 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:51,982 - INFO - Array_list sensors_4 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:51,986 - INFO - Polyines outlines_4 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:51,998 - INFO - Finished computing patch[4] in 4.07s. - in file: main.py - line: 115
+2023-07-29 14:13:51,999 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:51,999 - INFO - Started computing patch[5]. - in file: main.py - line: 113
+2023-07-29 14:13:56,022 - INFO - Mesh mesh_5 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:13:56,088 - INFO - Array_list sensors_5 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:13:56,092 - INFO - Polyines outlines_5 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:13:56,106 - INFO - Finished computing patch[5] in 4.11s. - in file: main.py - line: 115
+2023-07-29 14:13:56,107 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:13:56,107 - INFO - Started computing patch[6]. - in file: main.py - line: 113
+2023-07-29 14:14:01,440 - INFO - Mesh mesh_6 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:01,512 - INFO - Array_list sensors_6 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:01,517 - INFO - Polyines outlines_6 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:01,532 - INFO - Finished computing patch[6] in 5.42s. - in file: main.py - line: 115
+2023-07-29 14:14:01,533 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:01,533 - INFO - Started computing patch[7]. - in file: main.py - line: 113
+2023-07-29 14:14:07,663 - INFO - Mesh mesh_7 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:07,772 - INFO - Array_list sensors_7 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:07,778 - INFO - Polyines outlines_7 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:07,802 - INFO - Finished computing patch[7] in 6.27s. - in file: main.py - line: 115
+2023-07-29 14:14:07,803 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:07,803 - INFO - Started computing patch[8]. - in file: main.py - line: 113
+2023-07-29 14:14:14,757 - INFO - Mesh mesh_8 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:14,862 - INFO - Array_list sensors_8 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:14,869 - INFO - Polyines outlines_8 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:14,889 - INFO - Finished computing patch[8] in 7.09s. - in file: main.py - line: 115
+2023-07-29 14:14:14,890 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:14,890 - INFO - Started computing patch[9]. - in file: main.py - line: 113
+2023-07-29 14:14:16,513 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 14:14:16,513 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 14:14:20,600 - INFO - Mesh mesh_9 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:20,666 - INFO - Array_list sensors_9 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:20,670 - INFO - Polyines outlines_9 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:20,684 - INFO - Finished computing patch[9] in 5.79s. - in file: main.py - line: 115
+2023-07-29 14:14:20,684 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:20,685 - INFO - Started computing patch[10]. - in file: main.py - line: 113
+2023-07-29 14:14:25,935 - INFO - Mesh mesh_10 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:25,998 - INFO - Array_list sensors_10 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:26,002 - INFO - Polyines outlines_10 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:26,016 - INFO - Finished computing patch[10] in 5.33s. - in file: main.py - line: 115
+2023-07-29 14:14:26,017 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:26,018 - INFO - Started computing patch[11]. - in file: main.py - line: 113
+2023-07-29 14:14:30,781 - INFO - Mesh mesh_11 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:30,843 - INFO - Array_list sensors_11 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:30,847 - INFO - Polyines outlines_11 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:30,861 - INFO - Finished computing patch[11] in 4.84s. - in file: main.py - line: 115
+2023-07-29 14:14:30,861 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:30,862 - INFO - Started computing patch[12]. - in file: main.py - line: 113
+2023-07-29 14:14:34,301 - INFO - Mesh mesh_12 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:34,349 - INFO - Array_list sensors_12 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:34,353 - INFO - Polyines outlines_12 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:34,367 - INFO - Finished computing patch[12] in 3.51s. - in file: main.py - line: 115
+2023-07-29 14:14:34,368 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:34,368 - INFO - Started computing patch[13]. - in file: main.py - line: 113
+2023-07-29 14:14:38,026 - INFO - Mesh mesh_13 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:38,070 - INFO - Array_list sensors_13 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:38,075 - INFO - Polyines outlines_13 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:38,087 - INFO - Finished computing patch[13] in 3.72s. - in file: main.py - line: 115
+2023-07-29 14:14:38,088 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:38,088 - INFO - Started computing patch[14]. - in file: main.py - line: 113
+2023-07-29 14:14:38,973 - INFO - FSI_score 0.0 of sample 14 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:14:38,973 - INFO - Finished computing patch[14] in 0.89s. - in file: main.py - line: 115
+2023-07-29 14:14:38,975 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:38,975 - INFO - Started computing patch[15]. - in file: main.py - line: 113
+2023-07-29 14:14:39,786 - INFO - FSI_score 0.0 of sample 15 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:14:39,786 - INFO - Finished computing patch[15] in 0.81s. - in file: main.py - line: 115
+2023-07-29 14:14:39,786 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:39,787 - INFO - Started computing patch[16]. - in file: main.py - line: 113
+2023-07-29 14:14:44,470 - INFO - Mesh mesh_16 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:44,526 - INFO - Array_list sensors_16 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:44,531 - INFO - Polyines outlines_16 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:44,545 - INFO - Finished computing patch[16] in 4.76s. - in file: main.py - line: 115
+2023-07-29 14:14:44,546 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:44,546 - INFO - Started computing patch[17]. - in file: main.py - line: 113
+2023-07-29 14:14:51,826 - INFO - Mesh mesh_17 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:14:51,917 - INFO - Array_list sensors_17 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:14:51,921 - INFO - Polyines outlines_17 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:14:51,937 - INFO - Finished computing patch[17] in 7.39s. - in file: main.py - line: 115
+2023-07-29 14:14:51,938 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:14:51,938 - INFO - Started computing patch[18]. - in file: main.py - line: 113
+2023-07-29 14:15:01,727 - INFO - Mesh mesh_18 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:01,845 - INFO - Array_list sensors_18 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:01,851 - INFO - Polyines outlines_18 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:01,872 - INFO - Finished computing patch[18] in 9.93s. - in file: main.py - line: 115
+2023-07-29 14:15:01,873 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:01,873 - INFO - Started computing patch[19]. - in file: main.py - line: 113
+2023-07-29 14:15:08,673 - INFO - Mesh mesh_19 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:08,807 - INFO - Array_list sensors_19 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:08,811 - INFO - Polyines outlines_19 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:08,827 - INFO - Finished computing patch[19] in 6.95s. - in file: main.py - line: 115
+2023-07-29 14:15:08,827 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:08,827 - INFO - Started computing patch[20]. - in file: main.py - line: 113
+2023-07-29 14:15:13,698 - INFO - Mesh mesh_20 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:13,819 - INFO - Array_list sensors_20 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:13,822 - INFO - Polyines outlines_20 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:13,836 - INFO - Finished computing patch[20] in 5.01s. - in file: main.py - line: 115
+2023-07-29 14:15:13,836 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:13,837 - INFO - Started computing patch[21]. - in file: main.py - line: 113
+2023-07-29 14:15:17,301 - INFO - Mesh mesh_21 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:17,388 - INFO - Array_list sensors_21 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:17,392 - INFO - Polyines outlines_21 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:17,408 - INFO - Finished computing patch[21] in 3.57s. - in file: main.py - line: 115
+2023-07-29 14:15:17,408 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:17,409 - INFO - Started computing patch[22]. - in file: main.py - line: 113
+2023-07-29 14:15:21,217 - INFO - Mesh mesh_22 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:21,262 - INFO - Array_list sensors_22 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:21,266 - INFO - Polyines outlines_22 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:21,279 - INFO - Finished computing patch[22] in 3.87s. - in file: main.py - line: 115
+2023-07-29 14:15:21,280 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:21,280 - INFO - Started computing patch[23]. - in file: main.py - line: 113
+2023-07-29 14:15:25,248 - INFO - Mesh mesh_23 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:25,316 - INFO - Array_list sensors_23 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:25,320 - INFO - Polyines outlines_23 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:25,335 - INFO - Finished computing patch[23] in 4.05s. - in file: main.py - line: 115
+2023-07-29 14:15:25,336 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:25,336 - INFO - Started computing patch[24]. - in file: main.py - line: 113
+2023-07-29 14:15:29,330 - INFO - Mesh mesh_24 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:29,399 - INFO - Array_list sensors_24 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:29,404 - INFO - Polyines outlines_24 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:29,429 - INFO - Finished computing patch[24] in 4.09s. - in file: main.py - line: 115
+2023-07-29 14:15:29,430 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:29,430 - INFO - Started computing patch[25]. - in file: main.py - line: 113
+2023-07-29 14:15:33,071 - INFO - Mesh mesh_25 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:33,111 - INFO - Array_list sensors_25 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:33,116 - INFO - Polyines outlines_25 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:33,131 - INFO - Finished computing patch[25] in 3.7s. - in file: main.py - line: 115
+2023-07-29 14:15:33,132 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:33,132 - INFO - Started computing patch[26]. - in file: main.py - line: 113
+2023-07-29 14:15:33,804 - INFO - FSI_score 0.0 of sample 26 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:15:33,804 - INFO - Finished computing patch[26] in 0.67s. - in file: main.py - line: 115
+2023-07-29 14:15:33,804 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:33,805 - INFO - Started computing patch[27]. - in file: main.py - line: 113
+2023-07-29 14:15:34,605 - INFO - FSI_score 0.0 of sample 27 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:15:34,605 - INFO - Finished computing patch[27] in 0.8s. - in file: main.py - line: 115
+2023-07-29 14:15:34,606 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:34,606 - INFO - Started computing patch[28]. - in file: main.py - line: 113
+2023-07-29 14:15:35,350 - INFO - FSI_score 0.0 of sample 28 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:15:35,350 - INFO - Finished computing patch[28] in 0.74s. - in file: main.py - line: 115
+2023-07-29 14:15:35,351 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:35,351 - INFO - Started computing patch[29]. - in file: main.py - line: 113
+2023-07-29 14:15:36,011 - INFO - FSI_score 0.0 of sample 29 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:15:36,012 - INFO - Finished computing patch[29] in 0.66s. - in file: main.py - line: 115
+2023-07-29 14:15:36,012 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:36,012 - INFO - Started computing patch[30]. - in file: main.py - line: 113
+2023-07-29 14:15:40,387 - INFO - Mesh mesh_30 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:40,437 - INFO - Array_list sensors_30 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:40,440 - INFO - Polyines outlines_30 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:40,454 - INFO - Finished computing patch[30] in 4.44s. - in file: main.py - line: 115
+2023-07-29 14:15:40,454 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:40,454 - INFO - Started computing patch[31]. - in file: main.py - line: 113
+2023-07-29 14:15:44,161 - INFO - Mesh mesh_31 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:44,220 - INFO - Array_list sensors_31 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:44,225 - INFO - Polyines outlines_31 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:44,246 - INFO - Finished computing patch[31] in 3.79s. - in file: main.py - line: 115
+2023-07-29 14:15:44,247 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:44,247 - INFO - Started computing patch[32]. - in file: main.py - line: 113
+2023-07-29 14:15:48,062 - INFO - Mesh mesh_32 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:48,108 - INFO - Array_list sensors_32 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:48,112 - INFO - Polyines outlines_32 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:48,129 - INFO - Finished computing patch[32] in 3.88s. - in file: main.py - line: 115
+2023-07-29 14:15:48,129 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:48,130 - INFO - Started computing patch[33]. - in file: main.py - line: 113
+2023-07-29 14:15:52,605 - INFO - Mesh mesh_33 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:52,654 - INFO - Array_list sensors_33 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:52,658 - INFO - Polyines outlines_33 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:52,672 - INFO - Finished computing patch[33] in 4.54s. - in file: main.py - line: 115
+2023-07-29 14:15:52,672 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:52,673 - INFO - Started computing patch[34]. - in file: main.py - line: 113
+2023-07-29 14:15:57,069 - INFO - Mesh mesh_34 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:15:57,187 - INFO - Array_list sensors_34 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:15:57,191 - INFO - Polyines outlines_34 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:15:57,205 - INFO - Finished computing patch[34] in 4.53s. - in file: main.py - line: 115
+2023-07-29 14:15:57,206 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:15:57,206 - INFO - Started computing patch[35]. - in file: main.py - line: 113
+2023-07-29 14:16:01,260 - INFO - Mesh mesh_35 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:01,322 - INFO - Array_list sensors_35 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:01,325 - INFO - Polyines outlines_35 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:01,342 - INFO - Finished computing patch[35] in 4.14s. - in file: main.py - line: 115
+2023-07-29 14:16:01,342 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:01,343 - INFO - Started computing patch[36]. - in file: main.py - line: 113
+2023-07-29 14:16:06,016 - INFO - Mesh mesh_36 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:06,082 - INFO - Array_list sensors_36 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:06,089 - INFO - Polyines outlines_36 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:06,105 - INFO - Finished computing patch[36] in 4.76s. - in file: main.py - line: 115
+2023-07-29 14:16:06,106 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:06,106 - INFO - Started computing patch[37]. - in file: main.py - line: 113
+2023-07-29 14:16:12,191 - INFO - Mesh mesh_37 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:12,254 - INFO - Array_list sensors_37 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:12,259 - INFO - Polyines outlines_37 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:12,274 - INFO - Finished computing patch[37] in 6.17s. - in file: main.py - line: 115
+2023-07-29 14:16:12,275 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:12,275 - INFO - Started computing patch[38]. - in file: main.py - line: 113
+2023-07-29 14:16:18,522 - INFO - Mesh mesh_38 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:18,589 - INFO - Array_list sensors_38 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:18,592 - INFO - Polyines outlines_38 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:18,609 - INFO - Finished computing patch[38] in 6.33s. - in file: main.py - line: 115
+2023-07-29 14:16:18,610 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:18,610 - INFO - Started computing patch[39]. - in file: main.py - line: 113
+2023-07-29 14:16:23,636 - INFO - Mesh mesh_39 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:23,687 - INFO - Array_list sensors_39 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:23,691 - INFO - Polyines outlines_39 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:23,704 - INFO - Finished computing patch[39] in 5.09s. - in file: main.py - line: 115
+2023-07-29 14:16:23,706 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:23,706 - INFO - Started computing patch[40]. - in file: main.py - line: 113
+2023-07-29 14:16:28,362 - INFO - Mesh mesh_40 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:28,411 - INFO - Array_list sensors_40 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:28,418 - INFO - Polyines outlines_40 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:28,429 - INFO - Finished computing patch[40] in 4.72s. - in file: main.py - line: 115
+2023-07-29 14:16:28,430 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:28,430 - INFO - Started computing patch[41]. - in file: main.py - line: 113
+2023-07-29 14:16:32,433 - INFO - Mesh mesh_41 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:32,497 - INFO - Array_list sensors_41 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:32,501 - INFO - Polyines outlines_41 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:32,520 - INFO - Finished computing patch[41] in 4.09s. - in file: main.py - line: 115
+2023-07-29 14:16:32,520 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:32,521 - INFO - Started computing patch[42]. - in file: main.py - line: 113
+2023-07-29 14:16:33,320 - INFO - FSI_score 0.0 of sample 42 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:33,320 - INFO - Finished computing patch[42] in 0.8s. - in file: main.py - line: 115
+2023-07-29 14:16:33,321 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:33,321 - INFO - Started computing patch[43]. - in file: main.py - line: 113
+2023-07-29 14:16:34,117 - INFO - FSI_score 0.0 of sample 43 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:34,118 - INFO - Finished computing patch[43] in 0.8s. - in file: main.py - line: 115
+2023-07-29 14:16:34,118 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:34,119 - INFO - Started computing patch[44]. - in file: main.py - line: 113
+2023-07-29 14:16:35,337 - INFO - FSI_score 0.0 of sample 44 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:35,337 - INFO - Finished computing patch[44] in 1.22s. - in file: main.py - line: 115
+2023-07-29 14:16:35,338 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:35,338 - INFO - Started computing patch[45]. - in file: main.py - line: 113
+2023-07-29 14:16:36,217 - INFO - FSI_score 0.0 of sample 45 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:36,217 - INFO - Finished computing patch[45] in 0.88s. - in file: main.py - line: 115
+2023-07-29 14:16:36,217 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:36,218 - INFO - Started computing patch[46]. - in file: main.py - line: 113
+2023-07-29 14:16:36,895 - INFO - FSI_score 0.0 of sample 46 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:36,895 - INFO - Finished computing patch[46] in 0.68s. - in file: main.py - line: 115
+2023-07-29 14:16:36,896 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:36,896 - INFO - Started computing patch[47]. - in file: main.py - line: 113
+2023-07-29 14:16:37,702 - INFO - FSI_score 0.0 of sample 47 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:37,702 - INFO - Finished computing patch[47] in 0.81s. - in file: main.py - line: 115
+2023-07-29 14:16:37,702 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:37,702 - INFO - Started computing patch[48]. - in file: main.py - line: 113
+2023-07-29 14:16:38,347 - INFO - FSI_score 0.0 of sample 48 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:38,348 - INFO - Finished computing patch[48] in 0.65s. - in file: main.py - line: 115
+2023-07-29 14:16:38,348 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:38,348 - INFO - Started computing patch[49]. - in file: main.py - line: 113
+2023-07-29 14:16:38,964 - INFO - FSI_score 0.0 of sample 49 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:38,965 - INFO - Finished computing patch[49] in 0.62s. - in file: main.py - line: 115
+2023-07-29 14:16:38,965 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:38,965 - INFO - Started computing patch[50]. - in file: main.py - line: 113
+2023-07-29 14:16:39,699 - INFO - FSI_score 0.0 of sample 50 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:39,699 - INFO - Finished computing patch[50] in 0.73s. - in file: main.py - line: 115
+2023-07-29 14:16:39,699 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:39,699 - INFO - Started computing patch[51]. - in file: main.py - line: 113
+2023-07-29 14:16:40,458 - INFO - FSI_score 0.0 of sample 51 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:40,458 - INFO - Finished computing patch[51] in 0.76s. - in file: main.py - line: 115
+2023-07-29 14:16:40,459 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:40,459 - INFO - Started computing patch[52]. - in file: main.py - line: 113
+2023-07-29 14:16:41,090 - INFO - FSI_score 0.0 of sample 52 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:41,090 - INFO - Finished computing patch[52] in 0.63s. - in file: main.py - line: 115
+2023-07-29 14:16:41,091 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:41,091 - INFO - Started computing patch[53]. - in file: main.py - line: 113
+2023-07-29 14:16:41,728 - INFO - FSI_score 0.0 of sample 53 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:41,729 - INFO - Finished computing patch[53] in 0.64s. - in file: main.py - line: 115
+2023-07-29 14:16:41,729 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:41,730 - INFO - Started computing patch[54]. - in file: main.py - line: 113
+2023-07-29 14:16:42,505 - INFO - FSI_score 0.0 of sample 54 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:42,505 - INFO - Finished computing patch[54] in 0.77s. - in file: main.py - line: 115
+2023-07-29 14:16:42,506 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:42,506 - INFO - Started computing patch[55]. - in file: main.py - line: 113
+2023-07-29 14:16:43,151 - INFO - FSI_score 0.0 of sample 55 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:43,152 - INFO - Finished computing patch[55] in 0.65s. - in file: main.py - line: 115
+2023-07-29 14:16:43,152 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:43,152 - INFO - Started computing patch[56]. - in file: main.py - line: 113
+2023-07-29 14:16:43,777 - INFO - FSI_score 0.0 of sample 56 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:43,778 - INFO - Finished computing patch[56] in 0.63s. - in file: main.py - line: 115
+2023-07-29 14:16:43,778 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:43,779 - INFO - Started computing patch[57]. - in file: main.py - line: 113
+2023-07-29 14:16:44,590 - INFO - FSI_score 0.0 of sample 57 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:44,590 - INFO - Finished computing patch[57] in 0.81s. - in file: main.py - line: 115
+2023-07-29 14:16:44,591 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:44,591 - INFO - Started computing patch[58]. - in file: main.py - line: 113
+2023-07-29 14:16:45,263 - INFO - FSI_score 0.0 of sample 58 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:45,263 - INFO - Finished computing patch[58] in 0.67s. - in file: main.py - line: 115
+2023-07-29 14:16:45,263 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:45,264 - INFO - Started computing patch[59]. - in file: main.py - line: 113
+2023-07-29 14:16:45,892 - INFO - FSI_score 0.0 of sample 59 not high enough to continue generating sample. - in file: main.py - line: 93
+2023-07-29 14:16:45,893 - INFO - Finished computing patch[59] in 0.63s. - in file: main.py - line: 115
+2023-07-29 14:16:45,894 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:45,894 - INFO - Started computing patch[60]. - in file: main.py - line: 113
+2023-07-29 14:16:52,312 - INFO - Mesh mesh_60 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:52,388 - INFO - Array_list sensors_60 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:52,392 - INFO - Polyines outlines_60 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:52,408 - INFO - Finished computing patch[60] in 6.51s. - in file: main.py - line: 115
+2023-07-29 14:16:52,409 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:52,409 - INFO - Started computing patch[61]. - in file: main.py - line: 113
+2023-07-29 14:16:57,312 - INFO - Mesh mesh_61 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:16:57,365 - INFO - Array_list sensors_61 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:16:57,369 - INFO - Polyines outlines_61 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:16:57,383 - INFO - Finished computing patch[61] in 4.97s. - in file: main.py - line: 115
+2023-07-29 14:16:57,383 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:16:57,383 - INFO - Started computing patch[62]. - in file: main.py - line: 113
+2023-07-29 14:17:02,175 - INFO - Mesh mesh_62 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:02,222 - INFO - Array_list sensors_62 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:02,227 - INFO - Polyines outlines_62 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:02,240 - INFO - Finished computing patch[62] in 4.86s. - in file: main.py - line: 115
+2023-07-29 14:17:02,241 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:02,241 - INFO - Started computing patch[63]. - in file: main.py - line: 113
+2023-07-29 14:17:07,252 - INFO - Mesh mesh_63 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:07,308 - INFO - Array_list sensors_63 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:07,312 - INFO - Polyines outlines_63 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:07,326 - INFO - Finished computing patch[63] in 5.09s. - in file: main.py - line: 115
+2023-07-29 14:17:07,327 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:07,327 - INFO - Started computing patch[64]. - in file: main.py - line: 113
+2023-07-29 14:17:12,130 - INFO - Mesh mesh_64 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:12,190 - INFO - Array_list sensors_64 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:12,194 - INFO - Polyines outlines_64 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:12,209 - INFO - Finished computing patch[64] in 4.88s. - in file: main.py - line: 115
+2023-07-29 14:17:12,210 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:12,210 - INFO - Started computing patch[65]. - in file: main.py - line: 113
+2023-07-29 14:17:16,841 - INFO - Mesh mesh_65 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:16,966 - INFO - Array_list sensors_65 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:16,968 - INFO - Polyines outlines_65 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:16,985 - INFO - Finished computing patch[65] in 4.77s. - in file: main.py - line: 115
+2023-07-29 14:17:16,986 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:16,986 - INFO - Started computing patch[66]. - in file: main.py - line: 113
+2023-07-29 14:17:18,162 - WARNING - Point containment coincident - in file: meshing.py - line: 44
+2023-07-29 14:17:21,405 - INFO - Mesh mesh_66 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:21,474 - INFO - Array_list sensors_66 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:21,478 - INFO - Polyines outlines_66 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:21,494 - INFO - Finished computing patch[66] in 4.51s. - in file: main.py - line: 115
+2023-07-29 14:17:21,494 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:21,495 - INFO - Started computing patch[67]. - in file: main.py - line: 113
+2023-07-29 14:17:27,056 - INFO - Mesh mesh_67 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:27,122 - INFO - Array_list sensors_67 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:27,125 - INFO - Polyines outlines_67 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:27,140 - INFO - Finished computing patch[67] in 5.65s. - in file: main.py - line: 115
+2023-07-29 14:17:27,141 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:27,141 - INFO - Started computing patch[68]. - in file: main.py - line: 113
+2023-07-29 14:17:31,708 - INFO - Mesh mesh_68 saved in 1s - in file: save.py - line: 50
+2023-07-29 14:17:31,780 - INFO - Array_list sensors_68 saved in 0s - in file: save.py - line: 86
+2023-07-29 14:17:31,784 - INFO - Polyines outlines_68 saved in 0s - in file: save.py - line: 68
+2023-07-29 14:17:31,801 - INFO - Finished computing patch[68] in 4.66s. - in file: main.py - line: 115
+2023-07-29 14:17:31,801 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116
+2023-07-29 14:17:31,802 - INFO - Started computing patch[69]. - in file: main.py - line: 113

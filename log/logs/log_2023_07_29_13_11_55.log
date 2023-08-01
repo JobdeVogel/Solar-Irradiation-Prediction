@@ -1,0 +1,40 @@
+2023-07-29 13:11:59,811 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 13:12:13,790 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 13:12:14,113 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.0001 - in file: outlines.py - line: 126
+2023-07-29 13:12:14,240 - INFO - Started computing patch[0]. - in file: main.py - line: 114
+2023-07-29 13:12:15,170 - INFO - Polyines outlines_0 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:15,188 - INFO - Finished computing patch[0] in 0.95s. - in file: main.py - line: 116
+2023-07-29 13:12:15,188 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:15,188 - INFO - Started computing patch[1]. - in file: main.py - line: 114
+2023-07-29 13:12:15,894 - INFO - Polyines outlines_1 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:15,902 - INFO - Finished computing patch[1] in 0.71s. - in file: main.py - line: 116
+2023-07-29 13:12:15,902 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:15,902 - INFO - Started computing patch[2]. - in file: main.py - line: 114
+2023-07-29 13:12:16,624 - INFO - Polyines outlines_2 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:16,631 - INFO - Finished computing patch[2] in 0.73s. - in file: main.py - line: 116
+2023-07-29 13:12:16,631 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:16,633 - INFO - Started computing patch[3]. - in file: main.py - line: 114
+2023-07-29 13:12:17,515 - INFO - Polyines outlines_3 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:17,523 - INFO - Finished computing patch[3] in 0.89s. - in file: main.py - line: 116
+2023-07-29 13:12:17,524 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:17,524 - INFO - Started computing patch[4]. - in file: main.py - line: 114
+2023-07-29 13:12:18,240 - INFO - Polyines outlines_4 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:18,247 - INFO - Finished computing patch[4] in 0.72s. - in file: main.py - line: 116
+2023-07-29 13:12:18,247 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:18,248 - INFO - Started computing patch[5]. - in file: main.py - line: 114
+2023-07-29 13:12:18,944 - INFO - Polyines outlines_5 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:18,952 - INFO - Finished computing patch[5] in 0.7s. - in file: main.py - line: 116
+2023-07-29 13:12:18,952 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:18,952 - INFO - Started computing patch[6]. - in file: main.py - line: 114
+2023-07-29 13:12:19,969 - INFO - Polyines outlines_6 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:19,978 - INFO - Finished computing patch[6] in 1.03s. - in file: main.py - line: 116
+2023-07-29 13:12:19,979 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:19,979 - INFO - Started computing patch[7]. - in file: main.py - line: 114
+2023-07-29 13:12:20,968 - INFO - Polyines outlines_7 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:20,979 - INFO - Finished computing patch[7] in 1.0s. - in file: main.py - line: 116
+2023-07-29 13:12:20,979 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:20,980 - INFO - Started computing patch[8]. - in file: main.py - line: 114
+2023-07-29 13:12:22,318 - INFO - Polyines outlines_8 saved in 0s - in file: save.py - line: 69
+2023-07-29 13:12:22,331 - INFO - Finished computing patch[8] in 1.35s. - in file: main.py - line: 116
+2023-07-29 13:12:22,331 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 117
+2023-07-29 13:12:22,331 - INFO - Started computing patch[9]. - in file: main.py - line: 114

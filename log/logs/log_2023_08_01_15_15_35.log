@@ -1,0 +1,9 @@
+2023-08-01 15:15:39 INFO: Finished loading rhinoinside... - in file: main.py - line: 19
+2023-08-01 15:15:45 WARNING: Deleting all files in ['./data/geometry/', './data/irradiance/', './data/outlines/'] - in file: main.py - line: 47
+2023-08-01 15:15:45 WARNING: Deletion successfull! - in file: main.py - line: 53
+2023-08-01 15:15:57 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-08-01 15:15:57 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-08-01 15:15:57 INFO: Started computing patch[0]. - in file: main.py - line: 186
+2023-08-01 15:15:58 INFO: Started computing mesh for mesh[0] with FSI value of 0.23 - in file: main.py - line: 78
+2023-08-01 15:15:58 INFO: Generating walls for mesh patch[0] - in file: main.py - line: 79
+2023-08-01 15:16:03 WARNING: Point containment coincident - in file: meshing.py - line: 59

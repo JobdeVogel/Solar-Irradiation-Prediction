@@ -1,0 +1,5 @@
+2023-07-29 13:32:07,468 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
+2023-07-29 13:32:22,922 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-29 13:32:23,235 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.0001 - in file: outlines.py - line: 126
+2023-07-29 13:32:23,341 - INFO - Started computing patch[0]. - in file: main.py - line: 113
+2023-07-29 13:32:28,785 - WARNING - Point containment coincident - in file: meshing.py - line: 44

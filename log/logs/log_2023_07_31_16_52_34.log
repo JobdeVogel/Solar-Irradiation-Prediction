@@ -1,0 +1,4 @@
+2023-07-31 16:52:38 INFO: Finished loading rhinoinside... - in file: main.py - line: 12
+2023-07-31 16:52:42 WARNING: Deleted all files in ['./data/geometry', './data/outlines', './data/irradiance'] - in file: main.py - line: 58
+2023-07-31 16:52:53 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-07-31 16:52:53 INFO: Started computing patch[10]. - in file: main.py - line: 145
