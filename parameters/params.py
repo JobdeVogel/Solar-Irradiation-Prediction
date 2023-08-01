@@ -11,7 +11,7 @@ NUM_AUGMENTS = 4
 MIN_FSI = 0.2
 MIN_AREA = 10
 RUN_SIMULATION = True
-ALL_AUGMENTS = True
+ALL_AUGMENTS = False
 
 # Load 3DBAG using load_3d_bag.file.py
 _FACE_MERGE_TOLERANCE = 0.01

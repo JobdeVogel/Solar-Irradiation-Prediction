@@ -31,6 +31,7 @@ from transform import points, model
 from input_output import save, serialize
 from augment import augmentation
 from simulate import run
+from visualize.mesh import generate_colored_mesh, legend
 
 from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, RUN_SIMULATION, ALL_AUGMENTS
 
@@ -110,6 +111,8 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
 
         LOGGER.info(f'Finished preprocessing mesh for patch[{idx}] in {time.perf_counter() - t_preprocessing}s')
 
+        mesh_legend = legend()
+
         if all_augments:
             # Augment the joined mesh into different orientations
             augments = augmentation.augment([rough_ground_mesh, rough_roof_mesh, rough_wall_mesh], filtered_points, filtered_normals, NUM_AUGMENTS, detailed_meshes=[mesh_plane, roof_mesh, wall_mesh])
@@ -163,10 +166,16 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
                 # Add the irradiance values to the sensorpoint array
                 array = set_array_values(array, irradiance=irradiance)
             
+            mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
+            start = time.perf_counter()
+            colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
+            print(time.perf_counter() - start)
+            
             # Save the meshes to a json file
-            mesh_types = ['ground', 'roofs', 'walls']
-            meshes = [mesh_plane, roof_mesh, wall_mesh]
+            mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
+            meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
             save.save_mesh_to_json(meshes, mesh_types, f'mesh_{idx}_base', GEOMETRY_PATH)
+            
             
             # Save the sensorpoints to a json file
             save.save_array_as_list(array, f'sensors_{idx}_base', IRRADIANCE_PATH)
@@ -219,7 +228,7 @@ if __name__ == '__main__':
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH]
-    delete_dataset(folder_paths, secure=True)
+    delete_dataset(folder_paths, secure=False)
     
     # Run the sample generation
     main(filename, start_idx)

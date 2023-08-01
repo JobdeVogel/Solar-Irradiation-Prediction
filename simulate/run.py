@@ -33,7 +33,7 @@ def annual_irradiance(model, wea, sim_arguments, identifier='custom_name', displ
     recipe.input_value_by_name('radiance-parameters', sim_arguments)
     
     # Run the simulation    
-    project_folder = recipe.run(settings=WORKERS, radiance_check=True)
+    project_folder = recipe.run(settings=WORKERS, radiance_check=True, silent=True)
 
     # Retrieve the results
     irradiance = recipe.output_value_by_name('cumulative-radiation', project_folder)[0]
