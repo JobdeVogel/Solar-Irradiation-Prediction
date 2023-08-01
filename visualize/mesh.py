@@ -1,7 +1,6 @@
 import Rhino.Geometry as rg
 import System
-import numpy as np
-# import open3d
+import time
 
 from ladybug.graphic import GraphicContainer
 from ladybug_rhino.togeometry import to_mesh3d
@@ -26,12 +25,13 @@ def legend(colors=[(134, 144, 252), (247, 228, 10), (189, 88, 51), (212, 49, 0)]
 def generate_colored_mesh(mesh, values, legend_par, legend_title='(kWh/m2)', title='Solar Irradiance Simulation'):
     # generate Ladybug objects
     lb_mesh = to_mesh3d(mesh)
+    
     graphic = GraphicContainer(values, lb_mesh.min, lb_mesh.max, legend_par)
 
     # generate titles
     graphic.legend_parameters.title = legend_title
 
-    # draw rhino objects
+    # draw rhino objects # ! Most time consuming!
     lb_mesh.colors = graphic.value_colors
     mesh = from_mesh3d(lb_mesh)
     

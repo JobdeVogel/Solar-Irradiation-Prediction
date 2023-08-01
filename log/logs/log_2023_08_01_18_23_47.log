@@ -1,0 +1,50 @@
+2023-08-01 18:23:52 INFO: Finished loading rhinoinside... - in file: main.py - line: 19
+2023-08-01 18:23:56 WARNING: Deleting all files in ['./data/geometry/', './data/irradiance/', './data/outlines/'] - in file: main.py - line: 49
+2023-08-01 18:23:56 WARNING: Deletion successfull! - in file: main.py - line: 55
+2023-08-01 18:24:07 INFO: Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
+2023-08-01 18:24:08 WARNING: Mesh 713 does not have outline with height lower than tolerance 0.01 - in file: outlines.py - line: 128
+2023-08-01 18:24:08 INFO: Started computing patch[0]. - in file: main.py - line: 216
+2023-08-01 18:24:09 INFO: Started preprocessing mesh for patch[0] with FSI value of 0.23 - in file: main.py - line: 81
+2023-08-01 18:24:09 INFO: Generating walls for mesh patch[0] - in file: main.py - line: 82
+2023-08-01 18:24:14 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 18:24:25 INFO: Polyines outlines_0 saved in 0s - in file: save.py - line: 68
+2023-08-01 18:24:25 INFO: Finished preprocessing mesh for patch[0] in 16.0256356s - in file: main.py - line: 112
+2023-08-01 18:24:27 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 18:24:55 INFO: Computed 25008 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 18:25:13 INFO: Mesh mesh_0_base saved in 2s - in file: save.py - line: 50
+2023-08-01 18:25:14 INFO: Array_list sensors_0_base saved in 0s - in file: save.py - line: 86
+2023-08-01 18:25:14 INFO: Finished computing patch[0] in 65.57s. - in file: main.py - line: 221
+2023-08-01 18:25:14 INFO: Started computing patch[1]. - in file: main.py - line: 216
+2023-08-01 18:25:14 INFO: Started preprocessing mesh for patch[1] with FSI value of 0.21 - in file: main.py - line: 81
+2023-08-01 18:25:14 INFO: Generating walls for mesh patch[1] - in file: main.py - line: 82
+2023-08-01 18:25:17 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 18:25:17 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 18:25:18 WARNING: Point containment coincident - in file: meshing.py - line: 59
+2023-08-01 18:25:32 INFO: Polyines outlines_1 saved in 0s - in file: save.py - line: 68
+2023-08-01 18:25:32 INFO: Finished preprocessing mesh for patch[1] in 17.3168426s - in file: main.py - line: 112
+2023-08-01 18:25:34 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44
+2023-08-01 18:26:06 INFO: Computed 23978 solar irradiance values for model custom_name - in file: run.py - line: 47
+2023-08-01 18:26:23 INFO: Mesh mesh_1_base saved in 3s - in file: save.py - line: 50
+2023-08-01 18:26:23 INFO: Array_list sensors_1_base saved in 0s - in file: save.py - line: 86
+2023-08-01 18:26:23 INFO: Finished computing patch[1] in 69.32s. - in file: main.py - line: 221
+2023-08-01 18:26:23 INFO: Started computing patch[2]. - in file: main.py - line: 216
+2023-08-01 18:26:24 INFO: FSI_score 0.16 of sample 2 not high enough to continue generating sample. - in file: main.py - line: 184
+2023-08-01 18:26:24 INFO: Finished computing patch[2] in 0.99s. - in file: main.py - line: 221
+2023-08-01 18:26:24 INFO: Started computing patch[3]. - in file: main.py - line: 216
+2023-08-01 18:26:25 INFO: FSI_score 0.12 of sample 3 not high enough to continue generating sample. - in file: main.py - line: 184
+2023-08-01 18:26:25 INFO: Finished computing patch[3] in 0.86s. - in file: main.py - line: 221
+2023-08-01 18:26:25 INFO: Started computing patch[4]. - in file: main.py - line: 216
+2023-08-01 18:26:26 INFO: FSI_score 0.12 of sample 4 not high enough to continue generating sample. - in file: main.py - line: 184
+2023-08-01 18:26:26 INFO: Finished computing patch[4] in 0.92s. - in file: main.py - line: 221
+2023-08-01 18:26:26 INFO: Started computing patch[5]. - in file: main.py - line: 216
+2023-08-01 18:26:27 INFO: FSI_score 0.16 of sample 5 not high enough to continue generating sample. - in file: main.py - line: 184
+2023-08-01 18:26:27 INFO: Finished computing patch[5] in 0.85s. - in file: main.py - line: 221
+2023-08-01 18:26:27 INFO: Started computing patch[6]. - in file: main.py - line: 216
+2023-08-01 18:26:27 INFO: FSI_score 0.18 of sample 6 not high enough to continue generating sample. - in file: main.py - line: 184
+2023-08-01 18:26:27 INFO: Finished computing patch[6] in 0.87s. - in file: main.py - line: 221
+2023-08-01 18:26:27 INFO: Started computing patch[7]. - in file: main.py - line: 216
+2023-08-01 18:26:28 INFO: Started preprocessing mesh for patch[7] with FSI value of 0.22 - in file: main.py - line: 81
+2023-08-01 18:26:28 INFO: Generating walls for mesh patch[7] - in file: main.py - line: 82
+2023-08-01 18:26:41 INFO: Polyines outlines_7 saved in 0s - in file: save.py - line: 68
+2023-08-01 18:26:41 INFO: Finished preprocessing mesh for patch[7] in 12.849747799999989s - in file: main.py - line: 112
+2023-08-01 18:26:43 INFO: Started solar irradiance simulation with arguments -ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 - in file: run.py - line: 44

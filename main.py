@@ -110,6 +110,7 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
         save.save_outlines_to_json(building_outlines, f'outlines_{idx}', OUTLINES_PATH)
 
         LOGGER.info(f'Finished preprocessing mesh for patch[{idx}] in {time.perf_counter() - t_preprocessing}s')
+        print('\n')
 
         mesh_legend = legend()
 
@@ -139,9 +140,12 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
                 
                     array = set_array_values(array, points=filtered_points, normals=filtered_normals, irradiance=irradiance, pointmap=pointmap)
                 
+                mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
+                colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
+                
                 # Save the meshes to a json file
-                mesh_types = ['ground', 'roofs', 'walls']
-                meshes = [mesh_plane, roof_mesh, wall_mesh]
+                mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
+                meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
                 
                 if i == 0:
                     augment_idx = 'base'
@@ -167,15 +171,12 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
                 array = set_array_values(array, irradiance=irradiance)
             
             mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
-            start = time.perf_counter()
             colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
-            print(time.perf_counter() - start)
             
             # Save the meshes to a json file
             mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
             meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
             save.save_mesh_to_json(meshes, mesh_types, f'mesh_{idx}_base', GEOMETRY_PATH)
-            
             
             # Save the sensorpoints to a json file
             save.save_array_as_list(array, f'sensors_{idx}_base', IRRADIANCE_PATH)
