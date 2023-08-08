@@ -23,6 +23,7 @@ import os
 import numpy as np
 import random
 import sys
+import argparse
 
 from helpers.mesh import join_meshes
 from helpers.array import set_array_values
@@ -33,7 +34,28 @@ from augment import augmentation
 from simulate import run
 from visualize.mesh import generate_colored_mesh, legend
 
-from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, RUN_SIMULATION, ALL_AUGMENTS
+from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, RUN_SIMULATION, ALL_AUGMENTS, VISUALIZE_MESH
+
+parser = argparse.ArgumentParser(prog='name', description='random info', epilog='random bottom info')
+parser.add_argument('-b', '--BAG_FILE_PATH', type=str, nargs='?', default=BAG_FILE_PATH, help='')
+parser.add_argument('-i', '--IRRADIANCE_PATH', type=str, nargs='?', default=IRRADIANCE_PATH, help='')
+parser.add_argument('-g', '--GEOMETRY_PATH', type=str, nargs='?', default=GEOMETRY_PATH, help='')
+parser.add_argument('-o', '--OUTLINES_PATH', type=str, nargs='?', default=OUTLINES_PATH, help='')
+parser.add_argument('-s', '--SIZE', nargs='?', type=float, default=SIZE, help='')
+parser.add_argument('-gs', '--GRID_SIZE', type=float, nargs='?', default=GRID_SIZE, help='')
+parser.add_argument('-mc', '--MIN_COVERAGE', type=float, nargs='?', default=MIN_COVERAGE, help='')
+parser.add_argument('-of', '--OFFSET', type=float, nargs='?', default=OFFSET, help='')
+parser.add_argument('-na', '--NUM_AUGMENTS', type=int, nargs='?', default=NUM_AUGMENTS, help='')
+parser.add_argument('-ma', '--MIN_AREA', type=float, nargs='?', default=MIN_AREA, help='')
+parser.add_argument('-w', '--WEA', type=str, nargs='?', default=WEA, help='')
+parser.add_argument('-sa', '--SIMULATION_ARGUMENTS', type=str, nargs='?', default=SIMULATION_ARGUMENTS, help='')
+parser.add_argument('-f', '--MIN_FSI', type=float, nargs='?', default=MIN_FSI, help='')
+parser.add_argument('-r', '--RUN_SIMULATION', default=RUN_SIMULATION, action='store_true', help='')
+parser.add_argument('-aa', '--ALL_AUGMENTS', default=ALL_AUGMENTS, action='store_true', help='')
+parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='store_true', help='')
+
+args= parser.parse_args()
+BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, RUN_SIMULATION, ALL_AUGMENTS, VISUALIZE_MESH = vars(args).values()
 
 def delete_dataset(folder_paths, secure=True):
     """Delete all files in specified directories
@@ -55,7 +77,7 @@ def delete_dataset(folder_paths, secure=True):
     LOGGER.warning(f'Deletion successfull!')
     return
 
-def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance_simulation=False, all_augments=ALL_AUGMENTS):
+def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance_simulation=False, all_augments=ALL_AUGMENTS, visualize_mesh=VISUALIZE_MESH):
     """Generate a dataset sample
 
     Args:
@@ -109,8 +131,7 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
         # Save the polylines to a json file
         save.save_outlines_to_json(building_outlines, f'outlines_{idx}', OUTLINES_PATH)
 
-        LOGGER.info(f'Finished preprocessing mesh for patch[{idx}] in {time.perf_counter() - t_preprocessing}s')
-        print('\n')
+        LOGGER.info(f'Finished preprocessing mesh for patch[{idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
 
         mesh_legend = legend()
 
@@ -140,12 +161,18 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
                 
                     array = set_array_values(array, points=filtered_points, normals=filtered_normals, irradiance=irradiance, pointmap=pointmap)
                 
-                mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
-                colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
+                # Generate a colored mesh that can be visualized from Ladybug Grasshopper
+                if visualize_mesh:
+                    mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
+                    colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
                 
-                # Save the meshes to a json file
-                mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
-                meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
+                    # Save the meshes to a json file
+                    mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
+                    meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
+                else:
+                    # Save the meshes to a json file
+                    mesh_types = ['ground', 'roofs', 'walls']
+                    meshes = [mesh_plane, roof_mesh, wall_mesh]
                 
                 if i == 0:
                     augment_idx = 'base'
@@ -170,12 +197,18 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
                 # Add the irradiance values to the sensorpoint array
                 array = set_array_values(array, irradiance=irradiance)
             
-            mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
-            colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
-            
+            # Generate a colored mesh that can be visualized from Ladybug Grasshopper
+            if visualize_mesh:
+                mesh = join_meshes([mesh_plane, roof_mesh, wall_mesh])
+                colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
+                
+                mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
+                meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
+            else:
+                mesh_types = ['ground', 'roofs', 'walls']
+                meshes = [mesh_plane, roof_mesh, wall_mesh]
+
             # Save the meshes to a json file
-            mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
-            meshes = [mesh_plane, roof_mesh, wall_mesh, colored_mesh]
             save.save_mesh_to_json(meshes, mesh_types, f'mesh_{idx}_base', GEOMETRY_PATH)
             
             # Save the sensorpoints to a json file
@@ -183,6 +216,8 @@ def task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance
 
     else:
         LOGGER.info(f'FSI_score {round(FSI_score, 2)} of sample {idx} not high enough to continue generating sample.')
+        
+    print('\n')
     
 def main(filename, start_idx, run_irradiance_simulation=RUN_SIMULATION):
     """Generate a sample, and optionally simulate solar irradiance.
@@ -220,12 +255,11 @@ def main(filename, start_idx, run_irradiance_simulation=RUN_SIMULATION):
         task(patch_outlines, all_building_outlines, all_heights, idx, run_irradiance_simulation=run_irradiance_simulation)
         
         LOGGER.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
-        print('\n')
 
 if __name__ == '__main__':
     random.seed(0)
     filename = BAG_FILE_PATH
-    start_idx = 0
+    start_idx = 23
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH]
