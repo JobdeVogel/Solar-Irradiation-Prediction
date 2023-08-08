@@ -218,14 +218,30 @@ def cut_polyline(ground_outline, building_outline, tolerance=_SPLIT_TOLERANCE, m
         LOGGER.warning("cut_polyline() was not able to extract polylines")
     
     # ! NOT IMPLEMENTED YET
-    # valid_polylines = []
-    # for polyline in polylines:
-    #     area = rg.AreaMassProperties.Compute(polyline.ToNurbsCurve()).Area
+    valid_polylines = []
+    for polyline in polylines:
+        template = polyline.Duplicate()
         
-    #     if area > min_area:
-    #         valid_polylines.append(polyline)
+        try:
+            if polyline.IsClosed:
+                area = rg.AreaMassProperties.Compute(template.ToNurbsCurve()).Area       
             
-    return polylines
+                if area > min_area:
+                    valid_polylines.append(polyline)
+            else:
+                points = [point for point in polyline]
+                points += [points[0]]
+                template = rg.Polyline(System.Array[rg.Point3d](points))
+                
+                area = rg.AreaMassProperties.Compute(template.ToNurbsCurve()).Area  
+                
+                if area > min_area:
+                    valid_polylines.append(polyline)
+        except AttributeError:
+            # Area computation returns None
+            valid_polylines.append(polyline)
+                
+    return valid_polylines
 
 # Translate objects to origin
 def translate(outline, ground_outline, height=0):
