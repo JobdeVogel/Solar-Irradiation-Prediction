@@ -2,68 +2,179 @@ from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import System
 import math
+import random
 import sys
-from parameters.params import _REDUCE_SEGMENTS_TOLERANCE, _MESH_SPLITTER_BBOX_HEIGHT, _ANGLE_TOLERANCE_POSTP_MESH, _DIAGONAL_LENGTH_RATIO_POSTP_MESH
+from parameters.params import MAX_CONTAINMENT_ITERATIONS, _REDUCE_SEGMENTS_TOLERANCE, _MESH_SPLITTER_BBOX_HEIGHT, _ANGLE_TOLERANCE_POSTP_MESH, _DIAGONAL_LENGTH_RATIO_POSTP_MESH
 #import cProfile
   
 def postprocess_mesh(mesh, check=False):
+    """Postprocess a mesh such that there are no invalid faces or vertices
+
+    Args:
+        mesh (rg.Mesh): mesh
+        check (bool, optional): Check if the mesh is valid. Defaults to False.
+
+    Returns:
+        mesh (rg.Mesh): postprocessd mesh
+    """
+    
+    # Convert triangle faces to quad
     mesh.Faces.ConvertTrianglesToQuads(_ANGLE_TOLERANCE_POSTP_MESH, _DIAGONAL_LENGTH_RATIO_POSTP_MESH)
-        
+    
+    # Get vertices and faces    
     vertices = mesh.Vertices
     faces = mesh.Faces
     
+    # Initialize a rebuild mesh
     rebuild_mesh = rg.Mesh()
 
+    # Add the mesh vertices and faces to the rebuild mesh
     rebuild_mesh.Vertices.AddVertices(vertices)
     rebuild_mesh.Faces.AddFaces(faces)
     
+    # Check if the mesh is valid
     if check:
         print(f'Adding vertices and faces: {rebuild_mesh.IsValidWithLog()}')
     
+    # Compute the normals
     rebuild_mesh.Normals.ComputeNormals()
     
+    # Check if the mesh is valid
     if check:
         print(f'Computing normals: {rebuild_mesh.IsValidWithLog()}')
     
+    # Transform the mesh to a compact shape
     rebuild_mesh.Compact()
     
+    # Check if the mesh is valid
     if check:
         print(f'Compact: {rebuild_mesh.IsValidWithLog()}')
         
+    # Cull degenerate faces
     rebuild_mesh.Faces.CullDegenerateFaces()
     
+    # Check if the mesh is valid
     if check:
         print(f'Cull degenerate faces: {rebuild_mesh.IsValidWithLog()}')
-        sys.exit()
     
     return rebuild_mesh
 
-def is_inside(mesh, polylines):
-    # TOLERANCE PROBLEMS!!
-    checkpoint = None
+def get_random_face_center(mesh):
+    """Extract a random face center from a mesh
 
-    vertices = mesh.Faces.GetFaceVertices(0)[1:]
+    Args:
+        mesh (rg.Mesh): mesh
 
+    Returns:
+        checkpoint (rg.Point3d): random face center
+    """
+    
+    # Random index
+    idx = random.randint(0, len(mesh.Faces))
+    
+    # Get the vertices from the face
+    vertices = mesh.Faces.GetFaceVertices(idx)[1:]
+    
+    # Compute the center of the face
     center_x = sum(p.X for p in vertices) / len(vertices)
     center_y = sum(p.Y for p in vertices) / len(vertices)
     center_z = sum(p.Z for p in vertices) / len(vertices)
 
-    checkpoint = rg.Point3d(center_x, center_y, center_z)    
+    # Generate a point
+    checkpoint = rg.Point3d(center_x, center_y, center_z)   
     
-    inside = False
-    for polyline in polylines:
-        if polyline.Contains(checkpoint, rg.Plane.WorldXY, tolerance=1e-8) == rg.PointContainment.Inside:
-            inside = True
-        elif polyline.Contains(checkpoint, rg.Plane.WorldXY, tolerance=1e-8) == rg.PointContainment.Coincident:
-            inside = True
-            LOGGER.warning('Point containment coincident')
+    return checkpoint
+    
+def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS):
+    """Check if a planar mesh is inside any curve in a set of curves. This procedure works by taking a
+    mesh face center and then checking if this center is inside the curve. In some special
+    cases, this point intersects with the curve. In that case the multiple random faces centers
+    are taken until a point does not intersect, or the max containment iterations is reached.
+    If it still intersects, it is assumed that the mesh is inside the curve.
 
+    Args:
+        mesh (rg.Mesh): planar mesh
+        curves (list(rg.NurbsCurve)): list of planar curves
+        max_iterations (int, optional): Number of maximum containment iterations. Defaults to MAX_CONTAINMENT_ITERATIONS.
+
+    Returns:
+        inside (bool): indicates if inside one of the cuves
+    """
+    
+    # Generate an intial checkpoint
+    checkpoint = get_random_face_center(mesh)
+        
+    # Bool indicating if mesh is inside the curve
+    inside = False
+    
+    # Iterate over the curves
+    for curve in curves:
+        # Iterate over the max iterations
+        for i in range(max_iterations):
+            # Check if the curve contains the checkpoint
+            
+            if curve.Contains(checkpoint, rg.Plane.WorldXY, tolerance=1e-8) == rg.PointContainment.Inside:
+                inside = True
+                break
+            elif curve.Contains(checkpoint, rg.Plane.WorldXY, tolerance=1e-8) == rg.PointContainment.Coincident:
+                inside = True
+                
+                # Generate a new checkpoint
+                checkpoint = get_random_face_center(mesh)
+                
+                if i == max_iterations - 1:
+                     LOGGER.warning('Point containment coincident')
     return inside
 
-def triangulate_quad(quad_mesh):
-    tri_mesh = quad_mesh.Duplicate()
-    tri_mesh.Faces.ConvertQuadsToTriangles()
-    return tri_mesh
+def project_outlines_to_world_xy(outlines):
+    """Project polylines to the world XY plane, returns both a polyline and curves format
+
+    Args:
+        outlines (list[list[rg.Polyline]]): building outulines as polylines
+        
+    Returns:
+        polylines (list[list[rg.Polyline]]): projected polylines
+        curves (list[rg.NurbsCurve]): projected curves    
+    """
+    
+    # Store the projected polylines and curves as lists
+    polylines = []
+    curves = []
+    
+    # Project the building outlines on the mesh plane
+    for outline_set in outlines:
+        # Store projections per building
+        temp_polylines = []
+        temp_curves = []
+        
+        # Iterate over the polylines used in the building outlines
+        for polyline in outline_set:
+            # Reduce the number of segments in the polyline
+            polyline.ReduceSegments(_REDUCE_SEGMENTS_TOLERANCE)
+            
+            # Convert a duplicate polyline to a nurbscurve
+            curve = polyline.Duplicate().ToNurbsCurve()
+            
+            # Project the curve on the mesh plane
+            projected_curve = curve.ProjectToPlane(curve, rg.Plane.WorldXY)
+            
+            # Generate a polyline from the curve
+            projected_polyline = projected_curve.TryGetPolyline()[1]
+            
+            # Append the building polylines and curves to all polylines and curves
+            temp_polylines.append(projected_polyline)
+            temp_curves.append(projected_curve)
+        
+        polylines.append(temp_polylines)
+        curves.append(temp_curves)    
+        
+    return polylines, curves
+
+def compute_area(ground, roofs):
+    ground_area = rg.AreaMassProperties.Compute(ground).Area
+    building_area = sum([rg.AreaMassProperties.Compute(building).Area for building in roofs])
+    
+    return ground_area, building_area
 
 def remesh_rough(mesh):
     rough_mesh = mesh.Duplicate()
@@ -72,260 +183,406 @@ def remesh_rough(mesh):
 
     return rough_mesh
 
-def generate_horizontal(ground_outline, building_outlines, courtyard_outlines, heights, grid_size):
-    # Generate plane parameters
-    box_interval = rg.Box(ground_outline.BoundingBox)
-    plane_width = rg.Interval(box_interval.X[0], box_interval.X[1])
-    plane_height = rg.Interval(box_interval.Y[0], box_interval.Y[1])
-    plane = rg.Plane.WorldXY
-    
-    copy_building_outlines = []
-    copy_courtyard_outlines = []
-    for buildings, courtyards in zip(building_outlines, courtyard_outlines):
-        temp = []
-        for polyline in buildings:
-            temp.append(polyline.Duplicate())
-        copy_building_outlines.append(temp)
-        
-        temp = []
-        for polyline in courtyards:
-            temp.append(polyline.Duplicate())
-        copy_courtyard_outlines.append(temp)
-            
-    
-    width_divisions = System.Int32(int(plane_width.Length / grid_size))
-    length_divisions = System.Int32(int(plane_height.Length / grid_size))
-    
-    # Generate the mesh plane
-    mesh_plane = rg.Mesh.CreateFromPlane(plane, plane_width, plane_height, width_divisions, length_divisions)   
-    
-    # Project the building outlines on the mesh plane
-    for i, outlines in enumerate(building_outlines):
-        for j, polyline in enumerate(outlines):
-            curve = polyline.ToNurbsCurve()
-            
-            projected_curve = curve.ProjectToPlane(curve, rg.Plane.WorldXY)
-            
-            # tolerance = System.Double(0.001)
-            # projected_curve = rg.Curve.ProjectToMesh(curve, mesh_plane, rg.Vector3d(0,0,-1), tolerance)            
-            
-            building_outlines[i][j] = projected_curve
-    
-    # Project the courtyard outlines on the mesh plane
-    for i, outlines in enumerate(courtyard_outlines):
-        for j, polyline in enumerate(outlines):
-            curve = polyline.ToNurbsCurve()
-            # projected_curve = rg.Curve.ProjectToMesh(curve, mesh_plane, rg.Vector3d(0,0,-1), 0.001)
-            
-            projected_curve = curve.ProjectToPlane(curve, rg.Plane.WorldXY)
-            
-            courtyard_outlines[i][j] = projected_curve
-    
-    # Generate the splitters from the inner and outer polylines
-    params = rg.MeshingParameters.QualityRenderMesh
-    bbox = rg.BoundingBox(0,0,-_MESH_SPLITTER_BBOX_HEIGHT,100,100,_MESH_SPLITTER_BBOX_HEIGHT)
-    
-    splitters = []
-    for outlines in building_outlines:
-        temp_splitters = []
-        
-        for curve in outlines:
-            template = curve.Duplicate()
-                   
-            template.Translate(0,0,-1)
-            polyline = template.TryGetPolyline()[1]          
-            
-            polyline.ReduceSegments(_REDUCE_SEGMENTS_TOLERANCE)
-            splitter = rg.Mesh.CreateFromCurveExtrusion(polyline.ToNurbsCurve(), rg.Vector3d(0,0,2), params, bbox)
-            temp_splitters.append(splitter)
-        
-        splitters.append(temp_splitters)
-    
-    roofs = []
-    
-    # Split the mesh plane
-    for splitter_set, outlines, courtyards in zip(splitters, building_outlines, courtyard_outlines):
-        temp_roofs = rg.Mesh()
-        
-        # For each building outline
-        for splitter, outline in zip(splitter_set, outlines):
-            elements = mesh_plane.Split(splitter)
-            elements = [postprocess_mesh(element) for element in elements]
-            
-            if len(elements) > 1:        
-                relations = [is_inside(element, [outline]) for element in elements]               
-                
-                # For each splitted element
-                roof = rg.Mesh()
-                ground_elements = rg.Mesh()
-                for element, relation in zip(elements, relations):
-                    if relation:
-                        roof.Append(element)
-                    else:
-                        ground_elements.Append(element)
-                
-                temp_roofs.Append(roof)
-                
-                mesh_plane = ground_elements
-
-        if len(courtyards) > 0:
-            for polyline in courtyards:
-                splitter = rg.Mesh.CreateFromCurveExtrusion(polyline.ToNurbsCurve(), rg.Vector3d(0,0,2), params, bbox)
-                
-                elements = temp_roofs.Split(splitter)
-
-                if len(elements) > 1:        
-                    relations = [is_inside(element, [polyline]) for element in elements]
-
-                    # For each splitted element
-                    roof = rg.Mesh()
-                    courtyard_elements = rg.Mesh()
-                    for element, relation in zip(elements, relations):
-                        if relation:
-                            courtyard_elements.Append(element)
-                        else:
-                            roof.Append(element)
-                    
-                    mesh_plane.Append(courtyard_elements)
-                    temp_roofs = roof
-                        
-        roofs.append(temp_roofs)
-    
-        # translated_mesh = rg.Mesh()
-        # for vertex in mesh_plane.Vertices:
-        #     translated_mesh.Vertices.Add(vertex.X, vertex.Y, 0.0)
-        
-        # translated_mesh.Faces.AddFaces(mesh_plane.Faces)
-        
-    ground = postprocess_mesh(mesh_plane)
-               
-    for i, (mesh, height) in enumerate(zip(roofs, heights)):
-        translated_mesh = mesh.Duplicate()
-        
-        transform = rg.Transform.Translation(System.Double(0.0),System.Double(0.0),System.Double(height))
-        translated_mesh.Transform(transform)
-        
-        roofs[i] = postprocess_mesh(translated_mesh)
-    
-    return ground, roofs
-
-def compute_area(ground, roofs):
-    ground_area = rg.AreaMassProperties.Compute(ground).Area
-    building_area = sum([rg.AreaMassProperties.Compute(building).Area for building in roofs])
-    
-    return ground_area, building_area
-
-
-
-
 def polyline_isclockwise(polyline):
+    """Check if the vertices of a polyline are clockwise
+
+    Args:
+        polyline (rg.Polyline): polyline
+
+    Returns:
+        bool: True if clockwise
+    """
+    
+    # Connvert to duplicate nurbscurve to avoid in-place changes
     curve = polyline.Duplicate().ToNurbsCurve()
     return curve.ClosedCurveOrientation() == rg.CurveOrientation.Clockwise
 
-def flip_polyline(polyline):
-    flipped_polyline = rg.Polyline()
-    
-    for point in polyline.ToArray()[::-1]:
-        flipped_polyline.Add(point.X, point.Y, point.Z)
-    
-    return flipped_polyline
-
 def mesh_extrude_polyline(polyline, height, grid_size):
+    """Extrude a polyline to a mesh
+
+    Args:
+        polyline (rg.Polyline): polyline
+        height (float): height of the building
+        grid_size (float): approximate size of the mesh faces
+
+    Returns:
+        meshh (rg.Mesh): wall mesh
+    """
     vertices = []
     faces = []
     
+    # Reduce the number of segments to a minimum
     polyline.ReduceSegments(_REDUCE_SEGMENTS_TOLERANCE)
+    
+    # Extract the segments to a list
     segments = polyline.GetSegments()
+    
+    # Get the lengths of each segment
     lengths = [segment.Length for segment in segments]
     
+    # Compute how many faces each segment should have in horizonal direction
     num_segments = [int(math.ceil(length / grid_size)) for length in lengths]
     
+    # Compute how many faces each segment should have in vertical directioin
     levels = int(math.ceil(height / grid_size))
+    
+    # Total number of faces in horizontal directtion
     num_p = sum(num_segments)
     
+    # Vertices on the ground level
     base_vertices = []
+    
+    # Vertices all together
     vertices = []
-    faces = []
     
-    rough_mesh = rg.Mesh()
-    
+    # Iterate over the segments
     for segment, num_segment in zip(segments, num_segments):
         
+        # Iterate over the number of segments
         for i in range(num_segment):
             parameter = i * (1 / num_segment)
             
+            # Add the vertex to the base vertices
             base_vertices.append(segment.PointAt(parameter))
     
+    # Iterate over the vertical levels
     for j in range(levels + 1):
         parameter = j * (height / levels)
         
+        # Iterate over the base vertices
         for vertex in base_vertices:
+            # Add a base vertex at each level
             vertices.append(rg.Point3d(vertex.X, vertex.Y, vertex.Z + parameter))
     
+    # Generate the mesh faces
     faces = System.Array[rg.MeshFace]([
         rg.MeshFace(i + j * num_p, i + (j + 1) * num_p, (i + 1) % num_p + (j + 1) * num_p, (i + 1) % num_p + j * num_p)
         for j in range(levels)
         for i in range(num_p)
     ])
     
+    # Initialize a new mesh
     mesh = rg.Mesh()
-    for vertex in vertices:
-        mesh.Vertices.Add(vertex)
     
+    # Add the vertices and faces to the mesh
+    mesh.Vertices.AddVertices(System.Array[rg.Point3d](vertices))
     mesh.Faces.AddFaces(faces)
     
     return mesh
 
 def generate_vertical(building_outlines, courtyard_outlines, heights, grid_size):
-    meshes = []
-    outlines = []
-    wall_heights = []
+    """_summary_
 
+    Args:
+        building_outlines (list[list[rg.Polyline]]): List of building outlines
+        courtyard_outlines (list[list[rg.Polyline]]): Inner courtyard polylines of the buildings
+        heights (list[float]): heigths of the buildings
+        grid_size (float): grid size
+
+    Returns:
+        meshes (list[rg.Mesh]): walls for the buildings based on the outlines
+        outlines (list[rg.Polyline]): outlines of the buildings, possibly reversed direction
+    """
+    
+    # Store the outputs in lists
+    meshes = []
+
+    # Iterate over the buildings
     for building, courtyard, height in zip(building_outlines, courtyard_outlines, heights):
+        # Store courtyard and building walls in one temp mesh
         temp_mesh = rg.Mesh()
         
+        # Reverse direction of outlines if necessary
         for outline in building:
+            # Reverse direction if necessary
             if not polyline_isclockwise(outline):
                 outline.Reverse()
             
+            # Extrude the polyline in z direction based on height
             mesh = mesh_extrude_polyline(outline, height, grid_size)
+            
+            # Append the results to list variables
             temp_mesh.Append(mesh)
-            outlines.append(outline)
-            wall_heights.append(height)
         
+        # Iterate over courtyards
         for outline in courtyard:
+            # Reverse directtion if necessary
             if polyline_isclockwise(outline):
                 outline.Reverse()
             
+            # Appeend the results to list variables
             mesh = mesh_extrude_polyline(outline, height, grid_size)
             temp_mesh.Append(mesh)
-            outlines.append(outline)
-            wall_heights.append(height)
         
+        # Append the building walls processed, as a single mesh        
         meshes.append(postprocess_mesh(temp_mesh))
 
     LOGGER.debug(f'Generated {len(meshes)} meshes and outlines.')
-    return meshes, outlines, wall_heights
+    return meshes
 
-def triangulate_quad(quad_mesh):
-    tri_mesh = quad_mesh.Duplicate()
-    tri_mesh.Faces.ConvertQuadsToTriangles()
-    return tri_mesh
+def generate_horizontal(ground_outline, building_curves, courtyard_curves, heights, grid_size, size):
+    """Generate ground and roofs by splitting a mesh plane
+
+    Args:
+        ground_outline (rg.Rectangle3d): ground patch outline
+        building_outlines (list[list[rg.NurbsCurve]]): outlines for buildings
+        courtyard_outlines (list[list[rg.NurbsCurve]]): outlines for courtyards
+        heights (list[float]): building heights
+        grid_size (float): grid size
+
+    Returns:
+        ground (rg.Mesh): 2D mesh for ground
+        roofs (list[rg.Mesh]): roof meshes
+        valid (list[bool]): indicates if a roof mesh is valid
+    """
+    
+    # Generate plane parameters
+    box_interval = rg.Box(ground_outline.BoundingBox)
+    plane_width = rg.Interval(box_interval.X[0], box_interval.X[1])
+    plane_height = rg.Interval(box_interval.Y[0], box_interval.Y[1])
+    plane = rg.Plane.WorldXY
+
+    # Compute the number of face divisions for the mesh plane    
+    width_divisions = System.Int32(int(plane_width.Length / grid_size))
+    length_divisions = System.Int32(int(plane_height.Length / grid_size))
+    
+    # Generate the mesh plane
+    mesh_plane = rg.Mesh.CreateFromPlane(plane, plane_width, plane_height, width_divisions, length_divisions)   
+    
+    # Generate the splitters from the inner and outer polylines
+    params = rg.MeshingParameters.QualityRenderMesh
+    bbox = rg.BoundingBox(0,0,-_MESH_SPLITTER_BBOX_HEIGHT,size,size,_MESH_SPLITTER_BBOX_HEIGHT)
+    
+    # Store the splitters in a list
+    splitters = []
+    
+    # Iterate over the buildings
+    for outline_set in building_curves:
+        # Store the splitters per building
+        temp_splitters = []
+        
+        # Iterate over the outlines
+        for curve in outline_set:
+            # Create a duplicate curve
+            temp_curve = curve.Duplicate()
+            
+            # Translate the curve to z = -1
+            temp_curve.Translate(0,0,-1)
+            
+            # Generate a mesh splitter (extra unit on -z side)
+            splitter = rg.Mesh.CreateFromCurveExtrusion(temp_curve, rg.Vector3d(0,0,1), params, bbox)
+            
+            # Add the splitter to all splitters for this specific building
+            temp_splitters.append(splitter)
+        
+        # Add the building splitters to all building splitters
+        splitters.append(temp_splitters)
+    
+    # Store the splitters in a list
+    roofs = []
+    
+    # Iterate over the splitters and buildings
+    for splitter_set, building_curve_set, courtyard_curve_set in zip(splitters, building_curves, courtyard_curves):
+        # Store the roof meshes for a single building in a temp mesh
+        temp_roofs = rg.Mesh()
+        
+        # Iterate over the building outlines
+        for splitter, building_curve in zip(splitter_set, building_curve_set):
+            # Split the mesh
+            elements = mesh_plane.Split(splitter)
+            
+            # Postprocess the mesh elements
+            elements = [postprocess_mesh(element) for element in elements]
+            
+            # If more than one splitting elements returned
+            if len(elements) > 1:
+                # Check if the element is inside the building or outside (part of the ground)
+                relations = [is_inside(element, [building_curve]) for element in elements]
+                
+                # Generate a roof mesh
+                roof = rg.Mesh()
+                
+                # Generate a ground elements mesh
+                ground_elements = rg.Mesh()
+                
+                # Iterate over the splitted elements and the relations
+                for element, relation in zip(elements, relations):
+                    # If the element is inside the roof outline
+                    if relation:
+                        # Add the element to the roof mesh
+                        roof.Append(element)
+                    else:
+                        # Add the element to the ground mesh
+                        ground_elements.Append(element)
+                
+                # Add the roof mesh to the temp roofs for this building
+                temp_roofs.Append(roof)
+                
+                # Overwrite the mesh plane to the ground elements
+                mesh_plane = ground_elements
+            else:
+                LOGGER.warning("Splitting did not result in multiple elements")
+
+        # Check if this building has courtyards
+        if len(courtyard_curve_set) > 0:
+            # Iterate over the polylines in the courtyards
+            for courtyard_curve in courtyard_curve_set:
+                # Generate a splitter for the courtyard
+                splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
+                
+                # Split the roofs of this building by the courtyard splitter
+                elements = temp_roofs.Split(splitter)
+
+                # If the splitting resulted in more than one mesh
+                if len(elements) > 1:
+                    # Check if the element is inside the courtyard or outside (part of the roof)     
+                    relations = [is_inside(element, [courtyard_curve]) for element in elements]
+                    
+                    # Generate a new roof mesh
+                    roof = rg.Mesh()
+                    
+                    # Store the courtyard elements
+                    courtyard_elements = rg.Mesh()
+                    
+                    # Iterate over the splitted elements from the roof
+                    for element, relation in zip(elements, relations):
+                        # If the roof is inside the courtyard
+                        if relation:
+                            # Add to the courtyard elements
+                            courtyard_elements.Append(element)
+                        else:
+                            # Add to the roof elements
+                            roof.Append(element)
+                    
+                    # Add the courtyard elements to the mesh plane
+                    mesh_plane.Append(courtyard_elements)
+        
+        # Add the roof to the list of roofs
+        roofs.append(roof)
+    
+    # Postprocess the gorund mesh plane mesh
+    ground = postprocess_mesh(mesh_plane)
+    
+    # Iterate over the roof meshes to translate to the correct height
+    for i, (mesh, height) in enumerate(zip(roofs, heights)):
+        # Generate a duplicate translated mesh
+        translated_mesh = mesh.Duplicate()
+        
+        # Create a transform based on the height
+        transform = rg.Transform.Translation(System.Double(0.0),System.Double(0.0),System.Double(height))
+        
+        # Move the mesh
+        translated_mesh.Transform(transform)
+        
+        # Set the translated mesh after postprocessing
+        roofs[i] = postprocess_mesh(translated_mesh)
+    
+    valid = []
+    for roof in roofs:
+        if len(roof.Vertices) < 3:
+            valid.append(False)
+        elif len(roof.Faces) == 0:
+            valid.append(False)
+        else:
+            valid.append(True)
+     
+    return ground, roofs, valid
+
+'''
+REMESHING FUNCTIONS
+'''
 
 def remesh_horizontal(mesh):
+    """Remesh horizontal mesh elements
+
+    Args:
+        mesh (rg.Mesh): horizontal mesh
+
+    Returns:
+        rough_mesh (rg.Mesh): reduced
+    """
+    
     rough_mesh = mesh.Duplicate()
     
     rough_mesh.Reduce(100, False, 3, False, False)
 
     return rough_mesh
 
-def remesh_vertical(outlines, height):
-    params = rg.MeshingParameters.QualityRenderMesh
-    bbox = rg.BoundingBox(0,0,1,100,100,height-1)
-    
-    template = outlines.Duplicate()
-    template.ReduceSegments(_REDUCE_SEGMENTS_TOLERANCE)
-    mesh = rg.Mesh.CreateFromCurveExtrusion(template.ToNurbsCurve(), rg.Vector3d(0,0,1), params, bbox)
-        
-    return mesh
+def remesh_vertical(curve, height):
+    """Mesh vertical elements by using outlines and height
 
+    Args:
+        outlines (list[rg.Polyline]): building outlines
+        height (list[float]): heights of the buildings
+    Returns:
+        mesh (rg.Mesh): reduced mesh
+    """
+    
+    extrusion = rg.Extrusion.Create(curve, height, False)
+    
+    params = rg.MeshingParameters.QualityRenderMesh
+    
+    return rg.Mesh.CreateFromSurface(extrusion, params)
+
+def triangulate_quad(quad_mesh):
+    tri_mesh = quad_mesh.Duplicate()
+    tri_mesh.Faces.ConvertQuadsToTriangles()
+    return tri_mesh
+
+def generate_mesh(patch_outline, building_outlines, courtyard_outlines, building_heights, grid_size, size, rough=False):
+    """Generate a patch mesh based on a patch outline, building polylines and courtyard outlines
+
+    Args:
+        patch_outline (rg.Rectangle3d): ground patch outline
+        building_outlines (list[list[rg.Polyline]]): building outline polylines
+        courtyard_outlines (list[list[rg.Polyline]]): courtyard outline polylines
+        building_heights (list[float]): heights per building
+        grid_size (float): grid size
+        size (float): size of patch
+        rough (bool, optional): Indicate if function should also return rough meshes. Defaults to False.
+
+    Returns:
+        mesh_plane (rg.Mesh): ground mesh plane
+        walls (list[rg.Mesh]): walls
+        roofs (list[rg.Mesh]): roofs
+        rough_ground (rg.Mesh, optional), rough ground mesh
+        rough_walls (list[rg.Mesh], optional): rough walls
+        rough_roofs (list(rg.Mesh), optional): rough roofs
+    """
+    
+    building_polylines, building_curves = project_outlines_to_world_xy(building_outlines)
+    courtyard_polylines, courtyard_curves = project_outlines_to_world_xy(courtyard_outlines)
+    
+    LOGGER.info(f'Generating walls for mesh patch')
+    
+    # Generate the walls for the building outlines and compute corresponding heights
+    # Requires outlines in format polylines
+    walls = generate_vertical(building_polylines, courtyard_polylines, building_heights, grid_size)
+    
+    LOGGER.info(f'Generating ground and roofs for mesh patch')
+    
+    # Compute the mesh plane for the ground and roofs
+    # Requires outlines in format curves
+    mesh_plane, roofs, valid = generate_horizontal(patch_outline, building_curves, courtyard_curves, building_heights, grid_size, size)
+    
+    if rough:
+        LOGGER.info(f'Generating rough meshes')
+        
+        rough_ground = remesh_horizontal(mesh_plane)
+        rough_roofs = [remesh_horizontal(roof) for roof in roofs]
+        
+        rough_walls = []
+        for building, courtyard, height in zip(building_curves, courtyard_curves, building_heights):
+            mesh = rg.Mesh()
+            
+            for curve in building:
+                mesh.Append(remesh_vertical(curve, height))
+            
+            for curve in courtyard:
+                mesh.Append(remesh_vertical(curve, height))
+                
+            rough_walls.append(mesh)
+        
+        return mesh_plane, walls, roofs, rough_ground, rough_walls, rough_roofs
+    else:
+        return mesh_plane, walls, roofs, None, None, None
