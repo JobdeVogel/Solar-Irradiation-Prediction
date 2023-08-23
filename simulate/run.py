@@ -6,16 +6,9 @@ Developed by Job de Vogel : 2023-07-17
 from parameters.params import LOGGER
 from lbt_recipes.recipe import Recipe
 
-import time
-import warnings
-
 from parameters.params import USE_GPU, SKY_DENSITY, WORKERS
 
-def annual_irradiance(model, wea, sim_arguments, identifier='custom_name', display_name='custom_name'):   
-    # Assign an identifier and display_name
-    model.identifier = identifier
-    model.display_name = display_name
-
+def annual_irradiance(model, wea, sim_arguments):   
     # Pass the model to the recipe
     recipe = Recipe('cumulative-radiation')
 #    recipe = Recipe('annual-irradiance')
