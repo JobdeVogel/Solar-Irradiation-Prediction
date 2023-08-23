@@ -8,6 +8,22 @@ def set_array_values(array, points=None, normals=None, irradiance=None, pointmap
             array[:,3:6] = [[normal.X, normal.Y, normal.Z] for normal in points]
         if irradiance != None:
             array[:, 6] = irradiance
+    elif irradiance == None:
+        if points != None:
+            points = iter(points)
+        if normals != None:
+            normals = iter(normals)
+        
+        for i, bool in enumerate(pointmap):
+            if bool:
+                if points != None:
+                    point = next(points)
+                    array[i, 0:3] = [point.X, point.Y, point.Z]
+                if normals != None:
+                    normal = next(normals) 
+                    array[i, 3:6] = [normal.X, normal.Y, normal.Z]
+                if irradiance != None:
+                    array[i, 6] = 0.0
     else:
         if points != None:
             points = iter(points)
