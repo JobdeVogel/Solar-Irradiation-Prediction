@@ -3,8 +3,8 @@ from log.logger import generate_logger
 
 # General
 LOGGER = generate_logger()
-BAG_FILE_PATH = "C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//9-324-520-LoD12-3D.obj"
-WEA = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
+BAG_FILE_PATH = "./data/bag/9-324-520-LoD12-3D.obj"
+WEA = "./data/wea/NLD_Amsterdam.062400_IWEC.epw"
 GRID_SIZE = 1.0
 OFFSET = 0.1
 NUM_AUGMENTS = 1
