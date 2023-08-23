@@ -1,5 +1,8 @@
 from parameters.params import LOGGER
 import Rhino.Geometry as rg
+
+import uuid
+
 try:
     from honeybee.face import Face
     from honeybee.facetype import face_types
@@ -42,6 +45,7 @@ def modifier(reflectance=REFLECTANCE, specular=SPECULAR, roughness=ROUGHNESS, na
 def generate_HB_faces(mesh, modifier, name="faces", boundary_condition="outdoors"):
     faces = []
     for j, geo in enumerate(mesh):
+
         # Assign Name
         # display_name = '{}_{}'.format(longest_list(name, j), j + 1)
         display_name = 'temp'
@@ -118,6 +122,9 @@ def generate(ground_mesh, roof_mesh, wall_mesh, sensors, normals):
     faces.extend(generate_HB_faces(wall_mesh, mod))
 
     sensor_grid = grid(sensors, normals)
-    model = HB_model(faces, sensor_grid)
+    
+    name = str(uuid.uuid4())
+    
+    model = HB_model(faces, sensor_grid, name=name)
     
     return model
