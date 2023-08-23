@@ -370,7 +370,7 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
     num_of_courtyards = 0
     
     # Iterate over all outlines and the corresponding heights
-    for polylines in zip(all_building_outlines, heights):
+    for polylines, height in zip(all_building_outlines, heights):
         # The outer polyline of the building
         outer = polylines[0]
         
