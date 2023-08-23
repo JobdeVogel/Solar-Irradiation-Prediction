@@ -3,16 +3,14 @@ from log.logger import generate_logger
 
 # General
 LOGGER = generate_logger()
-BAG_FILE_PATH = "C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj"
+BAG_FILE_PATH = "C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//9-324-520-LoD12-3D.obj"
 WEA = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
 GRID_SIZE = 1.0
 OFFSET = 0.1
-NUM_AUGMENTS = 4
+NUM_AUGMENTS = 1
 MIN_FSI = 0.2
 MIN_AREA = 10
-RUN_SIMULATION = False
-ALL_AUGMENTS = False
-VISUALIZE_MESH = False
+VISUALIZE_MESH = True
 
 # Load 3DBAG using load_3d_bag.file.py
 _FACE_MERGE_TOLERANCE = 0.01
@@ -25,6 +23,7 @@ FSI = True
 _SPLIT_TOLERANCE = 0.01
 
 # Meshing using load_3d_bag.meshing.py
+MAX_CONTAINMENT_ITERATIONS = 5
 _REDUCE_SEGMENTS_TOLERANCE = 0.001
 _MESH_SPLITTER_BBOX_HEIGHT = 2
 _ANGLE_TOLERANCE_POSTP_MESH = math.pi/90
@@ -47,8 +46,9 @@ MODIFIER_NAME = 'default_urban_modifier'
 
 # Directory folders
 STATS_PATH = './stats'
-BAG_PATH = './data/bag/'
+BAG_PATH = "C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//"
 IRRADIANCE_PATH = './data/irradiance/'
+RAW_PATH = './data/raw/'
 GEOMETRY_PATH = './data/geometry/'
 OUTLINES_PATH = './data/outlines/'
 HBJSON_PATH = './data/models/'
