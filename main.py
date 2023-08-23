@@ -402,6 +402,18 @@ if __name__ == '__main__':
     random.seed(0)
     filename = BAG_FILE_PATH
     
+    if not os.path.exists(GEOMETRY_PATH):
+        os.makedirs(GEOMETRY_PATH)
+    
+    if not os.path.exists(IRRADIANCE_PATH):
+        os.makedirs(IRRADIANCE_PATH)
+    
+    if not os.path.exists(OUTLINES_PATH):
+        os.makedirs(OUTLINES_PATH)
+    
+    if not os.path.exists(RAW_PATH):
+        os.makedirs(RAW_PATH)
+    
     # ! problems: 181, 448
     # ! nice looking 447
     start_idx = 0
