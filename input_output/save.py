@@ -1,9 +1,7 @@
 from parameters.params import LOGGER
 import Rhino.Geometry as rg
-
 import Rhino
 import json
-import pickle
 import time
 
 import numpy as np
@@ -67,10 +65,12 @@ def save_outlines_to_json(outlines, name, folder):
     
     LOGGER.info(f"Polyines {name} saved in {round(time.time() - start)}s")
 
-def save_array(array):
-    start = time.time()
-    np.save('./data/array.npy', array)
-    LOGGER.info(f"Array saved in {round(time.time() - start)}s")
+def save_array(array, name, folder):
+    start = time.perf_counter()
+    path = folder + name + '.npy'
+    
+    np.save(path, array)
+    LOGGER.info(f"Array saved in {round(time.perf_counter() - start)}s")
 
 def save_array_as_list(array, name, folder):
     start = time.time()
