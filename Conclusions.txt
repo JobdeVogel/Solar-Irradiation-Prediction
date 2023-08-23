@@ -1,2 +1,4 @@
 * IronPython is faster
 * Memory corruption with garbage collection
+* Boolean intersection sucks
+* 100000 exceptions in preprocessing
