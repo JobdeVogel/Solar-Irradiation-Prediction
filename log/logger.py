@@ -3,13 +3,19 @@ from datetime import datetime
 import logging
 import os
 import sys
+import uuid
 
 def generate_logger(name=None):
     if name == None:
         # setup the path to the logfile
         from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
         logname = f'log_{from_date}.log'
-        logfile = os.path.join('./log/logs', logname)
+        
+        # folder = './log/logs/' + str(uuid.uuid4()) + '/'
+        # os.mkdir(folder)
+        folder = './log/logs/'
+        
+        logfile = os.path.join(folder, logname)
     else:
         logfile = name
 
