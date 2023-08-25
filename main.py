@@ -7,9 +7,6 @@ Faculty of Architecture and the Built Environment
 TU Delft
 """
 
-from parameters.params import LOGGER
-# LOGGER.info('Started loading packages and modules...')
-
 import rhinoinside
 rhinoinside.load()
 
@@ -35,9 +32,8 @@ from augment import augmentation
 from simulate import run
 from visualize.mesh import generate_colored_mesh, legend
 
+from log.logger import generate_logger
 from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH
-
-LOGGER.info('Finished loading packages and modules...')
 
 parser = argparse.ArgumentParser(prog='name', description='random info', epilog='random bottom info')
 parser.add_argument('-b', '--BAG_FILE_PATH', type=str, nargs='?', default=BAG_FILE_PATH, help='')
@@ -58,6 +54,10 @@ parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='st
 
 args= parser.parse_args()
 BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH = vars(args).values()
+
+# Initialize a logger
+identifier = BAG_FILE_PATH.split("/")[-1][:-4]
+LOGGER = generate_logger(identifier=identifier)
 
 class Sample:
     def __init__(self, idx):
@@ -386,12 +386,15 @@ def main(filename, start_idx):
         # Extract the patch outline based on given index
         patch_outline = patch_outlines[idx]
         
-        # # Run the generation and simulation for one ground patch sample
-        sample = task(patch_outline, deserializeed_building_outlines, all_heights, idx)
+        try:
+            # # Run the generation and simulation for one ground patch sample
+            sample = task(patch_outline, deserializeed_building_outlines, all_heights, idx)
             
-        
-        # Append the sample
-        samples.append(sample)
+            # Append the sample
+            samples.append(sample)
+        except Exception as e:
+            LOGGER.critical(f"Error message: {e}")
+            LOGGER.critical(f"Running task with index {idx} failed!")
         
         LOGGER.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
 
@@ -420,7 +423,7 @@ if __name__ == '__main__':
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]
-    delete_dataset(folder_paths, secure=True)
+    # delete_dataset(folder_paths, secure=True)
     
     # Run the sample generation
     main(filename, start_idx)

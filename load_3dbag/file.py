@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import System
 
@@ -89,7 +88,7 @@ def get_bbox(mesh):
     
     return boundingbox
 
-def partition_mesh(mesh):
+def partition_mesh(mesh, logger=False):
     """Partition a building mesh in floors, walls and roofs
 
     Args:
@@ -129,7 +128,9 @@ def partition_mesh(mesh):
     valid = True
     if len(floor_faces_idxs) == 0 or len(wall_faces_idxs) == 0 or len(roof_faces_idxs) == 0:
         valid = False
-        LOGGER.warning("File contains meshes without roofs, walls or floors.")
+        
+        if logger:
+            logger.warning("File contains meshes without roofs, walls or floors.")
         
         return valid, roof_mesh, wall_mesh, floor_mesh
     
@@ -169,7 +170,7 @@ def level_mesh(roof_mesh, wall_mesh, floor_mesh):
     
     return roof_mesh, wall_mesh, floor_mesh
 
-def load(path):
+def load(path, logger=False):
     """Load a 3D BAG .obj file LoD 1.2 to Rhino roof and wall meshes
 
     Args:
@@ -205,6 +206,7 @@ def load(path):
         roof_meshes.append(roof_mesh)
         wall_meshes.append(wall_mesh)
 
-    LOGGER.info(f"Loaded 3D BAG dataset with {len(roof_meshes)} roofs and {len(wall_meshes)} walls from {path}.")
+    if logger:
+        logger.info(f"Loaded 3D BAG dataset with {len(roof_meshes)} roofs and {len(wall_meshes)} walls from {path}.")
 
     return roof_meshes, wall_meshes, bbox

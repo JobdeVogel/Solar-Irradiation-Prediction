@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import numpy as np
 
 def data_to_array(points, normals):

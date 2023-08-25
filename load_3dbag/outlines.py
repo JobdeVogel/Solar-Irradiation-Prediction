@@ -2,7 +2,6 @@
 This module contains all functions regarding flat polylines, curves and rectangles
 """
 
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import System
 
@@ -142,7 +141,7 @@ def includes_ground_outline(ground_outline, building_outline):
     else:
         return None
 
-def extract_building_outlines(wall_meshes, roof_meshes, tolerance=_SPLIT_TOLERANCE):
+def extract_building_outlines(wall_meshes, roof_meshes, tolerance=_SPLIT_TOLERANCE, logger=False):
     """Extract polyline building outlines from wall and roof meshes
 
     Args:
@@ -188,9 +187,11 @@ def extract_building_outlines(wall_meshes, roof_meshes, tolerance=_SPLIT_TOLERAN
                 building_outlines.append(outlines)
                 building_heights.append(roof.Faces.GetFaceCenter(0).Z)
             else:
-                LOGGER.warning('Mesh ' + str(i) + ' does not have naked edges with height lower than tolerance ' + str(tolerance) + '. This building if floating above the ground.')
+                if logger:
+                    logger.warning('Mesh ' + str(i) + ' does not have naked edges with height lower than tolerance ' + str(tolerance) + '. This building if floating above the ground.')
         else:
-            LOGGER.warning('Mesh ' + str(i) + ' naked edges extraction failed. This mesh is most likely closed.')
+            if logger:
+                logger.warning('Mesh ' + str(i) + ' naked edges extraction failed. This mesh is most likely closed.')
     
     return building_outlines, building_heights
 
@@ -250,7 +251,7 @@ def find_segments(segments, base_curve):
 
     return polylines
     
-def cut_polyline(ground_outline, building_outline, tolerance=_SPLIT_TOLERANCE, min_area=MIN_AREA):
+def cut_polyline(ground_outline, building_outline, tolerance=_SPLIT_TOLERANCE, min_area=MIN_AREA, logger=False):
     # Transform polylines to curves
     ground_curve = ground_outline.ToNurbsCurve()
     building_curve = building_outline.ToNurbsCurve()
@@ -293,7 +294,8 @@ def cut_polyline(ground_outline, building_outline, tolerance=_SPLIT_TOLERANCE, m
     polylines = [curve.TryGetPolyline()[1] for curve in projections]
     
     if len(polylines) == 0:
-        LOGGER.warning("cut_polyline() was not able to extract polylines")
+        if logger:
+            logger.warning("cut_polyline() was not able to extract polylines")
     
     valid_polylines = []
     for polyline in polylines:
@@ -328,7 +330,7 @@ def translate(outline, ground_outline, height=0):
     translation = rg.Transform.Translation(-x, -y, height)
     outline.Transform(translation)
 
-def compute_FSI(ground_outline, building_outlines):
+def compute_FSI(ground_outline, building_outlines, logger=False):
     ground_area = rg.AreaMassProperties.Compute(ground_outline.ToNurbsCurve()).Area
     
     building_areas = []
@@ -339,11 +341,12 @@ def compute_FSI(ground_outline, building_outlines):
                     rg.AreaMassProperties.Compute(outlines[0].ToNurbsCurve()).Area
                     )
             except:
-                LOGGER.warning("RESOLVE: Polyline was not closed so area not added to FSI")
+                if logger:
+                    logger.warning("RESOLVE: Polyline was not closed so area not added to FSI")
     
     return sum(building_areas) / ground_area, ground_area, building_areas
     
-def generate_building_outlines(ground_outline, all_building_outlines, heights, translate_to_origin=TRANSLATE_TO_ORIGIN, fsi=FSI):    
+def generate_building_outlines(ground_outline, all_building_outlines, heights, translate_to_origin=TRANSLATE_TO_ORIGIN, fsi=FSI, logger=False):    
     """Compute the building outlines that are inside a ground outline. If a building polyline intersects
     with the ground outline, the building outlines are splitted in multiple segmenets and then closed.
 
@@ -462,5 +465,6 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
     building_outlines = included_polylines
     courtyard_outlines = courtyards
 
-    LOGGER.debug(f'Generated {len(building_outlines)} building_outlines and {num_of_courtyards} courtyards with FSI {round(FSI_score, 2)}.')
+    if logger:
+        logger.debug(f'Generated {len(building_outlines)} building_outlines and {num_of_courtyards} courtyards with FSI {round(FSI_score, 2)}.')
     return building_outlines, courtyard_outlines, building_heights, FSI_score, envelope_area, building_area

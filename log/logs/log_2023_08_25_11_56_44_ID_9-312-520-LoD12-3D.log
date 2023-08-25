@@ -1,0 +1,3 @@
+2023-08-25 11:56:53 INFO: Started computing patch[0]. - in file: main.py - line: 379
+2023-08-25 11:56:56 INFO: Started preprocessing mesh for patch[0] with FSI value of 0.34 - in file: main.py - line: 310
+2023-08-25 12:00:52 INFO: Computing sensors for mesh patch[0] - in file: main.py - line: 314

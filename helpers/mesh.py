@@ -1,5 +1,4 @@
 import Rhino.Geometry as rg
-from parameters.params import LOGGER
 
 def join_meshes(meshes):
     joined_meshes = rg.Mesh()

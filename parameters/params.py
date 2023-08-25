@@ -1,8 +1,6 @@
 import math
-from log.logger import generate_logger
 
 # General
-LOGGER = generate_logger()
 BAG_FILE_PATH = "./data/bag/9-324-520-LoD12-3D.obj"
 WEA = "./data/wea/NLD_Amsterdam.062400_IWEC.epw"
 GRID_SIZE = 1.0
@@ -45,8 +43,8 @@ ROUGHNESS = 0.0
 MODIFIER_NAME = 'default_urban_modifier'
 
 # Directory folders
-STATS_PATH = './stats'
-BAG_PATH = "C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//"
+STATS_PATH = './stats/'
+BAG_PATH = './data/bag/'
 IRRADIANCE_PATH = './data/irradiance/'
 RAW_PATH = './data/raw/'
 GEOMETRY_PATH = './data/geometry/'

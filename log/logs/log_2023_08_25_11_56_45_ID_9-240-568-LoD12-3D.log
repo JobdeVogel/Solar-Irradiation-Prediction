@@ -1,0 +1,19 @@
+2023-08-25 11:56:50 INFO: Started computing patch[0]. - in file: main.py - line: 379
+2023-08-25 11:56:52 INFO: FSI_score 0.12 of sample 0 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:56:52 INFO: Finished computing patch[0] in 1.52s. - in file: main.py - line: 399
+2023-08-25 11:56:52 INFO: Started computing patch[1]. - in file: main.py - line: 379
+2023-08-25 11:56:53 INFO: FSI_score 0.11 of sample 1 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:56:53 INFO: Finished computing patch[1] in 1.07s. - in file: main.py - line: 399
+2023-08-25 11:56:53 INFO: Started computing patch[2]. - in file: main.py - line: 379
+2023-08-25 11:56:54 INFO: FSI_score 0.1 of sample 2 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:56:54 INFO: Finished computing patch[2] in 1.24s. - in file: main.py - line: 399
+2023-08-25 11:56:54 INFO: Started computing patch[3]. - in file: main.py - line: 379
+2023-08-25 11:56:55 INFO: Started preprocessing mesh for patch[3] with FSI value of 0.22 - in file: main.py - line: 310
+2023-08-25 11:58:37 INFO: Computing sensors for mesh patch[3] - in file: main.py - line: 314
+2023-08-25 11:58:47 INFO: Generating model for mesh patch[3] augmentation 0 - in file: main.py - line: 323
+2023-08-25 11:58:48 INFO: Simulating irradiance model for mesh patch[3] augmentation 0 - in file: main.py - line: 325
+2023-08-25 12:00:59 CRITICAL: Error message: [Errno 2] No such file or directory: 'C:\\Users\\Job de Vogel\\simulation\\67d690df-1745-4c97-a4a2-3942f0bd5fe4\\cumulative_radiation\\results/cumulative_radiation\\custom_SensorGrid.res' - in file: main.py - line: 396
+2023-08-25 12:00:59 CRITICAL: Running task with index 3 failed! - in file: main.py - line: 397
+2023-08-25 12:00:59 INFO: Finished computing patch[3] in 244.82s. - in file: main.py - line: 399
+2023-08-25 12:00:59 INFO: Started computing patch[4]. - in file: main.py - line: 379
+2023-08-25 12:01:00 INFO: Started preprocessing mesh for patch[4] with FSI value of 0.37 - in file: main.py - line: 310

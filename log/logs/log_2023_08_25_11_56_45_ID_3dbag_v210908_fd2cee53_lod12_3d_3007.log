@@ -1,0 +1,62 @@
+2023-08-25 11:57:18 INFO: Started computing patch[0]. - in file: main.py - line: 379
+2023-08-25 11:57:24 INFO: FSI_score 0.04 of sample 0 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:24 INFO: Finished computing patch[0] in 6.03s. - in file: main.py - line: 399
+2023-08-25 11:57:24 INFO: Started computing patch[1]. - in file: main.py - line: 379
+2023-08-25 11:57:29 INFO: FSI_score 0.01 of sample 1 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:29 INFO: Finished computing patch[1] in 5.5s. - in file: main.py - line: 399
+2023-08-25 11:57:29 INFO: Started computing patch[2]. - in file: main.py - line: 379
+2023-08-25 11:57:36 INFO: FSI_score 0.0 of sample 2 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:36 INFO: Finished computing patch[2] in 6.99s. - in file: main.py - line: 399
+2023-08-25 11:57:36 INFO: Started computing patch[3]. - in file: main.py - line: 379
+2023-08-25 11:57:41 INFO: FSI_score 0.04 of sample 3 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:41 INFO: Finished computing patch[3] in 5.03s. - in file: main.py - line: 399
+2023-08-25 11:57:41 INFO: Started computing patch[4]. - in file: main.py - line: 379
+2023-08-25 11:57:45 INFO: FSI_score 0.08 of sample 4 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:45 INFO: Finished computing patch[4] in 3.84s. - in file: main.py - line: 399
+2023-08-25 11:57:45 INFO: Started computing patch[5]. - in file: main.py - line: 379
+2023-08-25 11:57:53 INFO: FSI_score 0.08 of sample 5 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:57:53 INFO: Finished computing patch[5] in 7.98s. - in file: main.py - line: 399
+2023-08-25 11:57:53 INFO: Started computing patch[6]. - in file: main.py - line: 379
+2023-08-25 11:58:00 INFO: FSI_score 0.08 of sample 6 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:00 INFO: Finished computing patch[6] in 6.96s. - in file: main.py - line: 399
+2023-08-25 11:58:00 INFO: Started computing patch[7]. - in file: main.py - line: 379
+2023-08-25 11:58:09 INFO: FSI_score 0.08 of sample 7 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:09 INFO: Finished computing patch[7] in 8.63s. - in file: main.py - line: 399
+2023-08-25 11:58:09 INFO: Started computing patch[8]. - in file: main.py - line: 379
+2023-08-25 11:58:20 INFO: FSI_score 0.09 of sample 8 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:20 INFO: Finished computing patch[8] in 11.09s. - in file: main.py - line: 399
+2023-08-25 11:58:20 INFO: Started computing patch[9]. - in file: main.py - line: 379
+2023-08-25 11:58:24 INFO: FSI_score 0.12 of sample 9 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:24 INFO: Finished computing patch[9] in 3.99s. - in file: main.py - line: 399
+2023-08-25 11:58:24 INFO: Started computing patch[10]. - in file: main.py - line: 379
+2023-08-25 11:58:30 INFO: FSI_score 0.14 of sample 10 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:30 INFO: Finished computing patch[10] in 5.84s. - in file: main.py - line: 399
+2023-08-25 11:58:30 INFO: Started computing patch[11]. - in file: main.py - line: 379
+2023-08-25 11:58:35 INFO: FSI_score 0.08 of sample 11 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:35 INFO: Finished computing patch[11] in 5.18s. - in file: main.py - line: 399
+2023-08-25 11:58:35 INFO: Started computing patch[12]. - in file: main.py - line: 379
+2023-08-25 11:58:40 INFO: FSI_score 0.04 of sample 12 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:40 INFO: Finished computing patch[12] in 4.81s. - in file: main.py - line: 399
+2023-08-25 11:58:40 INFO: Started computing patch[13]. - in file: main.py - line: 379
+2023-08-25 11:58:46 INFO: FSI_score 0.02 of sample 13 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:46 INFO: Finished computing patch[13] in 5.73s. - in file: main.py - line: 399
+2023-08-25 11:58:46 INFO: Started computing patch[14]. - in file: main.py - line: 379
+2023-08-25 11:58:54 INFO: FSI_score 0.12 of sample 14 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:58:54 INFO: Finished computing patch[14] in 8.37s. - in file: main.py - line: 399
+2023-08-25 11:58:54 INFO: Started computing patch[15]. - in file: main.py - line: 379
+2023-08-25 11:59:01 INFO: FSI_score 0.12 of sample 15 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:59:01 INFO: Finished computing patch[15] in 7.18s. - in file: main.py - line: 399
+2023-08-25 11:59:01 INFO: Started computing patch[16]. - in file: main.py - line: 379
+2023-08-25 11:59:12 INFO: FSI_score 0.14 of sample 16 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:59:12 INFO: Finished computing patch[16] in 10.3s. - in file: main.py - line: 399
+2023-08-25 11:59:12 INFO: Started computing patch[17]. - in file: main.py - line: 379
+2023-08-25 11:59:20 INFO: FSI_score 0.19 of sample 17 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:59:20 INFO: Finished computing patch[17] in 7.81s. - in file: main.py - line: 399
+2023-08-25 11:59:20 INFO: Started computing patch[18]. - in file: main.py - line: 379
+2023-08-25 11:59:31 INFO: FSI_score 0.12 of sample 18 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:59:31 INFO: Finished computing patch[18] in 11.58s. - in file: main.py - line: 399
+2023-08-25 11:59:31 INFO: Started computing patch[19]. - in file: main.py - line: 379
+2023-08-25 11:59:38 INFO: FSI_score 0.18 of sample 19 not high enough to continue generating sample. - in file: main.py - line: 344
+2023-08-25 11:59:38 INFO: Finished computing patch[19] in 6.96s. - in file: main.py - line: 399
+2023-08-25 11:59:38 INFO: Started computing patch[20]. - in file: main.py - line: 379
+2023-08-25 11:59:46 INFO: Started preprocessing mesh for patch[20] with FSI value of 0.2 - in file: main.py - line: 310

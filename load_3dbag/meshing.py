@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import System
 import math
@@ -123,7 +122,8 @@ def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS):
                 checkpoint = get_random_face_center(mesh)
                 
                 if i == max_iterations - 1:
-                     LOGGER.warning('Point containment coincident')
+                    if logger:
+                        logger.warning('Point containment coincident')
     return inside
 
 def project_outlines_to_world_xy(outlines):
@@ -270,7 +270,7 @@ def mesh_extrude_polyline(polyline, height, grid_size):
     
     return mesh
 
-def generate_vertical(building_outlines, courtyard_outlines, heights, grid_size):
+def generate_vertical(building_outlines, courtyard_outlines, heights, grid_size, logger=False):
     """_summary_
 
     Args:
@@ -317,10 +317,11 @@ def generate_vertical(building_outlines, courtyard_outlines, heights, grid_size)
         # Append the building walls processed, as a single mesh        
         meshes.append(postprocess_mesh(temp_mesh))
 
-    LOGGER.debug(f'Generated {len(meshes)} meshes and outlines.')
+    if logger:
+        logger.debug(f'Generated {len(meshes)} meshes and outlines.')
     return meshes
 
-def generate_horizontal(ground_outline, building_curves, courtyard_curves, heights, grid_size, size):
+def generate_horizontal(ground_outline, building_curves, courtyard_curves, heights, grid_size, size, logger=False):
     """Generate ground and roofs by splitting a mesh plane
 
     Args:
@@ -421,7 +422,8 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                 # Overwrite the mesh plane to the ground elements
                 mesh_plane = ground_elements
             else:
-                LOGGER.warning("Splitting did not result in multiple elements")
+                if logger:
+                    logger.warning("Splitting did not result in multiple elements")
 
         # Check if this building has courtyards
         if len(courtyard_curve_set) > 0:
@@ -529,7 +531,7 @@ def triangulate_quad(quad_mesh):
     tri_mesh.Faces.ConvertQuadsToTriangles()
     return tri_mesh
 
-def generate_mesh(patch_outline, building_outlines, courtyard_outlines, building_heights, grid_size, size, rough=False):
+def generate_mesh(patch_outline, building_outlines, courtyard_outlines, building_heights, grid_size, size, rough=False, logger=False):
     """Generate a patch mesh based on a patch outline, building polylines and courtyard outlines
 
     Args:
@@ -553,20 +555,23 @@ def generate_mesh(patch_outline, building_outlines, courtyard_outlines, building
     building_polylines, building_curves = project_outlines_to_world_xy(building_outlines)
     courtyard_polylines, courtyard_curves = project_outlines_to_world_xy(courtyard_outlines)
     
-    LOGGER.info(f'Generating walls for mesh patch')
+    if logger:
+        logger.info(f'Generating walls for mesh patch')
     
     # Generate the walls for the building outlines and compute corresponding heights
     # Requires outlines in format polylines
     walls = generate_vertical(building_polylines, courtyard_polylines, building_heights, grid_size)
     
-    LOGGER.info(f'Generating ground and roofs for mesh patch')
+    if logger:
+        logger.info(f'Generating ground and roofs for mesh patch')
     
     # Compute the mesh plane for the ground and roofs
     # Requires outlines in format curves
     mesh_plane, roofs, valid = generate_horizontal(patch_outline, building_curves, courtyard_curves, building_heights, grid_size, size)
     
     if rough:
-        LOGGER.info(f'Generating rough meshes')
+        if logger:
+            logger.info(f'Generating rough meshes')
         
         rough_ground = remesh_horizontal(mesh_plane)
         rough_roofs = [remesh_horizontal(roof) for roof in roofs]

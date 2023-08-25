@@ -1,28 +1,24 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 
 import uuid
 
-try:
-    from honeybee.face import Face
-    from honeybee.facetype import face_types
-    from honeybee.boundarycondition import boundary_conditions
-    from honeybee.typing import clean_string, clean_and_id_string, clean_and_id_rad_string, clean_rad_string
+from honeybee.face import Face
+from honeybee.facetype import face_types
+from honeybee.boundarycondition import boundary_conditions
+from honeybee.typing import clean_string, clean_and_id_string, clean_and_id_rad_string, clean_rad_string
 
-    # Ladybug-Rhino dependencies
-    from ladybug_rhino.togeometry import to_mesh3d, to_face3d
-    # from ladybug_rhino.grasshopper import longest_list
-    from ladybug_rhino.config import units_system, tolerance, angle_tolerance
+# Ladybug-Rhino dependencies
+from ladybug_rhino.togeometry import to_mesh3d, to_face3d
+# from ladybug_rhino.grasshopper import longest_list
+from ladybug_rhino.config import units_system, tolerance, angle_tolerance
 
-    # Honeybee Core dependencies
-    from honeybee.model import Model
+# Honeybee Core dependencies
+from honeybee.model import Model
 
-    # Honeybee-Radiance dependencies
-    from honeybee_radiance.lib.modifiers import modifier_by_identifier
-    from honeybee_radiance.modifier.material import Plastic
-    from honeybee_radiance.sensorgrid import SensorGrid
-except:
-    logging.error('Not able to import honeybee or ladybug packages.')
+# Honeybee-Radiance dependencies
+from honeybee_radiance.lib.modifiers import modifier_by_identifier
+from honeybee_radiance.modifier.material import Plastic
+from honeybee_radiance.sensorgrid import SensorGrid
 
 
 import time

@@ -1,9 +1,0 @@
-2023-07-29 13:58:07,955 - INFO - Finished loading rhinoinside... - in file: main.py - line: 11
-2023-07-29 13:58:22,158 - INFO - Loaded 3D BAG dataset with 1211 roofs and 1211 walls from C://Users//Job de Vogel//OneDrive//Documenten//TU Delft//Master Thesis//Dataset_pipeline//3D_BAG_dataset//3dbag_v210908_fd2cee53_lod12_3d_5859.obj. - in file: file.py - line: 130
-2023-07-29 13:58:22,640 - WARNING - Mesh 713 does not have outline with height lower than tolerance 0.0001 - in file: outlines.py - line: 126
-2023-07-29 13:58:22,765 - INFO - Started computing patch[212]. - in file: main.py - line: 113
-2023-07-29 13:58:42,481 - INFO - Mesh mesh_212 saved in 1s - in file: save.py - line: 50
-2023-07-29 13:58:42,678 - INFO - Array_list sensors_212 saved in 0s - in file: save.py - line: 86
-2023-07-29 13:58:42,688 - INFO - Polyines outlines_212 saved in 0s - in file: save.py - line: 68
-2023-07-29 13:58:42,719 - INFO - Finished computing patch[212] in 19.95s. - in file: main.py - line: 115
-2023-07-29 13:58:42,720 - INFO - ----- NEXT PATCH -----. - in file: main.py - line: 116

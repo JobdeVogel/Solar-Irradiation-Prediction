@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 
 import Rhino

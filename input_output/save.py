@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import Rhino
 import json
@@ -22,7 +21,7 @@ def generate_meta(keys, values):
 
 # Save a mesh to a json file in base64 format
 # The json data is a base64 encoded string of the byte array representing the geometry.
-def save_mesh_to_json(meshes, mesh_types, name, folder, meta_data=None):
+def save_mesh_to_json(meshes, mesh_types, name, folder, meta_data=None, logger=False):
     start = time.time()
     path = folder + "/" + name + ".json"
     
@@ -45,9 +44,10 @@ def save_mesh_to_json(meshes, mesh_types, name, folder, meta_data=None):
     with open(path, "w") as file:
         json.dump(data, file)
     
-    LOGGER.info(f"Mesh {name} saved in {round(time.time() - start)}s")
+    if logger:
+        logger.info(f"Mesh {name} saved in {round(time.time() - start)}s")
     
-def save_outlines_to_json(outlines, name, folder):
+def save_outlines_to_json(outlines, name, folder, logger=False):
     start = time.time()
     path = folder + "/" + name + ".json"
     
@@ -63,16 +63,19 @@ def save_outlines_to_json(outlines, name, folder):
     with open(path, "w") as file:
         json.dump(data, file)
     
-    LOGGER.info(f"Polyines {name} saved in {round(time.time() - start)}s")
+    if logger:
+        logger.info(f"Polyines {name} saved in {round(time.time() - start)}s")
 
-def save_array(array, name, folder):
+def save_array(array, name, folder, logger=False):
     start = time.perf_counter()
     path = folder + name + '.npy'
     
     np.save(path, array)
-    LOGGER.info(f"Array saved in {round(time.perf_counter() - start)}s")
+    
+    if logger:
+        logger.info(f"Array saved in {round(time.perf_counter() - start)}s")
 
-def save_array_as_list(array, name, folder):
+def save_array_as_list(array, name, folder, logger=False):
     start = time.time()
     list_data = array.tolist()
     
@@ -83,13 +86,16 @@ def save_array_as_list(array, name, folder):
     with open(path, 'w') as file:
         json.dump(data, file)
     
-    LOGGER.info(f"Array_list {name} saved in {round(time.time() - start)}s")
+    if logger:
+        logger.info(f"Array_list {name} saved in {round(time.time() - start)}s")
     
     # with open('./data/list_data.pkl', 'wb') as file:
     #     pickle.dump(list_data, file, protocol=PICKLE_PROTOCOL)
 
 # Save an HB model to a file as json file
-def save_hbjson(model, name, folder):
+def save_hbjson(model, name, folder, logger=False):
     start = time.time()
     model.to_hbjson(name=name, folder=folder)
-    LOGGER.info(f"HB_model {name} saved in {round(time.time() - start)}s")
+    
+    if logger:
+        logger.info(f"HB_model {name} saved in {round(time.time() - start)}s")

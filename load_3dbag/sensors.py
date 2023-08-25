@@ -1,4 +1,3 @@
-from parameters.params import LOGGER
 import Rhino.Geometry as rg
 import System
 import math
@@ -175,7 +174,7 @@ def wall_ray_intersection(point, normal, walls, grid_size, offset, tolerance=_WA
 
     return success, point
 
-def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only=QUAD_ONLY):
+def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only=QUAD_ONLY, logger=False):
     """Compute the sensorpoints for building meshes
 
     Args:
@@ -315,7 +314,8 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
         sensorpoints = new_sensorpoints
         normals = new_normals
     
-    LOGGER.debug(f"Computed {len(sensorpoints)} sensorpoints with grid_size {grid_size} and offset {offset}")
+    if logger:
+        logger.debug(f"Computed {len(sensorpoints)} sensorpoints with grid_size {grid_size} and offset {offset}")
     return sensorpoints, normals
 
 def filter_sensors(sensorpoints, normals):

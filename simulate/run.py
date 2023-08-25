@@ -3,7 +3,6 @@ Run a solar irradiance simulation for a given model
 
 Developed by Job de Vogel : 2023-07-17
 """
-from parameters.params import LOGGER
 from lbt_recipes.recipe import Recipe
 
 from parameters.params import USE_GPU, SKY_DENSITY, WORKERS
@@ -33,11 +32,14 @@ def annual_irradiance(model, wea, sim_arguments):
     
     return irradiance
 
-def main(model, wea, sim_arguments, pointmap, add_none_values=True):
-    LOGGER.info(f'Started solar irradiance simulation with arguments {sim_arguments}')
+def main(model, wea, sim_arguments, pointmap, add_none_values=True, logger=False):
+    if logger:
+        logger.info(f'Started solar irradiance simulation with arguments {sim_arguments}')
     # Compute the annual irradiance for the given model
     values = annual_irradiance(model, wea, sim_arguments)
-    LOGGER.info(f'Computed {len(values)} solar irradiance values for model {model.display_name}')
+    
+    if logger:
+        logger.info(f'Computed {len(values)} solar irradiance values for model {model.display_name}')
     
     # Store the irradiance values such that invalid sensorpoints get irriance value of 0
     irradiance = iter(values)

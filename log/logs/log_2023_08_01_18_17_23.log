@@ -1,3 +1,0 @@
-2023-08-01 18:17:27 INFO: Finished loading rhinoinside... - in file: main.py - line: 19
-2023-08-01 18:17:31 WARNING: Deleting all files in ['./data/geometry/', './data/irradiance/', './data/outlines/'] - in file: main.py - line: 49
-2023-08-01 18:17:31 WARNING: Deletion successfull! - in file: main.py - line: 55
