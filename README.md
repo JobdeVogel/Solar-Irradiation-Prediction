@@ -11,3 +11,11 @@ Run this code in parallel by calling run.py.
 `python run.py`
 
 Change parameters in parameters.params.py
+
+### Requirements
+McNeel Rhino 7 installed
+Radiance
+Python packages from requirements.txt
+
+Highly recommended: AcceleRad for simulation GPU support
+Optional: install libraries with Anaconda env from environments.yml
