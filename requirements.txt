@@ -1,4 +1,5 @@
 # Not up-to-date yet!
-
 lbt-recipes==0.25.14
 rhino3dm==7.15.0
+rhinoinside==0.6.0
+numpy==1.21.5
