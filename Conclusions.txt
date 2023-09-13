@@ -2,3 +2,7 @@
 * Memory corruption with garbage collection
 * Boolean intersection sucks
 * 100000 exceptions in preprocessing
+
+Dataset:
+* Find orientation of roofs with eigenvectors
+* Not manifold
