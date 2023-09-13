@@ -4,6 +4,7 @@ Run a solar irradiance simulation for a given model
 Developed by Job de Vogel : 2023-07-17
 """
 from lbt_recipes.recipe import Recipe
+from lbt_recipes.settings import RecipeSettings
 
 from parameters.params import USE_GPU, SKY_DENSITY, WORKERS
 
@@ -23,9 +24,13 @@ def annual_irradiance(model, wea, sim_arguments):
         sim_arguments += ' -g 0'
     
     recipe.input_value_by_name('radiance-parameters', sim_arguments)
+
+    settings = RecipeSettings()
+    settings.workers = WORKERS
+    settings.report_out = False
     
-    # Run the simulation    
-    project_folder = recipe.run(settings=WORKERS, radiance_check=True, silent=True)
+    # Run the simulation 
+    project_folder = recipe.run(settings=settings, radiance_check=True, silent=False, queenbee_path='queenbee')
 
     # Retrieve the results
     irradiance = recipe.output_value_by_name('cumulative-radiation', project_folder)[0]
