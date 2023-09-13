@@ -1,5 +1,5 @@
 ## IrradianceNet: *Solar irradiance prediction using Deep Learning*
-Created by Job de Vogel target
+Created by Job de Vogel
 
 ### Introduction
 Run this code sequentially by calling main.py, arguments described in file.
