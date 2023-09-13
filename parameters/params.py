@@ -5,10 +5,10 @@ BAG_FILE_PATH = "./data/bag/9-324-520-LoD12-3D.obj"
 WEA = "./data/wea/NLD_Amsterdam.062400_IWEC.epw"
 GRID_SIZE = 1.0
 OFFSET = 0.1
-NUM_AUGMENTS = 1
+NUM_AUGMENTS = 4
 MIN_FSI = 0.2
 MIN_AREA = 10
-VISUALIZE_MESH = True
+VISUALIZE_MESH = False
 
 # Load 3DBAG using load_3d_bag.file.py
 _FACE_MERGE_TOLERANCE = 0.01
@@ -54,10 +54,10 @@ HBJSON_PATH = './data/models/'
 # Simulation
 WEA_PATH = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
 
-SIMULATION_ARGUMENTS = '-ab 3 -ad 5000 -as 1024 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15'
+SIMULATION_ARGUMENTS = '-ab 9 -ad 5000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15'
 
 USE_GPU = True
 
 SKY_DENSITY = 1
 
-WORKERS = '--workers 1'
+WORKERS = 1
