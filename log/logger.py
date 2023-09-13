@@ -5,7 +5,7 @@ import os
 import sys
 import uuid
 
-def generate_logger(identifier=None):
+def generate_logger(identifier=None, stdout=True):
     if identifier != None:
         # setup the path to the logfile
         from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
@@ -27,14 +27,17 @@ def generate_logger(identifier=None):
     logger.setLevel(logging.INFO)
     
     file_handler = logging.FileHandler(filename=logfile)
-    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    if stdout:
+        stdout_handler = logging.StreamHandler(stream=sys.stdout)
 
     formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s - in file: %(filename)s - line: %(lineno)d", datefmt='%Y-%m-%d %H:%M:%S')
 
     file_handler.setFormatter(formatter)
-    stdout_handler.setFormatter(formatter)
+    if stdout:
+        stdout_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)
-    logger.addHandler(stdout_handler)
+    if stdout:
+        logger.addHandler(stdout_handler)
     
     return logger
