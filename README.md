@@ -9,3 +9,5 @@ Run this code sequentially by calling main.py, arguments described in file.
 Run this code in parallel by calling run.py.
 
 `python run.py`
+
+Change parameters in parameters.params.py
