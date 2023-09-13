@@ -51,17 +51,15 @@ parser.add_argument('-w', '--WEA', type=str, nargs='?', default=WEA, help='')
 parser.add_argument('-sa', '--SIMULATION_ARGUMENTS', type=str, nargs='?', default=SIMULATION_ARGUMENTS, help='')
 parser.add_argument('-f', '--MIN_FSI', type=float, nargs='?', default=MIN_FSI, help='')
 parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='store_true', help='')
+parser.add_argument('-l', '--LOG', default=False, action='store_true', help='')
 
 args= parser.parse_args()
-BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH = vars(args).values()
-
-# Initialize a logger
-identifier = BAG_FILE_PATH.split("/")[-1][:-4]
-LOGGER = generate_logger(identifier=identifier)
+BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, LOG = vars(args).values()
 
 class Sample:
-    def __init__(self, idx):
+    def __init__(self, idx, logger, geometry_path, irradiance_path, outlines_path, raw_path):
         self.idx = idx
+        self.logger = logger
         self.ground = rg.Mesh()
         self.patch_outline = None
         self.building_outlines = []
@@ -90,6 +88,11 @@ class Sample:
         self.FSI_score = 0
         self.envelope_area = 0
         self.building_area = 0
+        
+        self.geometry_path = geometry_path
+        self.irradiance_path = irradiance_path
+        self.outlines_path = outlines_path
+        self.raw_path = raw_path
     
     def compute_outlines(self, patch_outline, all_building_outlines, all_heights):
         # Store the patch outline as rectangle3d
@@ -102,8 +105,8 @@ class Sample:
                 all_building_outlines, 
                 all_heights)
         except Exception as e:
-            LOGGER.critical(f'Outlines computation for sample {self.idx} failed')
-            LOGGER.critical(e)
+            self.logger.critical(f'Outlines computation for sample {self.idx} failed')
+            self.logger.critical(e)
     
     def compute_mesh(self, rough=True):
         try:
@@ -117,8 +120,8 @@ class Sample:
                 SIZE, 
                 rough=rough)
         except Exception as e:
-            LOGGER.critical(f'Mesh computation for sample {self.idx} failed')
-            LOGGER.critical(e)
+            self.logger.critical(f'Mesh computation for sample {self.idx} failed')
+            self.logger.critical(e)
     
     def compute_sensors(self, compute_filtered=True):
         try:
@@ -129,8 +132,8 @@ class Sample:
                 # # Filter out the None values for invalid sensors
                 self.filtered_points, self.filtered_normals, self.pointmap = sensors.filter_sensors(self.sensorpoints, self.sensornormals)
         except Exception as e:
-            LOGGER.critical(f'Sensors computation for sample {self.idx} failed')
-            LOGGER.critical(e)
+            self.logger.critical(f'Sensors computation for sample {self.idx} failed')
+            self.logger.critical(e)
 
     def augment(self):
         rough_roof = join_meshes(self.rough_roofs)
@@ -145,13 +148,13 @@ class Sample:
             self.filtered_points, 
             self.filtered_normals, 
             NUM_AUGMENTS, 
-            detailed_meshes=[self.ground, roof_mesh, wall_mesh])
+            detailed_meshes=[self.ground, roof_mesh, wall_mesh])        
 
-        self.models = [None for i in range(len(self.augments[0]))]
-        self.arrays = [None for i in range(len(self.augments[0]))]
-        self.irradiance_results = [None for i in range(len(self.augments[0]))]
+        self.models = [None for _ in range(NUM_AUGMENTS)]
+        self.arrays = [None for _ in range(NUM_AUGMENTS)]
+        self.irradiance_results = [None for _ in range(NUM_AUGMENTS)]
         
-        return len(self.augments[0])
+        return NUM_AUGMENTS
   
     def add_model(self, augment_idx):
         meshes, pointclouds, normalclouds, _ = self.augments
@@ -182,10 +185,12 @@ class Sample:
         for i, (mesh, pointcloud, normalcloud, detailed_mesh) in enumerate(zip(meshes, pointclouds, normalclouds, detailed_meshes)):
             irradiance = self.irradiance_results[i]
             
+            temp_base_array = np.copy(base_array)
+            
             if irradiance != None:
-                array = set_array_values(base_array, points=pointcloud, normals=normalcloud, irradiance=irradiance, pointmap=self.pointmap)
+                array = set_array_values(temp_base_array, points=pointcloud, normals=normalcloud, irradiance=irradiance, pointmap=self.pointmap)
             else:
-                array = set_array_values(base_array, points=pointcloud, normals=normalcloud, pointmap=self.pointmap)
+                array = set_array_values(temp_base_array, points=pointcloud, normals=normalcloud, pointmap=self.pointmap)
             
             self.arrays[i] = array
     
@@ -208,7 +213,7 @@ class Sample:
             meshes = [self.ground_mesh, roof_mesh, wall_mesh]
 
         # Save the meshes to a json file
-        save.save_mesh_to_json(meshes, mesh_types, f'mesh_{self.idx}_base', GEOMETRY_PATH)
+        save.save_mesh_to_json(meshes, mesh_types, f'mesh_{self.idx}_base', self.geometry_path)
     
     def save_augment_meshes(self, visualization=False):
         _, _, _, detailed_meshes = self.augments
@@ -224,7 +229,7 @@ class Sample:
                 mesh = join_meshes([ground_mesh, roof_mesh, wall_mesh])
                 colored_mesh = generate_colored_mesh(mesh, irradiance, mesh_legend)
                 
-                mesh_types = ['ground', 'roofs', 'walls', 'colored_mesh']
+                mesh_types = ['ground', 'roofs', 'walls', 'visualization']
                 meshes = [ground_mesh, roof_mesh, wall_mesh, colored_mesh]
             else:
                 mesh_types = ['ground', 'roofs', 'walls']
@@ -236,33 +241,33 @@ class Sample:
                 name = 'rot' + str(i)
 
             # Save the meshes to a json file
-            save.save_mesh_to_json(meshes, mesh_types, f'mesh_{self.idx}_{name}', GEOMETRY_PATH)
+            save.save_mesh_to_json(meshes, mesh_types, f'mesh_{self.idx}_{name}', self.geometry_path)
 
-    def save_raw(self):
+    def save_raw(self):        
         for i, array in enumerate(self.arrays):
             name = f'irradiance_sample_{self.idx}_augmentation_{i}'
             
-            save.save_array(array, name, RAW_PATH)
+            save.save_array(array, name, self.raw_path)
 
     def save_sensors(self):
-        for i, array in enumerate(self.arrays):        
+        for i, array in enumerate(self.arrays):
             if i == 0:
                 name = 'base'
             else:
-                name = 'rot' + str(i)
+                name = 'rot' + str(i)            
     
             # Save the sensorpoints to a json file
-            save.save_array_as_list(array, f'sensors_{self.idx}_{name}', IRRADIANCE_PATH)
+            save.save_array_as_list(array, f'sensors_{self.idx}_{name}', self.irradiance_path)
 
     def save_outlines(self):    
         # # Save the polylines to a json file
-        save.save_outlines_to_json(self.building_outlines, f'outlines_{self.idx}', OUTLINES_PATH)
+        save.save_outlines_to_json(self.building_outlines, f'outlines_{self.idx}', self.outlines_path)
     
     @property
     def count(self):
         return len(self.augments[0])
     
-def delete_dataset(folder_paths, secure=True):
+def delete_dataset(folder_paths, logger, secure=True):
     """Delete all files in specified directories
 
     Args:
@@ -273,16 +278,16 @@ def delete_dataset(folder_paths, secure=True):
     if secure:
         input(f"Are you sure you want to delete the following datasets? {folder_paths}")
     
-    LOGGER.warning(f'Deleting all files in {folder_paths}')
+    logger.warning(f'Deleting all files in {folder_paths}')
     
     for path in folder_paths:
         for f in os.listdir(path):
             os.remove(os.path.join(path, f))
 
-    LOGGER.warning(f'Deletion successfull!')
+    logger.warning(f'Deletion successfull!')
     return
 
-def task(patch_outline, all_building_outlines, all_heights, idx, visualize_mesh=VISUALIZE_MESH):
+def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometry_path=GEOMETRY_PATH, irradiance_path=IRRADIANCE_PATH, outlines_path=OUTLINES_PATH, raw_path=RAW_PATH, visualize_mesh=VISUALIZE_MESH):
     """Generate a dataset sample
 
     Args:
@@ -294,7 +299,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, visualize_mesh=
     """
 
     # Initializa a sample
-    sample = Sample(idx)
+    sample = Sample(idx, logger, geometry_path, irradiance_path, outlines_path, raw_path)
     
     # Compute the outlines
     sample.compute_outlines(patch_outline, all_building_outlines, all_heights)
@@ -307,11 +312,11 @@ def task(patch_outline, all_building_outlines, all_heights, idx, visualize_mesh=
         t_preprocessing = time.perf_counter()
         
         # Generate meshes
-        LOGGER.info(f'Started preprocessing mesh for patch[{sample.idx}] with FSI value of {round(sample.FSI_score, 2)}')
+        logger.info(f'Started preprocessing mesh for patch[{sample.idx}] with FSI value of {round(sample.FSI_score, 2)}')
         sample.compute_mesh()    
 
         # Compute the sensors
-        LOGGER.info(f'Computing sensors for mesh patch[{sample.idx}]')
+        logger.info(f'Computing sensors for mesh patch[{sample.idx}]')
         sample.compute_sensors()
 
         # Augment the sample to different orientations
@@ -320,16 +325,16 @@ def task(patch_outline, all_building_outlines, all_heights, idx, visualize_mesh=
         # Iterate over the augmentations
         for idx in range(sample.count):
                                                 
-            LOGGER.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
+            logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
-            LOGGER.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
+            logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.simulate(idx)
 
         # Store the sensors, including irradiance values, as arrays in the sample object
         sample.store_sensors_as_arrays()
         
         # Save the detailed geometry
-        LOGGER.info(f'Saving mesh patch[{sample.idx}] and generating visualization')
+        logger.info(f'Saving mesh patch[{sample.idx}] and generating visualization')
         sample.save_augment_meshes(visualization=visualize_mesh)
         
         # Save the irradiance values as lists
@@ -338,12 +343,12 @@ def task(patch_outline, all_building_outlines, all_heights, idx, visualize_mesh=
         # Save the results as npy file
         sample.save_raw()
         
-        LOGGER.info(f'Finished preprocessing mesh for patch[{sample.idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
+        logger.info(f'Finished preprocessing mesh for patch[{sample.idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
         del sample
     else:
-        LOGGER.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
+        logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
 
-def main(filename, start_idx):
+def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_path=IRRADIANCE_PATH, outlines_path=OUTLINES_PATH, raw_path=RAW_PATH):
     """Generate a sample, and optionally simulate solar irradiance.
 
     Args:
@@ -356,6 +361,8 @@ def main(filename, start_idx):
 
     # Generate ground outlines for dataset patches
     patch_outlines = outlines.generate_outlines_from_bbox(bbox, SIZE, MIN_COVERAGE)
+    
+    logger.info(f'Number of samples to preprocess for this file: {len(patch_outlines)}')
 
     # Generate the building outlines for ALL building meshes
     all_building_outlines, all_heights = outlines.extract_building_outlines(wall_meshes, roof_meshes)
@@ -376,7 +383,7 @@ def main(filename, start_idx):
     # Iterate over all patch_outlines
     for idx in range(len(patch_outlines))[start_idx:]:
         start = time.perf_counter()
-        LOGGER.info(f'Started computing patch[{idx}].')
+        logger.info(f'Started computing patch[{idx}].')
         
         sample = None
 
@@ -388,20 +395,23 @@ def main(filename, start_idx):
         
         try:
             # # Run the generation and simulation for one ground patch sample
-            sample = task(patch_outline, deserializeed_building_outlines, all_heights, idx)
+            sample = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
             
             # Append the sample
             samples.append(sample)
         except Exception as e:
-            LOGGER.critical(f"Error message: {e}")
-            LOGGER.critical(f"Running task with index {idx} failed!")
+            logger.critical(f"Error message: {e}")
+            logger.critical(f"Running task with index {idx} failed!")
         
-        LOGGER.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
+        logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.\n')
 
     return samples
 
-
 if __name__ == '__main__':
+    # Initialize a logger
+    identifier = BAG_FILE_PATH.split("/")[-1][:-4]
+    logger = generate_logger(identifier=identifier, stdout=False)
+    
     random.seed(0)
     filename = BAG_FILE_PATH
     
@@ -423,7 +433,8 @@ if __name__ == '__main__':
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]
-    # delete_dataset(folder_paths, secure=True)
+    # delete_dataset(folder_paths, logger, secure=True)
     
     # Run the sample generation
-    main(filename, start_idx)
+    main(filename, start_idx, logger)
+    
