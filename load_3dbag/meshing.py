@@ -84,7 +84,7 @@ def get_random_face_center(mesh):
     
     return checkpoint
     
-def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS):
+def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS, logger=False):
     """Check if a planar mesh is inside any curve in a set of curves. This procedure works by taking a
     mesh face center and then checking if this center is inside the curve. In some special
     cases, this point intersects with the curve. In that case the multiple random faces centers
