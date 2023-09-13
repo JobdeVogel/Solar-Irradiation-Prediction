@@ -52,9 +52,10 @@ parser.add_argument('-sa', '--SIMULATION_ARGUMENTS', type=str, nargs='?', defaul
 parser.add_argument('-f', '--MIN_FSI', type=float, nargs='?', default=MIN_FSI, help='')
 parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='store_true', help='')
 parser.add_argument('-l', '--LOG', default=False, action='store_true', help='')
+parser.add_argument('-std', '--STDOUT', default=False, action='store_true', help='')
 
 args= parser.parse_args()
-BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, LOG = vars(args).values()
+BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, LOG, STD = vars(args).values()
 
 class Sample:
     def __init__(self, idx, logger, geometry_path, irradiance_path, outlines_path, raw_path):
@@ -410,7 +411,11 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
 if __name__ == '__main__':
     # Initialize a logger
     identifier = BAG_FILE_PATH.split("/")[-1][:-4]
-    logger = generate_logger(identifier=identifier, stdout=False)
+    
+    if STD:
+        logger = generate_logger(identifier=identifier, stdout=True)
+    else:
+        logger = generate_logger(identifier=identifier, stdout=False)
     
     random.seed(0)
     filename = BAG_FILE_PATH

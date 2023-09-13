@@ -4,7 +4,7 @@ Created by Job de Vogel
 ### Introduction
 Run this code sequentially by calling main.py, arguments described in file.
 
-`python main.py -r`
+`python main.py -std`
 
 Run this code in parallel by calling run.py.
 
