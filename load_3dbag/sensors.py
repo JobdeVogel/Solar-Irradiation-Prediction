@@ -1,6 +1,8 @@
 import Rhino.Geometry as rg
 import System
 import math
+import helpers
+import sys
 import numpy as np
 from parameters.params import _MINIMUM_ANGLE, _MINIMUM_AREA, _WALL_RAY_TOLERANCE, QUAD_ONLY
 
@@ -202,8 +204,10 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
     # Offset the ground centroids
     ground_centroids = offset_points(ground_centroids, ground_normals, offset)
     
+    
     # Delete the invalid sensors for the ground
     ground_centroids, ground_normals = delete_invalid_sensors(ground, ground_centroids, ground_normals)
+    
 
     # Compute the centroids and normals for the roof meshes
     joined_roofs = join_meshes(roofs)
@@ -240,7 +244,7 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
         wall_sensors = offset_points(wall_sensors, wall.FaceNormals, offset)
         
         # Compute the height of one face
-        face_height = height / int(math.ceil(height / grid_size))
+        face_height = height / int(math.ceil(height / grid_size))    
         
         # Iterate over the points and normals in the wall mesh
         for point, normal in zip(wall_sensors, wall.FaceNormals):
@@ -251,8 +255,9 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
                 # If this is the case, add the centroids to sensors and normals to normals
                 sensorpoints.append(point)
                 normals.append(normal)
-                
+              
             # Check if the sensorpoints are under the corresponding walls' roof (because of splitting error)
+            # Sometimes the ground is not splitted properly so wall points seem to be floating in space
             elif is_above_mesh(point, [meshes[i+1]], ray_vector=rg.Vector3d(0,0,1)):
                 
                 # If this is the case, add the centroids to sensors and normals to normals
@@ -269,15 +274,17 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
                     # Try to move the sensorpoint to close wall + offset
                     success, point = wall_ray_intersection(point, normal, [joined_walls], grid_size, offset)
                     
+                    
                     if not success:
                         # Set this point and normal value to None, thus it is invalid
                         point = None
                         normal = None
-                
+                    
                 # Append the invalid point and normal
                 sensorpoints.append(point)
                 normals.append(normal)
-    
+            
+        
     # Only compute the sensors for quad faces, skip the triangle faces at the borders of buildings    
     if quad_only:
         # Join all the meshes together in one list

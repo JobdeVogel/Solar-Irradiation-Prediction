@@ -14,7 +14,7 @@ rhinoinside.load()
 import Rhino.Geometry as rg
 import System
 import Rhino
-
+ 
 import time
 import os
 import numpy as np
@@ -105,6 +105,7 @@ class Sample:
                 patch_outline, 
                 all_building_outlines, 
                 all_heights)
+                       
         except Exception as e:
             self.logger.critical(f'Outlines computation for sample {self.idx} failed')
             self.logger.critical(e)
@@ -328,8 +329,8 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
                                                 
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
-            logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
-            sample.simulate(idx)
+            # logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
+            # sample.simulate(idx)
 
         # Store the sensors, including irradiance values, as arrays in the sample object
         sample.store_sensors_as_arrays()
@@ -434,7 +435,7 @@ if __name__ == '__main__':
     
     # ! problems: 181, 448
     # ! nice looking 447
-    start_idx = 0
+    start_idx = 448
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]

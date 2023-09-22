@@ -1,12 +1,12 @@
 import os
 import time
 
-path = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\irradiance"
+path = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\geometry"
 
 def get_latest_file(dir):
     files = os.listdir(dir)
     paths = [os.path.join(dir, basename) for basename in files]
-
+    
     latest_file = max(paths, key=os.path.getctime)
     
     return latest_file, paths

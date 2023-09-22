@@ -3,8 +3,23 @@ import System
 import math
 import random
 import sys
+
+import Rhino
+import json
+
 from parameters.params import MAX_CONTAINMENT_ITERATIONS, _REDUCE_SEGMENTS_TOLERANCE, _MESH_SPLITTER_BBOX_HEIGHT, _ANGLE_TOLERANCE_POSTP_MESH, _DIAGONAL_LENGTH_RATIO_POSTP_MESH
 #import cProfile
+  
+def temp_save(meshes, path):  
+    options = Rhino.FileIO.SerializationOptions()
+    data = []
+    
+    for mesh in meshes:
+        data.append(mesh.ToJSON(options))
+    
+    with open(path, "w") as file:
+        json.dump(data, file)  
+  
   
 def postprocess_mesh(mesh, check=False):
     """Postprocess a mesh such that there are no invalid faces or vertices
@@ -84,7 +99,7 @@ def get_random_face_center(mesh):
     
     return checkpoint
     
-def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS, logger=False):
+def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS, logger=False, std=False):
     """Check if a planar mesh is inside any curve in a set of curves. This procedure works by taking a
     mesh face center and then checking if this center is inside the curve. In some special
     cases, this point intersects with the curve. In that case the multiple random faces centers
@@ -99,12 +114,24 @@ def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS, logger=Fa
     Returns:
         inside (bool): indicates if inside one of the cuves
     """
-    
+      
     # Generate an intial checkpoint
     checkpoint = get_random_face_center(mesh)
         
     # Bool indicating if mesh is inside the curve
     inside = False
+    
+    # Find a quad mesh and get the face center
+    checkpoint = None
+    for i, face in enumerate(mesh.Faces):
+        if face.IsQuad:
+            checkpoint = mesh.Faces.GetFaceCenter(i)
+            break
+    
+    # The mesh does not have quad faces (outlier situation)
+    if not isinstance(checkpoint, rg.Point3d):
+        # Generate an intial checkpoint
+        checkpoint = get_random_face_center(mesh) 
     
     # Iterate over the curves
     for curve in curves:
@@ -117,13 +144,17 @@ def is_inside(mesh, curves, max_iterations=MAX_CONTAINMENT_ITERATIONS, logger=Fa
                 break
             elif curve.Contains(checkpoint, rg.Plane.WorldXY, tolerance=1e-8) == rg.PointContainment.Coincident:
                 inside = True
-                
+            
                 # Generate a new checkpoint
                 checkpoint = get_random_face_center(mesh)
-                
+                    
                 if i == max_iterations - 1:
                     if logger:
                         logger.warning('Point containment coincident')
+                break
+    if std:
+        print((checkpoint.X, checkpoint.Y, checkpoint.Z))
+
     return inside
 
 def project_outlines_to_world_xy(outlines):
@@ -383,7 +414,7 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
     roofs = []
     
     # Iterate over the splitters and buildings
-    for splitter_set, building_curve_set, courtyard_curve_set in zip(splitters, building_curves, courtyard_curves):
+    for sample, (splitter_set, building_curve_set, courtyard_curve_set) in enumerate(zip(splitters, building_curves, courtyard_curves)):
         # Store the roof meshes for a single building in a temp mesh
         temp_roofs = rg.Mesh()
         
@@ -400,6 +431,9 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                 # Check if the element is inside the building or outside (part of the ground)
                 relations = [is_inside(element, [building_curve]) for element in elements]
                 
+                temp = building_curve.Duplicate()
+                temp = temp.TryGetPolyline()[1]
+                                
                 # Generate a roof mesh
                 roof = rg.Mesh()
                 
@@ -415,7 +449,7 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                     else:
                         # Add the element to the ground mesh
                         ground_elements.Append(element)
-                
+                    
                 # Add the roof mesh to the temp roofs for this building
                 temp_roofs.Append(roof)
                 
@@ -425,42 +459,47 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                 if logger:
                     logger.warning("Splitting did not result in multiple elements")
 
-        # Check if this building has courtyards
-        if len(courtyard_curve_set) > 0:
-            # Iterate over the polylines in the courtyards
-            for courtyard_curve in courtyard_curve_set:
-                # Generate a splitter for the courtyard
-                splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
+        # # Check if this building has courtyards
+        # if len(courtyard_curve_set) > 0:
+        #     # Iterate over the polylines in the courtyards
+        #     for courtyard_curve in courtyard_curve_set:
+        #         # Generate a splitter for the courtyard
+        #         splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
                 
-                # Split the roofs of this building by the courtyard splitter
-                elements = temp_roofs.Split(splitter)
+        #         # Split the roofs of this building by the courtyard splitter
+        #         elements = temp_roofs.Split(splitter)
 
-                # If the splitting resulted in more than one mesh
-                if len(elements) > 1:
-                    # Check if the element is inside the courtyard or outside (part of the roof)     
-                    relations = [is_inside(element, [courtyard_curve]) for element in elements]
+        #         # If the splitting resulted in more than one mesh
+        #         if len(elements) > 1:
+        #             # Check if the element is inside the courtyard or outside (part of the roof)     
+        #             relations = [is_inside(element, [courtyard_curve]) for element in elements]
                     
-                    # Generate a new roof mesh
-                    roof = rg.Mesh()
+        #             if sum(relations) == 0:
+        #                 temp = building_curve.Duplicate()
+        #                 temp = temp.TryGetPolyline()[1]
                     
-                    # Store the courtyard elements
-                    courtyard_elements = rg.Mesh()
+        #             # Generate a new roof mesh
+        #             roof = rg.Mesh()
                     
-                    # Iterate over the splitted elements from the roof
-                    for element, relation in zip(elements, relations):
-                        # If the roof is inside the courtyard
-                        if relation:
-                            # Add to the courtyard elements
-                            courtyard_elements.Append(element)
-                        else:
-                            # Add to the roof elements
-                            roof.Append(element)
+        #             # Store the courtyard elements
+        #             courtyard_elements = rg.Mesh()
                     
-                    # Add the courtyard elements to the mesh plane
-                    mesh_plane.Append(courtyard_elements)
+        #             # Iterate over the splitted elements from the roof
+        #             for element, relation in zip(elements, relations):
+        #                 # If the roof is inside the courtyard
+        #                 if relation:
+        #                     # Add to the courtyard elements
+        #                     courtyard_elements.Append(element)
+        #                 else:
+        #                     # Add to the roof elements
+        #                     roof.Append(element)
+                    
+        #             # Add the courtyard elements to the mesh plane
+        #             mesh_plane.Append(courtyard_elements)
         
         # Add the roof to the list of roofs
         roofs.append(roof)
+
     
     # Postprocess the gorund mesh plane mesh
     ground = postprocess_mesh(mesh_plane)
