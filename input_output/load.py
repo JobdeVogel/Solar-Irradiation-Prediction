@@ -63,3 +63,5 @@ def load_array_as_list(name, folder):
 def load_hbjson(name, folder):
     path = folder + "/" + name + ".hbjson"
     model = Model.from_file(path)
+    
+    return model

@@ -55,7 +55,7 @@ HBJSON_PATH = './data/models/'
 WEA_PATH = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
 
 SIMULATION_ARGUMENTS = '-ab 9 -ad 5000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15'
-
+SIM_OUT_FOLDER = 'D:/Master Thesis Data/simulation'
 USE_GPU = True
 
 SKY_DENSITY = 1

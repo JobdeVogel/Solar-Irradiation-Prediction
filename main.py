@@ -170,7 +170,16 @@ class Sample:
         HB_model = model.generate([rough_ground_mesh], [rough_roof_mesh], [rough_wall_mesh], pointcloud, normalcloud)
         
         self.models[augment_idx] = HB_model
+    
+    def to_hbjson(self, augment_idx, path):
+        if augment_idx > len(self.models):
+            raise IndexError('Augment_idx is higher than number of models available in sample')
         
+        model = self.models[augment_idx]
+        
+        model.to_hbjson(name='renderfarm_test_model', folder=path)
+        
+    
     def simulate(self, augment_idx):
         model = self.models[augment_idx]
         
@@ -329,6 +338,12 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
                                                 
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
+            
+            sample.to_hbjson(0, './data/renderfarm')
+            
+            sys.exit()
+            
+            
             # logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
             # sample.simulate(idx)
 

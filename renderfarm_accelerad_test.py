@@ -1,12 +1,18 @@
-"""
-Run a solar irradiance simulation for a given model
+# Honeybee Core dependencies
+from honeybee.model import Model
+from simulate import run
 
-Developed by Job de Vogel : 2023-07-17
-"""
 from lbt_recipes.recipe import Recipe
 from lbt_recipes.settings import RecipeSettings
 
-from parameters.params import USE_GPU, SKY_DENSITY, WORKERS, SIM_OUT_FOLDER
+from parameters.params import USE_GPU, SKY_DENSITY, WORKERS, WEA, SIMULATION_ARGUMENTS, SIM_OUT_FOLDER
+
+# Load an HB model from a file
+def load_hbjson(name, folder):
+    path = folder + "/" + name + ".hbjson"
+    model = Model.from_file(path)
+    
+    return model
 
 def annual_irradiance(model, wea, sim_arguments):   
     # Pass the model to the recipe
@@ -30,6 +36,7 @@ def annual_irradiance(model, wea, sim_arguments):
     settings.report_out = False
     settings.folder = SIM_OUT_FOLDER + '/' + model.display_name
     
+    print('Started simulating...')
     # Run the simulation 
     project_folder = recipe.run(settings=settings, radiance_check=True, silent=False, queenbee_path='queenbee')
 
@@ -38,24 +45,16 @@ def annual_irradiance(model, wea, sim_arguments):
     
     return irradiance
 
-def main(model, wea, sim_arguments, pointmap, add_none_values=True, logger=False):
-    if logger:
-        logger.info(f'Started solar irradiance simulation with arguments {sim_arguments}')
-    # Compute the annual irradiance for the given model
-    values = annual_irradiance(model, wea, sim_arguments)
+def par_convergence():
+    pass
+
+if __name__=='__main__':
+    name, folder = 'renderfarm_test_model', './data/renderfarm'
     
-    if logger:
-        logger.info(f'Computed {len(values)} solar irradiance values for model {model.display_name}')
+    print('Loading hbjson')
+    model = load_hbjson(name, folder)
+    print('Finished loading')
     
-    # Store the irradiance values such that invalid sensorpoints get irriance value of 0
-    irradiance = iter(values)
+    values = annual_irradiance(model, WEA, SIMULATION_ARGUMENTS)
+    print(values)
     
-    result_mesh = []
-    for point in pointmap:
-        if point:
-            result_mesh.append(next(irradiance))
-        else:
-            if add_none_values:
-                result_mesh.append(0)
-    
-    return result_mesh
