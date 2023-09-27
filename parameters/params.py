@@ -37,7 +37,7 @@ QUAD_ONLY = False
 PICKLE_PROTOCOL = 2
 
 # Model settings
-REFLECTANCE = 0.0
+REFLECTANCE = 0.2
 SPECULAR = 0.0
 ROUGHNESS = 0.0
 MODIFIER_NAME = 'default_urban_modifier'
