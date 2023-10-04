@@ -33,6 +33,9 @@ _MINIMUM_AREA = 0.0001
 _WALL_RAY_TOLERANCE = 0.1
 QUAD_ONLY = False
 
+# Validation
+MAX_AREA_ERROR = 0.001 # Quite strict, but sure enough to get accurate models
+
 # Save settings
 PICKLE_PROTOCOL = 2
 
@@ -54,7 +57,7 @@ HBJSON_PATH = './data/models/'
 # Simulation
 WEA_PATH = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
 
-SIMULATION_ARGUMENTS = '-ab 9 -ad 5000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15'
+SIMULATION_ARGUMENTS = '-ab 9 -ad 5000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 -w'
 SIM_OUT_FOLDER = 'D:/Master Thesis Data/simulation'
 USE_GPU = True
 
