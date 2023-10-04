@@ -3,6 +3,7 @@ import System
 import math
 import random
 import sys
+import time
 
 import Rhino
 import json
@@ -71,6 +72,13 @@ def postprocess_mesh(mesh, check=False):
     if check:
         print(f'Cull degenerate faces: {rebuild_mesh.IsValidWithLog()}')
     
+    # Delete zero area mesh faces
+    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[1]
+    rebuild_mesh.Faces.DeleteFaces(indices, True)
+    
+    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[2]
+    rebuild_mesh.Faces.DeleteFaces(indices, True)
+        
     return rebuild_mesh
 
 def get_random_face_center(mesh):
@@ -459,49 +467,48 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                 if logger:
                     logger.warning("Splitting did not result in multiple elements")
 
-        # # Check if this building has courtyards
-        # if len(courtyard_curve_set) > 0:
-        #     # Iterate over the polylines in the courtyards
-        #     for courtyard_curve in courtyard_curve_set:
-        #         # Generate a splitter for the courtyard
-        #         splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
+        # Check if this building has courtyards
+        if len(courtyard_curve_set) > 0:
+            # Iterate over the polylines in the courtyards
+            for courtyard_curve in courtyard_curve_set:
+                # Generate a splitter for the courtyard
+                splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
                 
-        #         # Split the roofs of this building by the courtyard splitter
-        #         elements = temp_roofs.Split(splitter)
+                # Split the roofs of this building by the courtyard splitter
+                elements = temp_roofs.Split(splitter)
 
-        #         # If the splitting resulted in more than one mesh
-        #         if len(elements) > 1:
-        #             # Check if the element is inside the courtyard or outside (part of the roof)     
-        #             relations = [is_inside(element, [courtyard_curve]) for element in elements]
+                # If the splitting resulted in more than one mesh
+                if len(elements) > 1:
+                    # Check if the element is inside the courtyard or outside (part of the roof)     
+                    relations = [is_inside(element, [courtyard_curve]) for element in elements]
                     
-        #             if sum(relations) == 0:
-        #                 temp = building_curve.Duplicate()
-        #                 temp = temp.TryGetPolyline()[1]
+                    if sum(relations) == 0:
+                        temp = building_curve.Duplicate()
+                        temp = temp.TryGetPolyline()[1]
                     
-        #             # Generate a new roof mesh
-        #             roof = rg.Mesh()
+                    # Generate a new roof mesh
+                    roof = rg.Mesh()
                     
-        #             # Store the courtyard elements
-        #             courtyard_elements = rg.Mesh()
+                    # Store the courtyard elements
+                    courtyard_elements = rg.Mesh()
                     
-        #             # Iterate over the splitted elements from the roof
-        #             for element, relation in zip(elements, relations):
-        #                 # If the roof is inside the courtyard
-        #                 if relation:
-        #                     # Add to the courtyard elements
-        #                     courtyard_elements.Append(element)
-        #                 else:
-        #                     # Add to the roof elements
-        #                     roof.Append(element)
+                    # Iterate over the splitted elements from the roof
+                    for element, relation in zip(elements, relations):
+                        # If the roof is inside the courtyard
+                        if relation:
+                            # Add to the courtyard elements
+                            courtyard_elements.Append(element)
+                        else:
+                            # Add to the roof elements
+                            roof.Append(element)
                     
-        #             # Add the courtyard elements to the mesh plane
-        #             mesh_plane.Append(courtyard_elements)
+                    # Add the courtyard elements to the mesh plane
+                    mesh_plane.Append(courtyard_elements)
         
         # Add the roof to the list of roofs
         roofs.append(roof)
-
-    
-    # Postprocess the gorund mesh plane mesh
+   
+    # Postprocess the ground mesh plane mesh
     ground = postprocess_mesh(mesh_plane)
     
     # Iterate over the roof meshes to translate to the correct height
