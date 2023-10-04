@@ -33,7 +33,7 @@ from simulate import run
 from visualize.mesh import generate_colored_mesh, legend
 
 from log.logger import generate_logger
-from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH
+from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, MAX_AREA_ERROR
 
 parser = argparse.ArgumentParser(prog='name', description='random info', epilog='random bottom info')
 parser.add_argument('-b', '--BAG_FILE_PATH', type=str, nargs='?', default=BAG_FILE_PATH, help='')
@@ -51,11 +51,12 @@ parser.add_argument('-w', '--WEA', type=str, nargs='?', default=WEA, help='')
 parser.add_argument('-sa', '--SIMULATION_ARGUMENTS', type=str, nargs='?', default=SIMULATION_ARGUMENTS, help='')
 parser.add_argument('-f', '--MIN_FSI', type=float, nargs='?', default=MIN_FSI, help='')
 parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='store_true', help='')
+parser.add_argument('-ae', '--MAX_AREA_ERROR', type=float, nargs='?', default=MAX_AREA_ERROR, help='')
 parser.add_argument('-l', '--LOG', default=False, action='store_true', help='')
 parser.add_argument('-std', '--STDOUT', default=False, action='store_true', help='')
 
 args= parser.parse_args()
-BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, LOG, STD = vars(args).values()
+BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, MAX_AREA_ERROR, LOG, STD = vars(args).values()
 
 class Sample:
     def __init__(self, idx, logger, geometry_path, irradiance_path, outlines_path, raw_path):
@@ -125,6 +126,20 @@ class Sample:
             self.logger.critical(f'Mesh computation for sample {self.idx} failed')
             self.logger.critical(e)
     
+    def validate(self):
+        expected = SIZE**2
+
+        ground_area = rg.AreaMassProperties.Compute(self.rough_ground).Area
+        roof_area = rg.AreaMassProperties.Compute(join_meshes(self.rough_roofs)).Area
+
+        error = abs(1.0 - ((ground_area + roof_area) / expected))
+        
+        valid = True
+        if error > MAX_AREA_ERROR:
+            valid = False
+        
+        return valid
+    
     def compute_sensors(self, compute_filtered=True):
         try:
             # Compute the sensorpoints for this sample
@@ -178,7 +193,6 @@ class Sample:
         model = self.models[augment_idx]
         
         model.to_hbjson(name='renderfarm_test_model', folder=path)
-        
     
     def simulate(self, augment_idx):
         model = self.models[augment_idx]
@@ -326,6 +340,13 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         logger.info(f'Started preprocessing mesh for patch[{sample.idx}] with FSI value of {round(sample.FSI_score, 2)}')
         sample.compute_mesh()    
 
+        # Check if horizontal mesh area close enough to expected area
+        valid = sample.validate()
+        
+        if not valid:
+            logger.warning(f'Area of sample {sample.idx} not in line with maximum area error, most likely due to invalid boolean mesh split. Therefore this sample will be skipped. Change the error with the MAX_AREA_ERROR argument.')
+            return
+
         # Compute the sensors
         logger.info(f'Computing sensors for mesh patch[{sample.idx}]')
         sample.compute_sensors()
@@ -339,13 +360,10 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
             
-            sample.to_hbjson(0, './data/renderfarm')
+            # sample.to_hbjson(0, "C:\\Users\\Job de Vogel\\Desktop")
             
-            sys.exit()
-            
-            
-            # logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
-            # sample.simulate(idx)
+            logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
+            sample.simulate(idx)
 
         # Store the sensors, including irradiance values, as arrays in the sample object
         sample.store_sensors_as_arrays()
@@ -359,6 +377,8 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         
         # Save the results as npy file
         sample.save_raw()
+        
+        sys.exit()
         
         logger.info(f'Finished preprocessing mesh for patch[{sample.idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
         del sample
@@ -448,8 +468,6 @@ if __name__ == '__main__':
     if not os.path.exists(RAW_PATH):
         os.makedirs(RAW_PATH)
     
-    # ! problems: 181, 448
-    # ! nice looking 447
     start_idx = 448
     
     # Delete the database
