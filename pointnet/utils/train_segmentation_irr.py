@@ -23,6 +23,15 @@ import numpy as np
 import sys
 import time
 
+'''
+CHANGES FOR IRRADIANCE PREDICTION
+
+The traditional PointNet predicts an output value for each class with the likelihood
+of being that class. Since we are using regression to predict irradiance. The number
+of classes is set to 1, log_softmax in the network is removed and loss function is
+changed to mse_loss.
+'''
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
@@ -38,10 +47,13 @@ parser.add_argument('--feature_transform', action='store_true', help="use featur
 
 opt = parser.parse_args()
 
-# Temporarily assign dataset
-opt.dataset = "D:\\Master Thesis Data\\Shapenet\\nonormal"
+if not opt.dataset:
+    # Temporarily assign dataset
+    opt.dataset = "D:\\Master Thesis Data\\Shapenet\\nonormal"
+    #opt.dataset = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\Master Thesis\\Dataset_pipeline\\dataset\\pointnet\\raw"
 
 def main():
+    # Set seed
     opt.manualSeed = random.randint(1, 10000)  # fix seed
     opt.manualSeed = 0
     
@@ -49,6 +61,7 @@ def main():
     random.seed(opt.manualSeed)
     torch.manual_seed(opt.manualSeed)
 
+    # Initialize dataset
     dataset = ShapeNetDataset(
         root=opt.dataset,
         npoints=2500,
@@ -74,44 +87,41 @@ def main():
         batch_size=opt.batchSize,
         shuffle=True,
         num_workers=int(opt.workers))
-
+    
     '''
-    # dataset = IrradianceDataset(
-    #     root=opt.dataset,
-    #     dtype=np.float32,
-    #     normals=False,
-    #     npoints=2500
-    # )
+    dataset = IrradianceDataset(
+        root=opt.dataset,
+        dtype=np.float32,
+        normals=False,
+        npoints=2500
+    )
     
-    # test_dataset = IrradianceDataset(
-    #     root=opt.dataset,
-    #     split='test',
-    #     dtype=np.float32,
-    #     normals=False,
-    #     npoints=2500
-    # )
+    test_dataset = IrradianceDataset(
+        root=opt.dataset,
+        split='test',
+        dtype=np.float32,
+        normals=False,
+        npoints=2500
+    )
     
-    # dataloader = torch.utils.data.DataLoader(
-    #     dataset,
-    #     batch_size=32,
-    #     shuffle=True,
-    #     num_workers=4,
-    #     pin_memory=True
-    #     )
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=32,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True
+        )
     
-    # testdataloader = torch.utils.data.DataLoader(
-    #     test_dataset,
-    #     batch_size=32,
-    #     shuffle=True,
-    #     num_workers=4,
-    #     pin_memory=True
-    #     )
-
-    # num_classes = dataset.num_seg_classes
-    # print('classes', num_classes)
+    testdataloader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=32,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True
+        )
     '''
     
-    # ! Changing this to num_classes = 1 results in all 0. values for predictions
+    # ! Overwrite for irradiance prediction
     num_classes = 1
 
     try:
@@ -129,7 +139,7 @@ def main():
     classifier.cuda()
     
     '''
-    #Test a specific sample from the dataset
+    # Test a specific sample from the dataset
     criterion = nn.MSELoss()
     
     idx = 0
@@ -171,7 +181,7 @@ def main():
             
             pred = pred.view(-1, 1)
 
-            # pred_choice = pred.data.max(1)[1]
+            # pred_choice = pred.data.max(1)[1] # Only used for segmentation
             pred_regress = pred.data.squeeze()
             
             target = target.view(-1, 1)[:, 0] - 1            
