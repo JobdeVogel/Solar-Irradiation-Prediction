@@ -12,6 +12,10 @@ Run this code in parallel by calling run.py.
 
 Change parameters in parameters.params.py
 
+Train the irradiance model using (using Python 3.8 with pytorch cuda enabled):
+
+`python train_segmentation_irr.py`
+
 ### Requirements
 * McNeel Rhino 7 installed
 * Radiance
