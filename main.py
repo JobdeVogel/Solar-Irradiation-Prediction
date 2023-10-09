@@ -440,13 +440,13 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
             logger.critical(f"Error message: {e}")
             logger.critical(f"Running task with index {idx} failed!")
         
-        logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.\n')
+        logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
 
     return samples
 
 if __name__ == '__main__':
     # Initialize a logger
-    identifier = BAG_FILE_PATH.split("/")[-1][:-4]
+    identifier = BAG_FILE_PATH.split("\\")[-1][:-4]
     
     if STD:
         logger = generate_logger(identifier=identifier, stdout=True)
@@ -468,7 +468,7 @@ if __name__ == '__main__':
     if not os.path.exists(RAW_PATH):
         os.makedirs(RAW_PATH)
     
-    start_idx = 448
+    start_idx = 450
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]
