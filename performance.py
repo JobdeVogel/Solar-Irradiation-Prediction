@@ -21,8 +21,11 @@ for file in os.listdir(path):
 all_files = []
 
 for folder in subfolders:
-    latest_file, files = get_latest_file(folder)
-    all_files.extend(files)
+    try:
+        latest_file, files = get_latest_file(folder)
+        all_files.extend(files)
+    except ValueError:
+        pass
 
 initial_count = len(all_files)
 
