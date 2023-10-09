@@ -8,7 +8,6 @@ import numpy as np
 import torch.nn.functional as F
 import sys
 
-
 class STN3d(nn.Module):
     # Feature transformer
     def __init__(self):
@@ -167,12 +166,15 @@ class PointNetDenseCls(nn.Module):
     def __init__(self, k = 2, feature_transform=False):
         super(PointNetDenseCls, self).__init__()
         self.k = k
-        self.feature_transform=feature_transform
+        self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=False, feature_transform=feature_transform)
         self.conv1 = torch.nn.Conv1d(1088, 512, 1)
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
-        self.conv4 = torch.nn.Conv1d(128, self.k, 1)
+        self.conv4 = torch.nn.Conv1d(128, 8, 1)
+        self.fc1 = nn.Linear(8 * 2500, 1024)  # Add an FC layer to reduce dimensionality
+        self.fc2 = nn.Linear(1024, 64)  # Add another FC layer
+        self.fc3 = nn.Linear(64, 2500)  # The final FC layer with 'k' output neurons
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
@@ -185,15 +187,16 @@ class PointNetDenseCls(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         x = self.conv4(x)
-        x = x.transpose(2,1).contiguous()
         
-        x = x.view(-1,self.k)
+        # Flatten the output of the last convolutional layer
+        x = x.view(batchsize, -1)
         
-        if self.k > 1:
-            x = F.log_softmax(x, dim=-1)
-        
-        x = x.view(batchsize, n_pts, self.k)       
-        
+        # Pass it through FC layers
+        x = F.relu(self.fc1(x))        
+        x = F.relu(self.fc2(x))        
+        x = self.fc3(x)  # No activation function for the final output
+        x = x.unsqueeze(-1)
+
         return x, trans, trans_feat
 
 def feature_transform_regularizer(trans):
@@ -232,7 +235,13 @@ if __name__ == '__main__':
     # out, _, _ = cls(sim_data)
     # print('class', out.size())
     
-    seg = PointNetDenseCls(k = 1)
+
+    seg = PointNetDenseCls(k = 3)
     out, _, _ = seg(sim_data)
     print('seg', out.size())
     print(out.shape)
+    
+    # seg = PointNetDenseCls(k = 1)
+    # out, _, _ = seg(sim_data)
+    # print('seg', out.size())
+    # print(out.shape)

@@ -12,7 +12,7 @@ import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 from pointnet.dataset import ShapeNetDataset, IrradianceDataset
-from pointnet.irr_model import PointNetDenseCls, feature_transform_regularizer
+from pointnet.irr_model_test import PointNetDenseCls, feature_transform_regularizer
 from torch.utils.tensorboard import SummaryWriter
 
 from torch.multiprocessing import freeze_support
@@ -160,11 +160,13 @@ def main():
     loss = criterion(pred_regress, target)
     '''
     
-    optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
+    optimizer = optim.Adam(classifier.parameters(), lr=0.0001, betas=(0.9, 0.999))
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
     classifier.cuda()
 
     num_batch = len(dataset) / opt.batchSize
+
+    losses = []
 
     for epoch in range(opt.nepoch):
         for i, data in enumerate(dataloader, 0):
@@ -178,23 +180,19 @@ def main():
             
             pred, trans, trans_feat = classifier(points)
             
-            
-            
             pred = pred.view(-1, 1)
-            
+
             # pred_choice = pred.data.max(1)[1] # Only used for segmentation
             pred_regress = pred.data.squeeze()
-            
-            print(pred.shape)
-
-            sys.exit()
             
             target = target.view(-1, 1)[:, 0] - 1            
             target = target.float()
             
             pred_regress.requires_grad_()
-               
-            loss = F.mse_loss(pred_regress, target)         
+
+            loss = F.mse_loss(pred_regress, target)
+            
+            losses.append(loss)
             
             if opt.feature_transform:
                  loss += feature_transform_regularizer(trans_feat) * 0.001
@@ -203,7 +201,7 @@ def main():
             
             optimizer.step()
 
-            print('[%d: %d/%d] train loss: %f' % (epoch, i, num_batch, loss.item()))
+            print('[%d: %d/%d] train loss: %f, avg_loss: %f' % (epoch, i, num_batch, loss.item(), sum(losses) / len(losses)))
 
             if i % 10 == 0:
                 j, data = next(enumerate(testdataloader, 0))
@@ -211,6 +209,7 @@ def main():
                 
                 points = points.transpose(2, 1)
                 points, target = points.cuda(), target.cuda()
+                
                 classifier = classifier.eval()
                 
                 pred, _, _ = classifier(points)
