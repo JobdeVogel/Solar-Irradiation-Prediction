@@ -171,6 +171,7 @@ def main():
     for epoch in range(opt.nepoch):
         for i, data in enumerate(dataloader, 0):
             points, target = data
+            
             points = points.transpose(2, 1)
             points, target = points.cuda(), target.cuda()
             
@@ -180,17 +181,17 @@ def main():
             
             pred, trans, trans_feat = classifier(points)
             
-            pred = pred.view(-1, 1)
-
             # pred_choice = pred.data.max(1)[1] # Only used for segmentation
-            pred_regress = pred.data.squeeze()
+            # pred_regress = pred.data.squeeze() #! FIXED THE ISSUE, COMPUTATIONAL GRAPH BREAKS HERE!!!
             
-            target = target.view(-1, 1)[:, 0] - 1            
+            # Flatten the data
+            pred = pred.view(-1)
+            
+            target = target.view(-1, 1)[:, 0] - 1
+                        
             target = target.float()
-            
-            pred_regress.requires_grad_()
 
-            loss = F.mse_loss(pred_regress, target)
+            loss = F.mse_loss(pred, target)
             
             losses.append(loss)
             

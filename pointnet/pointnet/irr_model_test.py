@@ -192,8 +192,8 @@ class PointNetDenseCls(nn.Module):
         x = x.view(batchsize, -1)
         
         # Pass it through FC layers
-        x = F.relu(self.fc1(x))        
-        x = F.relu(self.fc2(x))        
+        x = self.fc1(x)     
+        x = self.fc2(x)    
         x = self.fc3(x)  # No activation function for the final output
         x = x.unsqueeze(-1)
 
