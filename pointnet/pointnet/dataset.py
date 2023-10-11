@@ -15,6 +15,8 @@ import functools
 torch.set_printoptions(precision=5)
 torch.set_printoptions(threshold=10)
 
+np.set_printoptions(suppress = True)
+
 def get_segmentation_classes(root):
     catfile = os.path.join(root, 'synsetoffset2category.txt')
     cat = {}
@@ -215,7 +217,8 @@ class IrradianceDataset(data.Dataset):
                  normals=True,
                  dtype=np.float32,
                  shuffle=True,
-                 seed=78789
+                 seed=78789,
+                 transform=False,
                  ):
         self.root = root
         self.npoints = npoints
@@ -226,21 +229,29 @@ class IrradianceDataset(data.Dataset):
         self.files = []
         self.shuffle = shuffle
         self.seed=seed
+        self.transform = transform
         
         np.random.seed(self.seed)
         random.seed(self.seed)
         
         files = traverse_root(self.root)
+        
         split_index = int(len(files) * self.split_size)
         
         if self.shuffle:
             random.shuffle(files)
-            
+    
+        if len(files) == 0:
+            print(f'WARNING: number of available samples in {self.root} is 0, it is not possible to generate a dataset')
+            sys.exit()
+        elif len(files) == 1:
+            print(f'WARNING: number of available samples in {self.root} is 1, only a train dataset can be generated, test will be skipped')
+    
         if split == 'train':
-            for file_path in files[:split_index]:
+            for file_path in files[:split_index+1]:
                 self.files.append(file_path)
         elif split == 'test':
-            for file_path in files[split_index:]:
+            for file_path in files[split_index+1:]:
                 self.files.append(file_path)       
     
     def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:
@@ -278,7 +289,7 @@ class IrradianceDataset(data.Dataset):
         
         return outputs
      
-    def __getitem__(self, index):
+    def __getitem__(self, index):       
         file = self.files[index]
         
         with open(os.path.join(self.root, file), 'rb') as f:
@@ -287,8 +298,12 @@ class IrradianceDataset(data.Dataset):
         nan_mask = np.isnan(data).any(axis=1)
         filtered_data = data[~nan_mask]
         
-        choice = np.random.choice(len(filtered_data), self.npoints, replace=True)
-        sampled_data = filtered_data[choice, :]
+        # ! Something goes wrong HERE!!!
+        # #choice = np.random.choice(len(filtered_data), self.npoints, replace=True)       
+        # choice = np.sort(np.random.choice(np.arange(0, len(filtered_data)), size=self.npoints, replace=False))
+        
+        # sampled_data = filtered_data[choice, :]
+        sampled_data = filtered_data
         
         points = sampled_data[:, :6] if self.normals else sampled_data[:, :3]
         irr = sampled_data[:, -1]
@@ -296,9 +311,9 @@ class IrradianceDataset(data.Dataset):
         points = torch.from_numpy(points.astype(self.dtype))
         irr = torch.from_numpy(irr.astype(self.dtype))
         
-        points = self.transform_features(points)
-        
-        irr = self.transform_outputs(irr)
+        if self.transform:
+            points = self.transform_features(points)    
+            irr = self.transform_outputs(irr)
         
         return points, irr
     

@@ -126,13 +126,20 @@ if __name__ == "__main__":
             
             pred, trans, trans_feat = classifier(points)
 
+            print(pred)
+
             pred = pred.view(-1, num_classes)
 
             target = target.view(-1, 1)[:, 0] - 1
             
             pred_choice = pred.data.max(1)[1]                    
             
+            # print(f'pred grad: {pred.grad}')
+            sys.exit()
+            
+            
             loss = F.nll_loss(pred, target)
+            sys.exit()
 
             if opt.feature_transform:
                 loss += feature_transform_regularizer(trans_feat) * 0.001

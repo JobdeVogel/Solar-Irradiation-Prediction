@@ -22,6 +22,11 @@ import numpy as np
 import sys
 import time
 
+import open3d as o3d
+import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
+
+
 '''
 CHANGES FOR IRRADIANCE PREDICTION
 
@@ -46,20 +51,51 @@ parser.add_argument('--feature_transform', action='store_true', help="use featur
 
 opt = parser.parse_args()
 
-if not opt.dataset:
-    # Temporarily assign dataset
-    opt.dataset = "D:\\Master Thesis Data\\Shapenet\\nonormal"
-    #opt.dataset = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\Master Thesis\\Dataset_pipeline\\dataset\\pointnet\\raw"
-
-def main():
-    # Set seed
-    opt.manualSeed = random.randint(1, 10000)  # fix seed
-    opt.manualSeed = 0
+def visualize_pointcloud(pointcloud: np.array, color_values: np.array):
+    print([i for i in color_values[:25]])
     
-    print("Random Seed: ", opt.manualSeed)
-    random.seed(opt.manualSeed)
-    torch.manual_seed(opt.manualSeed)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pointcloud)
+    
+    coord_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5, origin=[0, 0, -1])
+    
+    color_map = plt.get_cmap('coolwarm')
+    
+    norm = Normalize(vmin=min(color_values), vmax=max(color_values))
 
+    # Map normalized values to colors
+    colors = color_map(norm(color_values))[:, :3]       
+    
+    pcd.colors = o3d.utility.Vector3dVector(colors)    
+
+    o3d.visualization.draw_geometries([pcd, coord_frame],
+                                        zoom=1,
+                                        front=[1, 1, 1],
+                                        lookat=[0, 0, -1],
+                                        up=[0, 0, 1])
+    
+    # camera = visualizer.get_view_control()
+    
+    # camera.set_constant_z_near(0.001)
+    # camera.set_constant_z_far(100.0)
+    # camera.set_front([0, -np.sin(np.radians(45)), -np.cos(np.radians(45))])
+    # camera.set_lookat([0, 0, 0])
+    # camera.set_up([0, 0, 1])
+    
+    # visualizer.run()
+    
+    # o3d.visualization.draw_geometries([pcd],
+    #                                     zoom=1,
+    #                                     front=[0.4257, -0.2125, -0.8795],
+    #                                     lookat=[2.6172, 2.0475, 1.532],
+    #                                     up=[0, 0, -1])
+    # sys.exit()
+
+def fit(opt, lr, name):    
+    writer = SummaryWriter(f'runs/shapenet/{name}') 
+    
+    print(f'Fitting model {name} with learning_rate {lr} and batchSize {opt.batchSize}')
+        
     # Initialize dataset
     dataset = ShapeNetDataset(
         root=opt.dataset,
@@ -87,46 +123,9 @@ def main():
         shuffle=True,
         num_workers=int(opt.workers))
     
-    '''
-    dataset = IrradianceDataset(
-        root=opt.dataset,
-        dtype=np.float32,
-        normals=False,
-        npoints=2500
-    )
-    
-    test_dataset = IrradianceDataset(
-        root=opt.dataset,
-        split='test',
-        dtype=np.float32,
-        normals=False,
-        npoints=2500
-    )
-    
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-        )
-    
-    testdataloader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-        )
-    '''
     
     # ! Overwrite for irradiance prediction
     num_classes = 1
-
-    try:
-        os.makedirs(opt.outf)
-    except OSError:
-        pass
 
     blue = lambda x: '\033[94m' + x + '\033[0m'
 
@@ -135,39 +134,17 @@ def main():
     if opt.model != '':
         classifier.load_state_dict(torch.load(opt.model))
 
-    classifier.cuda()
+    classifier.cuda()    
     
-    '''
-    # Test a specific sample from the dataset
-    criterion = nn.MSELoss()
-    
-    idx = 0
-    points, target = dataset[idx]
-    points = points.transpose(1, 0) 
-    points = points.unsqueeze(0).cuda()
-    points, target = points.cuda(), target.cuda()
-    
-    
-    
-    classifier.eval()  # Set the classifier to evaluation mode
-    with torch.no_grad():
-        pred, _, _ = classifier(points)
-    
-    pred_regress = pred.view(-1, 1)
-    target = target.view(-1, 1)[:, 0] - 1
-    tartget = target.float()
-    
-    loss = criterion(pred_regress, target)
-    '''
-    
-    optimizer = optim.Adam(classifier.parameters(), lr=0.0001, betas=(0.9, 0.999))
+    optimizer = optim.Adam(classifier.parameters(), lr=lr, betas=(0.9, 0.999))
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
     classifier.cuda()
-
+    
     num_batch = len(dataset) / opt.batchSize
 
     losses = []
 
+    step = 0
     for epoch in range(opt.nepoch):
         for i, data in enumerate(dataloader, 0):
             points, target = data
@@ -180,9 +157,6 @@ def main():
             classifier = classifier.train()
             
             pred, trans, trans_feat = classifier(points)
-            
-            # pred_choice = pred.data.max(1)[1] # Only used for segmentation
-            # pred_regress = pred.data.squeeze() #! FIXED THE ISSUE, COMPUTATIONAL GRAPH BREAKS HERE!!!
             
             # Flatten the data
             pred = pred.view(-1)
@@ -201,8 +175,14 @@ def main():
             loss.backward()
             
             optimizer.step()
+            
+            avg_loss = sum(losses) / len(losses)
+            
+            writer.add_scalar('Training loss', loss, global_step=step)
+            writer.add_scalar('Average training loss', avg_loss, global_step=step)
+            step += 1
 
-            print('[%d: %d/%d] train loss: %f, avg_loss: %f' % (epoch, i, num_batch, loss.item(), sum(losses) / len(losses)))
+            print('[%d: %d/%d] train loss: %f, avg_loss: %f' % (epoch, i, num_batch, loss.item(), avg_loss))
 
             if i % 10 == 0:
                 j, data = next(enumerate(testdataloader, 0))
@@ -223,12 +203,61 @@ def main():
                 
                 loss = F.mse_loss(pred_regress, target) 
         
+                writer.add_scalar('Average test loss', loss, global_step=step)
+        
                 print('[%d: %d/%d] %s loss: %f' % (epoch, i, num_batch, blue('test'), loss.item()))
-            
+          
+          
+        writer.add_hparams({'lr': lr, 'bs': opt.batchSize}, {'avg_train_loss': avg_loss})
         scheduler.step()
 
         print('[%d: %d/%d] Saving dict state...' % (epoch, i, num_batch))
         torch.save(classifier.state_dict(), '%s/seg_model_%s_%d.pth' % (opt.outf, opt.class_choice, epoch))
 
-if __name__ == '__main__':
-    main()
+def main(opt):
+    
+    opt.dataset = 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\raw'
+    
+    dataset = IrradianceDataset(
+        root=opt.dataset,
+        dtype=np.float32,
+        normals=False,
+        npoints=30000,
+        transform=True,
+        shuffle=False
+    )
+    
+    idx = 15
+    visualize_pointcloud(dataset[idx][0].numpy(), dataset[idx][1].numpy())
+    
+    '''
+    if not opt.dataset:
+        opt.dataset = 'D:\\Master Thesis Data\\Shapenet\\nonormal'
+    
+    # Set seed
+    opt.manualSeed = random.randint(1, 10000)  # fix seed
+    opt.manualSeed = 0
+    
+    try:
+        os.makedirs(opt.outf)
+    except OSError:
+        pass
+    
+    learning_rates = [0.1, 0.01, 0.001, 0.0001]
+    batch_sizes = [16, 32, 64, 128]
+    learning_rates = [0.001]
+    batch_sizes = [32]
+    num_epochs = 100
+    
+    opt.nepoch = num_epochs
+    
+    for bs in batch_sizes:
+        for lr in learning_rates:
+            opt.batchSize = bs
+            name = f'model_lr_{lr}_bs_{bs}'
+            
+            fit(opt, lr, name)
+    '''
+
+if __name__ == '__main__':      
+    main(opt)
