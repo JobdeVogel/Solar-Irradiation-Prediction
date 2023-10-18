@@ -84,7 +84,7 @@ if __name__ =='__main__':
         os.makedirs(RAW_PATH)
     
     args = os.listdir(BAG_PATH)
-    cpus = 4
+    cpus = 7
     
     # for file in args[:cpus]:
     #     task(file, None)
