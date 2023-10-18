@@ -378,8 +378,6 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         # Save the results as npy file
         sample.save_raw()
         
-        sys.exit()
-        
         logger.info(f'Finished preprocessing mesh for patch[{sample.idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
         del sample
     else:
