@@ -6,12 +6,14 @@ import sys
 import uuid
 
 def generate_logger(identifier=None, stdout=True):
+    abs_path = os.path.dirname(os.path.dirname(__file__))
+
     if identifier != None:
         # setup the path to the logfile
         from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
         logname = f'log_{from_date}_ID_{identifier}.log'
         
-        folder = './log/logs/'
+        folder = os.path.join(abs_path, 'log\\logs')
         
         logfile = os.path.join(folder, logname)
     else:
@@ -19,7 +21,7 @@ def generate_logger(identifier=None, stdout=True):
         from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
         logname = f'log_{from_date}.log'
         
-        folder = './log/logs/'
+        folder = os.path.join(abs_path, 'log\\logs')
         
         logfile = os.path.join(folder, logname)
 
@@ -27,6 +29,7 @@ def generate_logger(identifier=None, stdout=True):
     logger.setLevel(logging.INFO)
     
     file_handler = logging.FileHandler(filename=logfile)
+    
     if stdout:
         stdout_handler = logging.StreamHandler(stream=sys.stdout)
 
