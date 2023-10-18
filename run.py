@@ -6,7 +6,7 @@ from log.logger import generate_logger
 import subprocess
 
 def task(file, logger):
-    bag_file = BAG_PATH + file
+    bag_file = os.path.join(BAG_PATH, file)
        
     geometry_path = os.path.join(GEOMETRY_PATH, file[:-4])
     irradiance_path = os.path.join(IRRADIANCE_PATH, file[:-4])
@@ -82,7 +82,7 @@ if __name__ =='__main__':
         os.makedirs(RAW_PATH)
     
     args = os.listdir(BAG_PATH)
-    cpus = 7
+    cpus = 2
     
     # for file in args[:cpus]:
     #     task(file, None)
