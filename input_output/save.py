@@ -68,7 +68,7 @@ def save_outlines_to_json(outlines, name, folder, logger=False):
 
 def save_array(array, name, folder, logger=False):
     start = time.perf_counter()
-    path = folder + name + '.npy'
+    path = folder + '\\' + name + '.npy'
     
     np.save(path, array)
     

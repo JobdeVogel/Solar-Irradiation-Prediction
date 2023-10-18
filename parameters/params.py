@@ -4,7 +4,6 @@ import os
 abs_path = os.path.dirname(os.path.dirname(__file__))
 
 # General
-BAG_FILE_PATH = os.path.join(abs_path, 'data\\bag\\9-324-520-LoD12-3D.obj')
 GRID_SIZE = 1.0
 OFFSET = 0.01
 NUM_AUGMENTS = 1
@@ -47,20 +46,23 @@ SPECULAR = 0.0
 ROUGHNESS = 0.0
 MODIFIER_NAME = 'default_urban_modifier'
 
+_DATA_PATH = os.path.join(abs_path, 'data')
+
 # Directory folders
 STATS_PATH = os.path.join(abs_path, 'stats')
-BAG_PATH = os.path.join(abs_path, 'data\\bag\\')
-IRRADIANCE_PATH = os.path.join(abs_path, 'data\\irradiance\\')
-RAW_PATH = os.path.join(abs_path, 'data\\raw\\')
-GEOMETRY_PATH = os.path.join(abs_path, 'data\\geometry\\')
-OUTLINES_PATH = os.path.join(abs_path, 'data\\outlines\\')
-HBJSON_PATH = os.path.join(abs_path, 'data\\models\\')
+BAG_PATH = os.path.join(_DATA_PATH, 'bag')
+IRRADIANCE_PATH = os.path.join(_DATA_PATH, 'irradiance')
+RAW_PATH = os.path.join(_DATA_PATH, 'raw')
+GEOMETRY_PATH = os.path.join(_DATA_PATH, 'geometry')
+OUTLINES_PATH = os.path.join(_DATA_PATH, 'outlines')
+HBJSON_PATH = os.path.join(_DATA_PATH, 'models')
+BAG_FILE_PATH = os.path.join(_DATA_PATH, 'bag\\9-284-556-LoD12-3D.obj')
 
 # Simulation
-WEA = os.path.join(abs_path, 'data\\wea\\NLD_Amsterdam.062400_IWEC.epw')
+WEA = os.path.join(_DATA_PATH, 'wea\\NLD_Amsterdam.062400_IWEC.epw')
 
 SIMULATION_ARGUMENTS = '-ab 7 -aa 0 -ar 256 -ad 1024 -as 512 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 -w'
-SIM_OUT_FOLDER = os.path.join(abs_path, 'data\\simulation')
+SIM_OUT_FOLDER = os.path.join(_DATA_PATH, 'simulation')
 USE_GPU = True
 
 SKY_DENSITY = 1
