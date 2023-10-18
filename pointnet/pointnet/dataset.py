@@ -8,9 +8,6 @@ import sys
 import random
 from tqdm import tqdm 
 import json
-from plyfile import PlyData, PlyElement
-import time
-import functools
 
 torch.set_printoptions(precision=5)
 torch.set_printoptions(threshold=10)
