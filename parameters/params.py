@@ -1,8 +1,10 @@
 import math
+import os
+
+abs_path = os.path.dirname(os.path.dirname(__file__))
 
 # General
-BAG_FILE_PATH = "./data/bag/9-324-520-LoD12-3D.obj"
-WEA = "./data/wea/NLD_Amsterdam.062400_IWEC.epw"
+BAG_FILE_PATH = os.path.join(abs_path, 'data\\bag\\9-324-520-LoD12-3D.obj')
 GRID_SIZE = 1.0
 OFFSET = 0.01
 NUM_AUGMENTS = 1
@@ -46,19 +48,19 @@ ROUGHNESS = 0.0
 MODIFIER_NAME = 'default_urban_modifier'
 
 # Directory folders
-STATS_PATH = './stats/'
-BAG_PATH = './data/bag/'
-IRRADIANCE_PATH = './data/irradiance/'
-RAW_PATH = './data/raw/'
-GEOMETRY_PATH = './data/geometry/'
-OUTLINES_PATH = './data/outlines/'
-HBJSON_PATH = './data/models/'
+STATS_PATH = os.path.join(abs_path, 'stats')
+BAG_PATH = os.path.join(abs_path, 'data\\bag\\')
+IRRADIANCE_PATH = os.path.join(abs_path, 'data\\irradiance\\')
+RAW_PATH = os.path.join(abs_path, 'data\\raw\\')
+GEOMETRY_PATH = os.path.join(abs_path, 'data\\geometry\\')
+OUTLINES_PATH = os.path.join(abs_path, 'data\\outlines\\')
+HBJSON_PATH = os.path.join(abs_path, 'data\\models\\')
 
 # Simulation
-WEA_PATH = "C:\\Users\\Job de Vogel\\AppData\\Roaming\\ladybug_tools\\weather\\NLD_Amsterdam.062400_IWEC\\NLD_Amsterdam.062400_IWEC.epw"
+WEA = os.path.join(abs_path, 'data\\wea\\NLD_Amsterdam.062400_IWEC.epw')
 
-SIMULATION_ARGUMENTS = '-ab 9 -ad 5000 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 -w'
-SIM_OUT_FOLDER = 'D:/Master Thesis Data/simulation'
+SIMULATION_ARGUMENTS = '-ab 7 -aa 0 -ar 256 -ad 1024 -as 512 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 -w'
+SIM_OUT_FOLDER = os.path.join(abs_path, 'data\\simulation')
 USE_GPU = True
 
 SKY_DENSITY = 1
