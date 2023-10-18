@@ -17,50 +17,6 @@ torch.set_printoptions(threshold=10)
 
 np.set_printoptions(suppress = True)
 
-def get_segmentation_classes(root):
-    catfile = os.path.join(root, 'synsetoffset2category.txt')
-    cat = {}
-    meta = {}
-
-    with open(catfile, 'r') as f:
-        for line in f:
-            ls = line.strip().split()
-            cat[ls[0]] = ls[1]
-
-    for item in cat:
-        dir_seg = os.path.join(root, cat[item], 'points_label')
-        dir_point = os.path.join(root, cat[item], 'points')
-        fns = sorted(os.listdir(dir_point))
-        meta[item] = []
-        for fn in fns:
-            token = (os.path.splitext(os.path.basename(fn))[0])
-            meta[item].append((os.path.join(dir_point, token + '.pts'), os.path.join(dir_seg, token + '.seg')))
-    
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../misc/num_seg_classes.txt'), 'w') as f:
-        for item in cat:
-            datapath = []
-            num_seg_classes = 0
-            for fn in meta[item]:
-                datapath.append((item, fn[0], fn[1]))
-
-            for i in tqdm(range(len(datapath))):
-                l = len(np.unique(np.loadtxt(datapath[i][-1]).astype(np.uint8)))
-                if l > num_seg_classes:
-                    num_seg_classes = l
-
-            print("category {} num segmentation classes {}".format(item, num_seg_classes))
-            f.write("{}\t{}\n".format(item, num_seg_classes))
-
-def gen_modelnet_id(root):
-    classes = []
-    with open(os.path.join(root, 'train.txt'), 'r') as f:
-        for line in f:
-            classes.append(line.strip().split('/')[0])
-    classes = np.unique(classes)
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../misc/modelnet_id.txt'), 'w') as f:
-        for i in range(len(classes)):
-            f.write('{}\t{}\n'.format(classes[i], i))
-
 class ShapeNetDataset(data.Dataset):
     def __init__(self,
                  root,
@@ -149,57 +105,6 @@ class ShapeNetDataset(data.Dataset):
     def __len__(self):
         return len(self.datapath)
 
-class ModelNetDataset(data.Dataset):
-    def __init__(self,
-                 root,
-                 npoints=2500,
-                 split='train',
-                 data_augmentation=True):
-        self.npoints = npoints
-        self.root = root
-        self.split = split
-        self.data_augmentation = data_augmentation
-        self.fns = []
-        with open(os.path.join(root, '{}.txt'.format(self.split)), 'r') as f:
-            for line in f:
-                self.fns.append(line.strip())
-
-        self.cat = {}
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../misc/modelnet_id.txt'), 'r') as f:
-            for line in f:
-                ls = line.strip().split()
-                self.cat[ls[0]] = int(ls[1])
-
-        # print(self.cat)
-        self.classes = list(self.cat.keys())
-
-    def __getitem__(self, index):
-        fn = self.fns[index]
-        cls = self.cat[fn.split('/')[0]]
-        with open(os.path.join(self.root, fn), 'rb') as f:
-            plydata = PlyData.read(f)
-        pts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
-        choice = np.random.choice(len(pts), self.npoints, replace=True)
-        point_set = pts[choice, :]
-
-        point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
-        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
-        point_set = point_set / dist  # scale
-
-        if self.data_augmentation:
-            theta = np.random.uniform(0, np.pi * 2)
-            rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-            point_set[:, [0, 2]] = point_set[:, [0, 2]].dot(rotation_matrix)  # random rotation
-            point_set += np.random.normal(0, 0.02, size=point_set.shape)  # random jitter
-
-        point_set = torch.from_numpy(point_set.astype(np.float32))
-        cls = torch.from_numpy(np.array([cls]).astype(np.int64))
-        return point_set, cls
-
-
-    def __len__(self):
-        return len(self.fns)
-
 def traverse_root(root):
     res = []
     for (dir_path, _, file_names) in os.walk(root):
@@ -216,9 +121,9 @@ class IrradianceDataset(data.Dataset):
                  split_size=0.8,
                  normals=True,
                  dtype=np.float32,
-                 shuffle=True,
                  seed=78789,
                  transform=False,
+                 resample=False
                  ):
         self.root = root
         self.npoints = npoints
@@ -227,9 +132,9 @@ class IrradianceDataset(data.Dataset):
         self.normals = normals
         self.dtype = dtype
         self.files = []
-        self.shuffle = shuffle
         self.seed=seed
         self.transform = transform
+        self.resample = resample
         
         np.random.seed(self.seed)
         random.seed(self.seed)
@@ -237,9 +142,6 @@ class IrradianceDataset(data.Dataset):
         files = traverse_root(self.root)
         
         split_index = int(len(files) * self.split_size)
-        
-        if self.shuffle:
-            random.shuffle(files)
     
         if len(files) == 0:
             print(f'WARNING: number of available samples in {self.root} is 0, it is not possible to generate a dataset')
@@ -256,9 +158,8 @@ class IrradianceDataset(data.Dataset):
     
     def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:
         # TODO: Get out off dataset class and use in preprocessing phase
-        # Clip and normalize tensor with pointcloud
-        # Return absolute values to avoid negative 0.0 values
         
+        # Clip and normalize tensor with pointcloud        
         columns_to_normalize = slice(0, 3)
         
         clip_min = torch.tensor([min, min, 0])
@@ -274,7 +175,8 @@ class IrradianceDataset(data.Dataset):
         normalized_tensor[:, columns_to_normalize] /= (max_values - min_values)
         
         # From [0, 1] to [-1, 1]
-        normalized_tensor = 2 * normalized_tensor - 1
+        # TODO: Discuss best interval
+        normalized_tensor[:, :2] = 2 * normalized_tensor[:, :2] - 1
         
         return normalized_tensor
         
@@ -298,11 +200,6 @@ class IrradianceDataset(data.Dataset):
         nan_mask = np.isnan(data).any(axis=1)
         filtered_data = data[~nan_mask]
         
-        # ! Something goes wrong HERE!!!
-        # #choice = np.random.choice(len(filtered_data), self.npoints, replace=True)       
-        # choice = np.sort(np.random.choice(np.arange(0, len(filtered_data)), size=self.npoints, replace=False))
-        
-        # sampled_data = filtered_data[choice, :]
         sampled_data = filtered_data
         
         points = sampled_data[:, :6] if self.normals else sampled_data[:, :3]
@@ -311,6 +208,15 @@ class IrradianceDataset(data.Dataset):
         points = torch.from_numpy(points.astype(self.dtype))
         irr = torch.from_numpy(irr.astype(self.dtype))
         
+        # resample
+        if self.resample:
+            choice = np.sort(np.random.choice(np.arange(0, sampled_data.shape[0]), size=self.npoints, replace=False))
+            try:
+                points = points[choice, :]
+            except ValueError:
+                print('WARNING: npoints exceeds the number of available points in sample.')
+            irr = irr[choice]
+            
         if self.transform:
             points = self.transform_features(points)    
             irr = self.transform_outputs(irr)
@@ -321,7 +227,9 @@ class IrradianceDataset(data.Dataset):
         return len(self.files)
 
 if __name__ == '__main__':
-    
+    '''
+    TEST IRRADIANCE NET DATASET
+    '''
     path = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\raw"
     
     train_dataset = IrradianceDataset(
@@ -355,8 +263,9 @@ if __name__ == '__main__':
         pin_memory=True
         )
     
-    
-    dataset = 'shapenet'
+    '''
+    TEST SHAPENET
+    '''
     datapath = 'D:\\Master Thesis Data\\Shapenet\\nonormal'
 
     dataset = ShapeNetDataset(
@@ -365,27 +274,21 @@ if __name__ == '__main__':
         classification=False,
         class_choice=['Chair', 'Guitar'])
     
-    print(dataset[0])
-    print(dataset[0][0].shape)
-    print(train_dataset[0])
-    print(train_dataset[0][0].shape)
-    '''
-    # dataloader = torch.utils.data.DataLoader(
-    #     dataset,
-    #     batch_size=32,
-    #     shuffle=True,
-    #     num_workers=int(4))
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=32,
+        shuffle=True,
+        num_workers=int(4))
 
-    # test_dataset = ShapeNetDataset(
-    #     root=datapath,
-    #     npoints=2500,
-    #     classification=False,
-    #     class_choice=['Chair', 'Guitar'],
-    #     split='test',
-    #     data_augmentation=False)
-    # testdataloader = torch.utils.data.DataLoader(
-    #     test_dataset,
-    #     batch_size=32,
-    #     shuffle=True,
-    #     num_workers=int(4))
-    '''
+    test_dataset = ShapeNetDataset(
+        root=datapath,
+        npoints=2500,
+        classification=False,
+        class_choice=['Chair', 'Guitar'],
+        split='test',
+        data_augmentation=False)
+    testdataloader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=32,
+        shuffle=True,
+        num_workers=int(4))
