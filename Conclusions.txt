@@ -6,3 +6,10 @@
 Dataset:
 * Find orientation of roofs with eigenvectors
 * Not manifold
+
+Augmentation discussion
+
+Supercomputer and renderfarm are not working
+
+
+Convergence test
