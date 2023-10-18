@@ -7,12 +7,10 @@ import subprocess
 
 def task(file, logger):
     bag_file = BAG_PATH + file
-    
-    bag_file = BAG_PATH + file
-        
-    geometry_path = f'{GEOMETRY_PATH}{file[:-4]}/'
-    irradiance_path = f'{IRRADIANCE_PATH}{file[:-4]}/'
-    raw_path = f'{RAW_PATH}{file[:-4]}/'
+       
+    geometry_path = os.path.join(GEOMETRY_PATH, file[:-4])
+    irradiance_path = os.path.join(IRRADIANCE_PATH, file[:-4])
+    raw_path = os.path.join(RAW_PATH, file[:-4])
     
     if not os.path.exists(geometry_path):
         os.makedirs(geometry_path)
