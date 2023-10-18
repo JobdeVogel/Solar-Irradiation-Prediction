@@ -16,3 +16,6 @@ load_3dbag/__pycache__/meshing.cpython-37.pyc
 load_3dbag/__pycache__/sensors.cpython-37.pyc
 log/__pycache__/logger.cpython-37.pyc
 parameters/__pycache__/params.cpython-37.pyc
+input_output/__pycache__/save.cpython-37.pyc
+load_3dbag/__pycache__/file.cpython-37.pyc
+load_3dbag/__pycache__/outlines.cpython-37.pyc
