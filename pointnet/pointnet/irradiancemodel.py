@@ -163,7 +163,7 @@ class PointNetCls(nn.Module):
 class PointNetDenseCls(nn.Module):
     # Add the segmentation part
     
-    def __init__(self, k = 10000, feature_transform=False):
+    def __init__(self, k = 2500, feature_transform=False):
         super(PointNetDenseCls, self).__init__()
         self.k = k
         self.feature_transform = feature_transform
@@ -172,9 +172,9 @@ class PointNetDenseCls(nn.Module):
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
         self.conv4 = torch.nn.Conv1d(128, 8, 1)
-        self.fc1 = nn.Linear(8 * self.k, 1024)  # Add an FC layer to reduce dimensionality
-        self.fc2 = nn.Linear(1024, 64)  # Add another FC layer
-        self.fc3 = nn.Linear(64, self.k)  # The final FC layer with 'k' output neurons
+        self.fc1 = nn.Linear(8 * self.k, 2048)  # Add an FC layer to reduce dimensionality
+        self.fc2 = nn.Linear(2048, 512)  # Add another FC layer
+        self.fc3 = nn.Linear(512, self.k)  # The final FC layer with 'k' output neurons
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
@@ -196,6 +196,8 @@ class PointNetDenseCls(nn.Module):
         x = self.fc2(x)    
         x = self.fc3(x)  # No activation function for the final output
         x = x.unsqueeze(-1)
+        x = x.view(-1)
+
 
         return x, trans, trans_feat
 

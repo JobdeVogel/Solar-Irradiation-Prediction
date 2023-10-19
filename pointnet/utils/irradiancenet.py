@@ -14,7 +14,7 @@ import torch.utils.data
 from torchvision.io import read_image
 from torchvision.utils import make_grid
 from pointnet.dataset import ShapeNetDataset, IrradianceDataset
-from pointnet.irr_model_test import PointNetDenseCls, feature_transform_regularizer
+from pointnet.irradiancemodel import PointNetDenseCls, feature_transform_regularizer
 from torch.utils.tensorboard import SummaryWriter
 
 from torch.multiprocessing import freeze_support
@@ -27,8 +27,9 @@ import time
 import open3d as o3d
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from PIL import Image
 
+from skorch import NeuralNetRegressor
+from sklearn.model_selection import GridSearchCV
 
 '''
 CHANGES FOR IRRADIANCE PREDICTION
@@ -112,8 +113,6 @@ def eval_image(points, classifier, writer, name, path=None):
         
         pred, _, _ = classifier(eval_points_cuda)
         pred = pred.to('cpu')
-        
-        pred = pred.view(-1)
     
     start = time.perf_counter()
 
@@ -125,44 +124,15 @@ def eval_image(points, classifier, writer, name, path=None):
     print(f'Saved evaluation image in {round(time.perf_counter() - start, 2)}s')
     
 def fit(opt, lr, name):    
-    writer = SummaryWriter(f'runs/shapenet/{name}') 
+    writer = SummaryWriter(f'runs/irradiancenet/{name}') 
     
     print(f'Fitting model {name} with learning_rate {lr} and batchSize {opt.batchSize}')
-    '''
-    opt.dataset = 'D:\\Master Thesis Data\\Shapenet\\nonormal'
-    # Initialize dataset
-    dataset = ShapeNetDataset(
-        root=opt.dataset,
-        npoints=2500,
-        classification=False,
-        class_choice=[opt.class_choice])
-    
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=opt.batchSize,
-        shuffle=True,
-        num_workers=int(opt.workers))
-
-    test_dataset = ShapeNetDataset(
-        root=opt.dataset,
-        npoints=2500,
-        classification=False,
-        class_choice=[opt.class_choice],
-        split='test',
-        data_augmentation=False)
-    
-    testdataloader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=opt.batchSize,
-        shuffle=True,
-        num_workers=int(opt.workers))    
-    '''
     
     dataset = IrradianceDataset(
         root=opt.dataset,
         dtype=np.float32,
         normals=False,
-        npoints=10000,
+        npoints=2500,
         transform=True,
         resample=True
     )
@@ -172,7 +142,7 @@ def fit(opt, lr, name):
         split='test',
         dtype=np.float32,
         normals=False,
-        npoints=10000,
+        npoints=2500,
         transform=True,
         resample=True
     )
@@ -192,7 +162,7 @@ def fit(opt, lr, name):
         num_workers=4,
         pin_memory=True
         )
-       
+
     num_classes = 1
 
     blue = lambda x: '\033[94m' + x + '\033[0m'
@@ -232,8 +202,8 @@ def fit(opt, lr, name):
             optimizer.zero_grad()
             
             pred, trans, trans_feat = classifier(points)
-            pred = pred.view(-1)
             
+            # ! What is this actually doing??
             target = target.view(-1, 1)[:, 0] - 1
             target = target.float()
 
@@ -270,7 +240,6 @@ def fit(opt, lr, name):
                 
                 with torch.no_grad():
                     pred, _, _ = classifier(points)
-                    pred = pred.view(-1)
                     
                     target = target.view(-1, 1)[:, 0] - 1
                     target = target.float()
@@ -286,16 +255,15 @@ def fit(opt, lr, name):
                 eval_name = f'evaluation_epoch_{str(epoch)}_it_{str(i)}.png'
                 eval_image(eval_points, classifier, writer, eval_name)
         
-        writer.add_hparams({'lr': lr, 'bs': opt.batchSize}, {'avg_train_loss': avg_loss})
+        # writer.add_hparams({'lr': lr, 'bs': opt.batchSize}, {'avg_train_loss': avg_loss})
         scheduler.step()
 
         print('[%d: %d/%d] Saving dict state...' % (epoch, i, num_batch))
-        torch.save(classifier.state_dict(), '%s/seg_model_%s_%d.pth' % (opt.outf, opt.class_choice, epoch))
+        torch.save(classifier.state_dict(), '%s/irr_model_epoch_%d.pth' % (opt.outf, epoch))
 
 def main(opt):
-    ''''''
+    '''
     opt.dataset = 'T:\\student-homes\\v\\jobdevogeldevo\\My Documents\\Data'
-    
     dataset = IrradianceDataset(
         root=opt.dataset,
         split='train',
@@ -324,10 +292,10 @@ def main(opt):
     
         img = visualize_pointcloud(points.numpy(), values.numpy(), 'C:\\Users\\Job de Vogel\\Desktop\\test.png', visualize=True)
     sys.exit()
-    ''''''
+    '''
     
     if not opt.dataset:
-        opt.dataset = 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\raw'
+        opt.dataset = 'D:\\Master Thesis Data\\raw'
     
     # Set seed
     opt.manualSeed = random.randint(1, 10000)  # fix seed
@@ -345,6 +313,57 @@ def main(opt):
     num_epochs = 100
     
     opt.nepoch = num_epochs
+    
+    ##############################################
+    dataset = IrradianceDataset(
+        root=opt.dataset,
+        split='test',
+        dtype=np.float32,
+        normals=False,
+        npoints=2500,
+        transform=True,
+        resample=True
+    )
+    
+    x = torch.stack([sample[0] for sample in dataset]).permute(0, 2, 1)
+    y = torch.stack([sample[1] for sample in dataset])
+    
+    print('Dataset x an y finished loading...')
+    
+    model = NeuralNetRegressor(
+        module=PointNetDenseCls,
+        criterion=nn.MSELoss,
+        optimizer=optim.Adam,
+        max_epochs=2,
+        verbose=3,
+        module__k=2500,
+        module__feature_transform=True        
+    )
+    
+    param_grid = {
+        'batch_size': [16, 32]
+        }
+    
+    grid = GridSearchCV(estimator=model,
+                        param_grid=param_grid,
+                        n_jobs=-1,
+                        cv=3,
+                        scoring='neg_mean_squared_error'
+                        )
+
+    grid_result = grid.fit(x, y)
+    
+    # Print results
+    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    means = grid_result.cv_results_['mean_test_score']
+    stds = grid_result.cv_results_['std_test_score']
+    params = grid_result.cv_results_['params']
+    for mean, stdev, param in zip(means, stds, params):
+        print("%f (%f) with: %r" % (mean, stdev, param))
+    
+
+    sys.exit()
+    
     
     for bs in batch_sizes:
         for lr in learning_rates:
