@@ -28,6 +28,10 @@ import pprint
 
 import wandb
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--cpu', action='store_true', help="run on cpu")
+opt = parser.parse_args()
+
 # Ensure deterministic behavior
 torch.backends.cudnn.deterministic = True
 random.seed(hash("setting random seeds") % 2**32 - 1)
@@ -37,6 +41,9 @@ torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
 
 # Device configuration
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+if opt.cpu:
+    device = "cpu"
 
 wandb.login()
 
@@ -142,7 +149,7 @@ def make_loader(dataset, batch_size):
         dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=1,
+        num_workers=0,
         pin_memory=True
         )
     
@@ -218,7 +225,7 @@ def pipeline_loop(model, train_loader, test_loader, criterion, optimizer, schedu
             # Evaluation
             if step % config.eval_interval == 0:
                 eval_name = f'Evaluation_epoch_{str(epoch)}_it_{str(i)}_step_{step}.png'
-                grid = eval_image(eval_points, model, eval_name)
+                grid = eval_image(eval_points, model, eval_name, device)
                 
                 image = wandb.Image(
                     grid,
@@ -399,6 +406,12 @@ def main():
     parameters_dict = {
         'optimizer': {
             'values': ['adam', 'sgd']
+            },
+        'train_slice': {
+            'values': [300, 1000, None]
+            },
+        'test_slice': {
+            'values': [100, 300, None]
             }
         }
     
@@ -427,8 +440,6 @@ def main():
         'scheduler': {'value': 'StepLR'},
         'model_outf': {'value': "seg"},
         'wandb_outf': {'value': "C:\\Users\\Job de Vogel\\Desktop\\wandb"},
-        'train_slice': {'value': None},
-        'test_slice': {'value': None},
         'architecture': {'value': "PointNet"},
         'feature_transform': {'value': True},
         'single_output': {'value': False},
@@ -448,9 +459,9 @@ def main():
     
     # Build, train and analyze the model with the pipeline
     # model = model_pipeline(config)   
-    sweep_id = wandb.sweep(sweep_config, project="wandb_sweep")
+    sweep_id = wandb.sweep(sweep_config, project="wandb_sweep-2")
     
-    wandb.agent(sweep_id, model_pipeline, count=3)  
+    wandb.agent(sweep_id, model_pipeline, count=10)  
 
 if __name__ == '__main__':
     main()    
