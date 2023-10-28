@@ -116,6 +116,7 @@ class IrradianceDataset(data.Dataset):
                  npoints=10000,
                  split='train',
                  split_size=0.8,
+                 slice=None,
                  normals=True,
                  dtype=np.float32,
                  seed=78789,
@@ -146,11 +147,12 @@ class IrradianceDataset(data.Dataset):
         elif len(files) == 1:
             print(f'WARNING: number of available samples in {self.root} is 1, only a train dataset can be generated, test will be skipped')
     
+        
         if split == 'train':
-            for file_path in files[:split_index+1]:
+            for file_path in files[:split_index+1][:slice]:
                 self.files.append(file_path)
         elif split == 'test':
-            for file_path in files[split_index+1:]:
+            for file_path in files[split_index+1:][:slice]:
                 self.files.append(file_path)       
     
     def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:
@@ -187,7 +189,7 @@ class IrradianceDataset(data.Dataset):
         outputs /= (max - min)
         
         return outputs
-     
+    
     def __getitem__(self, index):       
         file = self.files[index]
         
