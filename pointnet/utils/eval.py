@@ -50,7 +50,7 @@ def visualize_pointcloud(pointcloud: np.array, color_values: np.array, path: str
     
     return read_image(path)
 
-def eval_image(points, classifier, name, path=None):
+def eval_image(points, classifier, name, device, path=None):
     if path == None:
         path = './images'
     
@@ -61,7 +61,7 @@ def eval_image(points, classifier, name, path=None):
 
     eval_points = eval_points.transpose(2, 1)
     
-    eval_points_cuda = eval_points.cuda()
+    eval_points_cuda = eval_points.to(device)
     
     with torch.no_grad():        
         classifier = classifier.eval()
