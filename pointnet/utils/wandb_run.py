@@ -52,7 +52,7 @@ def get_data(config, slice=None, train=True):
         npoints=config.npoints,
         transform=True,
         resample=config.resample,
-        preload=True
+        preload=config.preload_data
     )
     
     return dataset
@@ -110,7 +110,8 @@ def build_scheduler(config, optimizer):
         scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer, 
             step_size=2, 
-            gamma=0.5
+            gamma=0.5,
+            verbose=True
             )
     else:
         print(f'Scheduler {config.scheduler} is not available')
@@ -180,7 +181,7 @@ def train(model, loader, criterion, optimizer, scheduler, config):
                 train_log(loss, epoch, step, num_epoch_batches)
             
         print(f'Avg. loss: {sum(losses) / len(losses)}')
-        scheduler.step()
+        # scheduler.step()
 
 def train_batch(data, targets, model, optimizer, criterion, config):
     data, targets = data.to(device), targets.to(device)
@@ -367,7 +368,7 @@ def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, opt
             
             step += 1
             
-        scheduler.step()
+        # scheduler.step()
         
         print('[Epoch %d] Saving dict state...' % (epoch))
         torch.save(model.state_dict(), '%s/irr_model_%s_epoch_%d.pth' % (config.model_outf, wandb.run.name, epoch))
@@ -431,12 +432,15 @@ def main(opt):
     # Sweep parameters
     parameters_dict = {
         'optimizer': {
-            'values': ['adam', 'sgd']
+            'values': ['adam', 'sgd', 'adagrad']
             },
-        'architecture': {
-            'values': ['PointNet_normals', 'PointNet']
-            }
+        'feature_transform': {
+            'values': [True, False]
+            },
+        'meta': {
+            'values': [True, False]
         }
+    }
     
     parameters_dict.update({
         'learning_rate': {
@@ -451,13 +455,13 @@ def main(opt):
             'distribution': 'q_log_uniform_values',
             'q': 8,
             'min': 16,
-            'max': 32,
+            'max': 64,
           }
         })
     
     # Non-changing parameters
     parameters_dict.update({
-        'dataset': {'value': "D:\\Master Thesis Data\\raw"},
+        'dataset': {'value': "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data\\raw"}, 
         'meta': {'value': True},
         'epochs': {'value': 2},
         'criterion': {'value': 'mse'},
@@ -465,21 +469,16 @@ def main(opt):
         'model_outf': {'value': "seg"},
         'wandb_outf': {'value': "C:\\Users\\Job de Vogel\\Desktop\\wandb"},
         'architecture': {'value': "PointNet"},
-        'feature_transform': {'value': False},
         'single_output': {'value': False},
         'npoints': {'value': 2500},
         'test_interval': {'value': 25},
         'eval_interval': {'value': 25},
         'train_metrics_interval': {'value': 1},
-        'eval_sample': {'value': 0},
         'train_slice': {'value': None},
         'test_slice': {'value': None},
-        'learning_rate': {'value': 0.0001},
-        'batch_size': {'value': 32},
-        'optimizer': {'value': 'adam'},
         'resample': {'value': True},
         'eval_sample': {'value': 0},
-        'meta': {'value': False}
+        'preload_data': {'value': False}
         })
     
     sweep_config['parameters'] = parameters_dict
@@ -493,7 +492,7 @@ def main(opt):
         epochs=5,
         batch_size=32,
         learning_rate=0.001,
-        dataset="D:\\Master Thesis Data\\raw",
+        dataset="C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data\\raw",
         model_outf="seg",
         wandb_outf='C:\\Users\\Job de Vogel\\Desktop\\wandb',
         train_slice=None,
@@ -510,7 +509,8 @@ def main(opt):
         train_metrics_interval=1,
         eval_sample=0,
         resample=True,
-        meta=True
+        meta=True,
+        preload_data=False
         )
     
     try:
