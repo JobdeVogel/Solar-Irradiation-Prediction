@@ -108,9 +108,10 @@ class PointNetfeat(nn.Module):
         if self.feature_transform:
             self.fstn = STNkd(k=64)
 
-    def forward(self, x):
+    def forward(self, x, meta=None):      
         n_pts = x.size()[2]
         trans = self.stn(x)
+        
         x = x.transpose(2, 1)
         
         # Multiplication of input and first feature transformation
@@ -128,62 +129,90 @@ class PointNetfeat(nn.Module):
             trans_feat = None
 
         pointfeat = x
+
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
+        
+        '''
+        # ! Here the global features are concatenated with the output from the feature transform
+        
+        # That would mean that the normal data should be added HERE, just after getting the pointfeatures
+            * pointfeat shape:  [32, 64, 2500]
+            * normal shape: [32, 3, 2500]
+            
+            Should be joined to [32, 67, 2500]
+            
+            x = torch.cat((pointfeat, normals), dim=1)
+            
+        This is then combined with x of shape [32, 1024] (global features)
+            
+            * x shape: [32, 67, 2500]
+            * global_features shape [32, 1024]
+            
+            To:
+            
+            * [32, 1091, 1024]   
+        '''
+        
+        # ! New implementation with meta:
+        if meta != None:
+            pointfeat = torch.cat((pointfeat, meta), dim=1)
+        
+        ''' AS USUAL FROM HERE '''
+        
         if self.global_feat:
             return x, trans, trans_feat
         else:
             x = x.view(-1, 1024, 1).repeat(1, 1, n_pts)
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
-class PointNetCls(nn.Module):
-    def __init__(self, k=2, feature_transform=False):
-        super(PointNetCls, self).__init__()
-        self.feature_transform = feature_transform
-        self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
-        self.fc1 = nn.Linear(1024, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, k)
-        self.dropout = nn.Dropout(p=0.3)
-        self.bn1 = nn.BatchNorm1d(512)
-        self.bn2 = nn.BatchNorm1d(256)
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        # feature transform
-        x, trans, trans_feat = self.feat(x)
-        x = F.relu(self.bn1(self.fc1(x)))
-        x = F.relu(self.bn2(self.dropout(self.fc2(x))))
-        x = self.fc3(x)
-        return F.log_softmax(x, dim=1), trans, trans_feat
-
-
 class PointNetDenseCls(nn.Module):
     # Add the segmentation part
     
-    def __init__(self, k = 2500, feature_transform=False, single_output=False):
+    def __init__(self, k = 2500, m=0, feature_transform=False, single_output=False, config=None):
         super(PointNetDenseCls, self).__init__()
         self.k = k
+        self.m = m
         self.feature_transform = feature_transform
         self.single_output = single_output
+        self.config = config
         self.feat = PointNetfeat(global_feat=False, feature_transform=feature_transform)
-        self.conv1 = torch.nn.Conv1d(1088, 512, 1)
+        
+        # ! Here we should change 1088 to 1091 since normal data is added
+        self.conv1 = torch.nn.Conv1d(1088 + self.m, 512, 1)
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
-        self.conv4 = torch.nn.Conv1d(128, 8, 1)
-        self.fc1 = nn.Linear(8 * self.k, 4096)  # Add an FC layer to reduce dimensionality
-        self.fc2 = nn.Linear(4096, 2048)  # Add another FC layer
-        self.fc3 = nn.Linear(2048, self.k)  # The final FC layer with 'k' output neurons
+        
+        if self.config == None:
+            self.conv4 = torch.nn.Conv1d(128, 4, 1)
+            
+            self.fc1 = nn.Linear(4 * self.k, 1024)  # Add an FC layer to reduce dimensionality
+            self.fc2 = nn.Linear(1024, 512)  # Add another FC layer
+            self.fc3 = nn.Linear(512, self.k)  # The final FC layer with 'k' output neurons
+        '''
+        else:           
+            fc1_kernels = self.config.fc1
+            fc2_kernels = self.config.fc2
+            fc3_kernels = self.config.fc3
+            
+            self.conv4 = torch.nn.Conv1d(128, fc1_kernels, 1)
+            
+            self.fc1 = nn.Linear(fc1_kernels * self.k, fc2_kernels)
+            self.fc2 = nn.Linear(fc2_kernels, fc3_kernels)
+            self.fc3 = nn.Linear(fc3_kernels, self.k)
+        '''
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
 
-    def forward(self, x):
+    def forward(self, x, meta=None):
         batchsize = x.size()[0]
         n_pts = x.size()[2]
-        x, trans, trans_feat = self.feat(x)
+        
+        x, trans, trans_feat = self.feat(x, meta)       
+        
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -216,37 +245,7 @@ def feature_transform_regularizer(trans):
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
     normal_data = Variable(torch.rand(32,3,2500))
+
+    seg = PointNetDenseCls_normals(k=2500)
     
-    # trans = STN3d()
-    # out = trans(sim_data)
-    # print('stn', out.size())
-    # print('loss', feature_transform_regularizer(out))
-
-    # sim_data_64d = Variable(torch.rand(32, 64, 2500))
-    # trans = STNkd(k=64)
-    # out = trans(sim_data_64d)
-    # print('stn64d', out.size())
-    # print('loss', feature_transform_regularizer(out))
-
-    # pointfeat = PointNetfeat(global_feat=True)
-    # out, _, _ = pointfeat(sim_data)
-    # print('global feat', out.size())
-
-    # pointfeat = PointNetfeat(global_feat=False)
-    # out, _, _ = pointfeat(sim_data)
-    # print('point feat', out.size())
-
-    # cls = PointNetCls(k = 5)
-    # out, _, _ = cls(sim_data)
-    # print('class', out.size())
-    
-
-    seg = PointNetDenseCls(k = 3)
-    out, _, _ = seg(sim_data)
-    print('seg', out.size())
-    print(out.shape)
-    
-    # seg = PointNetDenseCls(k = 1)
-    # out, _, _ = seg(sim_data)
-    # print('seg', out.size())
-    # print(out.shape)
+    out, _, _ = seg(sim_data, normal_data)

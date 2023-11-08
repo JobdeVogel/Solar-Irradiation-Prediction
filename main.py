@@ -23,6 +23,8 @@ import string
 import sys
 import argparse
 
+import gc
+
 from helpers.mesh import join_meshes
 from helpers.array import set_array_values
 from load_3dbag import file, outlines, meshing, sensors
@@ -380,6 +382,8 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         
         logger.info(f'Finished preprocessing mesh for patch[{sample.idx}] in {round(time.perf_counter() - t_preprocessing, 2)}s')
         del sample
+        
+        gc.collect()
     else:
         logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
 
@@ -466,7 +470,7 @@ if __name__ == '__main__':
     if not os.path.exists(RAW_PATH):
         os.makedirs(RAW_PATH)
     
-    start_idx = 450
+    start_idx = 0
     
     # Delete the database
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]

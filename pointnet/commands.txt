@@ -1,1 +1,0 @@
-python train_segmentation.py --dataset "D:\Master Thesis Data\Shapenet\nonormal" --nepoch=10 --outf "C:\Users\Job de Vogel\OneDrive\Documenten\TU Delft\Master Thesis\Dataset_pipeline\pointnet_testing\pointnet.pytorch\results"

@@ -8,6 +8,7 @@ import sys
 import random
 from tqdm import tqdm 
 import json
+import time
 
 torch.set_printoptions(precision=5)
 torch.set_printoptions(threshold=10)
@@ -121,7 +122,8 @@ class IrradianceDataset(data.Dataset):
                  dtype=np.float32,
                  seed=78789,
                  transform=False,
-                 resample=False
+                 resample=False,
+                 preload=False
                  ):
         self.root = root
         self.npoints = npoints
@@ -133,6 +135,7 @@ class IrradianceDataset(data.Dataset):
         self.seed=seed
         self.transform = transform
         self.resample = resample
+        self.preload = preload
         
         np.random.seed(self.seed)
         random.seed(self.seed)
@@ -155,6 +158,16 @@ class IrradianceDataset(data.Dataset):
             for file_path in files[split_index+1:][:slice]:
                 self.files.append(file_path)       
     
+        if preload:
+            preload_data = []
+            
+            for file in tqdm(self.files):
+                with open(os.path.join(self.root, file), 'rb') as f:
+                    data = np.load(f)
+                    preload_data.append(data)
+            
+            self.preload_data = preload_data
+
     def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:
         # TODO: Get out off dataset class and use in preprocessing phase
         
@@ -190,11 +203,14 @@ class IrradianceDataset(data.Dataset):
         
         return outputs
     
-    def __getitem__(self, index):       
-        file = self.files[index]
-        
-        with open(os.path.join(self.root, file), 'rb') as f:
-            data = np.load(f)
+    def __getitem__(self, index):
+        if self.preload:
+            data = self.preload_data[index]
+        else:
+            file = self.files[index]
+            
+            with open(os.path.join(self.root, file), 'rb') as f:
+                data = np.load(f)
     
         nan_mask = np.isnan(data).any(axis=1)
         filtered_data = data[~nan_mask]
@@ -229,65 +245,66 @@ if __name__ == '__main__':
     '''
     TEST IRRADIANCE NET DATASET
     '''
-    path = "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Dataset_pipeline\\dataset\\data\\raw"
+    path = "D:\\Master Thesis Data\\raw"
     
     train_dataset = IrradianceDataset(
         root=path,
-        npoints=2500,
+        npoints=10000,
         dtype=np.float32,
-        normals=False
+        normals=False,
+        preload=False
     )
-    
-    test_dataset = IrradianceDataset(
-        root=path,
-        npoints=2500,
-        split='test',
-        dtype=np.float32,
-        normals=False
-    )
-    
-    train_dataloader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-        )
-    
-    test_dataloader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-        )
-    
-    '''
-    TEST SHAPENET
-    '''
-    datapath = 'D:\\Master Thesis Data\\Shapenet\\nonormal'
 
-    dataset = ShapeNetDataset(
-        root=datapath,
-        npoints=2500,
-        classification=False,
-        class_choice=['Chair', 'Guitar'])
+    # test_dataset = IrradianceDataset(
+    #     root=path,
+    #     npoints=2500,
+    #     split='test',
+    #     dtype=np.float32,
+    #     normals=False
+    # )
     
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=int(4))
+    # train_dataloader = torch.utils.data.DataLoader(
+    #     train_dataset,
+    #     batch_size=32,
+    #     shuffle=True,
+    #     num_workers=4,
+    #     pin_memory=True
+    #     )
+    
+    # test_dataloader = torch.utils.data.DataLoader(
+    #     train_dataset,
+    #     batch_size=32,
+    #     shuffle=True,
+    #     num_workers=4,
+    #     pin_memory=True
+    #     )
+    
+    # '''
+    # TEST SHAPENET
+    # '''
+    # datapath = 'D:\\Master Thesis Data\\Shapenet\\nonormal'
 
-    test_dataset = ShapeNetDataset(
-        root=datapath,
-        npoints=2500,
-        classification=False,
-        class_choice=['Chair', 'Guitar'],
-        split='test',
-        data_augmentation=False)
-    testdataloader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=int(4))
+    # dataset = ShapeNetDataset(
+    #     root=datapath,
+    #     npoints=2500,
+    #     classification=False,
+    #     class_choice=['Chair', 'Guitar'])
+    
+    # dataloader = torch.utils.data.DataLoader(
+    #     dataset,
+    #     batch_size=32,
+    #     shuffle=True,
+    #     num_workers=int(4))
+
+    # test_dataset = ShapeNetDataset(
+    #     root=datapath,
+    #     npoints=2500,
+    #     classification=False,
+    #     class_choice=['Chair', 'Guitar'],
+    #     split='test',
+    #     data_augmentation=False)
+    # testdataloader = torch.utils.data.DataLoader(
+    #     test_dataset,
+    #     batch_size=32,
+    #     shuffle=True,
+    #     num_workers=int(4))

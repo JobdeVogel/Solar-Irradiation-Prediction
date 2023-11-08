@@ -8,7 +8,9 @@ from lbt_recipes.settings import RecipeSettings
 
 from parameters.params import USE_GPU, SKY_DENSITY, WORKERS, SIM_OUT_FOLDER
 
-def annual_irradiance(model, wea, sim_arguments):   
+import shutil
+
+def annual_irradiance(model, wea, sim_arguments, del_sim_folder=False):   
     # Pass the model to the recipe
     recipe = Recipe('cumulative-radiation')
 #    recipe = Recipe('annual-irradiance')
@@ -36,13 +38,16 @@ def annual_irradiance(model, wea, sim_arguments):
     # Retrieve the results
     irradiance = recipe.output_value_by_name('cumulative-radiation', project_folder)[0]
     
+    if del_sim_folder:
+        shutil.rmtree(settings.folder)
+    
     return irradiance
 
 def main(model, wea, sim_arguments, pointmap, add_none_values=True, logger=False):
     if logger:
         logger.info(f'Started solar irradiance simulation with arguments {sim_arguments}')
     # Compute the annual irradiance for the given model
-    values = annual_irradiance(model, wea, sim_arguments)
+    values = annual_irradiance(model, wea, sim_arguments, del_sim_folder=True)
     
     if logger:
         logger.info(f'Computed {len(values)} solar irradiance values for model {model.display_name}')

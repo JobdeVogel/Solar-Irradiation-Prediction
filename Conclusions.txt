@@ -13,3 +13,7 @@ Supercomputer and renderfarm are not working
 
 
 Convergence test
+
+
+Question:
+Does the vector length matter?

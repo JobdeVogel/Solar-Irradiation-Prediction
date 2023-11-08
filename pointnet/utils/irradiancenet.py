@@ -20,7 +20,7 @@ import torch.nn.functional as F
 import numpy as np
 import sys
 
-from eval import eval_image, visualize_pointcloud
+# from eval import eval_image, visualize_pointcloud
 
 from skorch import NeuralNetRegressor
 from sklearn.model_selection import GridSearchCV
