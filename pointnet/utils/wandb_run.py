@@ -62,7 +62,7 @@ def make_loader(dataset, batch_size):
         dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=4,
+        num_workers=0,
         pin_memory=True
         )
     
@@ -109,7 +109,7 @@ def build_scheduler(config, optimizer):
     if config.scheduler == 'StepLR':
         scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer, 
-            step_size=2, 
+            step_size=1, 
             gamma=0.5,
             verbose=True
             )
@@ -495,7 +495,7 @@ def main(opt):
         dataset="C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data\\raw",
         model_outf="seg",
         wandb_outf='C:\\Users\\Job de Vogel\\Desktop\\wandb',
-        train_slice=None,
+        train_slice=200,
         test_slice=None,
         architecture="PointNet",
         optimizer='adam',
