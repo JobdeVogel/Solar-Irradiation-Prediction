@@ -40,6 +40,9 @@ opt = parser.parse_args()
 # Device configuration
 device = torch.device(f"cuda:{opt.gpu}" if torch.cuda.is_available() else "cpu")
 
+if device == 'parallel':
+    device = torch.device("cuda")
+
 if opt.cpu:
     device = "cpu"
 
@@ -135,6 +138,9 @@ def build_model(config, m):
     else:
         print(f'Model {config.architecture} is not available')
         sys.exit()
+    
+    if config.parallel == True:
+        model = nn.DataParallel(model)
     
     return model
 
@@ -575,6 +581,11 @@ def main(opt, config=None):
 if __name__ == '__main__':
     # wandb.login()
     
+    if device == 'parallel':
+        parallel = True
+    else:
+        parallel = False
+    
     config = dict(
         epochs=150,
         batch_size=32,
@@ -601,7 +612,8 @@ if __name__ == '__main__':
         fc2=512,
         fc3=512,
         initialization=None,
-        randomize_point_order=True
+        randomize_point_order=True,
+        parallel=parallel
         )
     
     if opt.feature_transform:
