@@ -110,7 +110,17 @@ def traverse_root(root):
             res.append(os.path.join(dir_path, file))
 
     return res
-   
+
+class CustomDataset(data.Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx, :, :], np.array([]), idx
+  
 class IrradianceDataset(data.Dataset):
     def __init__(self,
                  root,
@@ -123,7 +133,9 @@ class IrradianceDataset(data.Dataset):
                  seed=78789,
                  transform=False,
                  resample=False,
-                 preload=False
+                 preload=False,
+                 device=torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu"),
+                 randomize_point_order=False
                  ):
         self.root = root
         self.npoints = npoints
@@ -136,6 +148,9 @@ class IrradianceDataset(data.Dataset):
         self.transform = transform
         self.resample = resample
         self.preload = preload
+        self.preload_data = None
+        self.device = device
+        self.randomize_point_order = randomize_point_order
         
         np.random.seed(self.seed)
         random.seed(self.seed)
@@ -149,7 +164,6 @@ class IrradianceDataset(data.Dataset):
             sys.exit()
         elif len(files) == 1:
             print(f'WARNING: number of available samples in {self.root} is 1, only a train dataset can be generated, test will be skipped')
-    
         
         if split == 'train':
             for file_path in files[:split_index+1][:slice]:
@@ -164,13 +178,29 @@ class IrradianceDataset(data.Dataset):
             for file in tqdm(self.files):
                 with open(os.path.join(self.root, file), 'rb') as f:
                     data = np.load(f)
-                    preload_data.append(data)
+                    # preload_data.append(data)
             
+                nan_mask = np.isnan(data).any(axis=1)
+                sampled_data = data[~nan_mask]
+
+                points = sampled_data[:, :6] if self.normals else sampled_data[:, :3]
+                irr = sampled_data[:, -1]
+                
+                points = torch.from_numpy(points.astype(self.dtype))
+                irr = torch.from_numpy(irr.astype(self.dtype))
+
+                if self.transform:
+                    points = self.transform_features(points)    
+                    irr = self.transform_outputs(irr)
+                
+                irr = irr.unsqueeze(1)
+
+                data = torch.cat((points, irr), dim=1)
+                preload_data.append(data)
+
             self.preload_data = preload_data
 
-    def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:
-        # TODO: Get out off dataset class and use in preprocessing phase
-        
+    def transform_features(self, sample: torch.tensor, min=-50, max=50) -> torch.tensor:     
         # Clip and normalize tensor with pointcloud        
         columns_to_normalize = slice(0, 3)
         
@@ -178,18 +208,20 @@ class IrradianceDataset(data.Dataset):
         clip_max = torch.tensor([max, max, max*2])
         min_values = torch.tensor([min, min, 0])
         max_values = torch.tensor([max, max, max*2])
-        
+
         normalized_tensor = sample.clone()
-        
+
         normalized_tensor[:, columns_to_normalize] = torch.clamp(normalized_tensor[:, columns_to_normalize], clip_min, clip_max)
-        
+
         normalized_tensor[:, columns_to_normalize] -= min_values
         normalized_tensor[:, columns_to_normalize] /= (max_values - min_values)
         
         # From [0, 1] to [-1, 1]
         # TODO: Discuss best interval
-        normalized_tensor[:, :2] = 2 * normalized_tensor[:, :2] - 1
-        
+        # normalized_tensor[:, :2] = 2 * normalized_tensor[:, :2] - 1
+
+        # TODO: Normalize vectors?
+
         return normalized_tensor
         
     def transform_outputs(self, outputs: torch.tensor) -> torch.tensor:
@@ -202,41 +234,66 @@ class IrradianceDataset(data.Dataset):
         outputs /= (max - min)
         
         return outputs
-    
+
     def __getitem__(self, index):
         if self.preload:
+            '''
+            The data is already preprocessed,
+            so we only need to pick the right samples from preload_data
+            '''
             data = self.preload_data[index]
+
+            # resample
+            if self.resample:
+                choice = np.sort(np.random.choice(np.arange(0, data.shape[0]), size=self.npoints, replace=False))
+                
+                points = data[choice, :-1]
+                irr = data[choice, -1]
+
+            else:
+                points = data[:, :-1]
+                irr = data[:, -1]
         else:
+            '''
+            The data is not preprocessed,
+            so we only need to preprocess each sample
+            '''
+
             file = self.files[index]
             
             with open(os.path.join(self.root, file), 'rb') as f:
                 data = np.load(f)
     
-        nan_mask = np.isnan(data).any(axis=1)
-        filtered_data = data[~nan_mask]
-        
-        sampled_data = filtered_data
-        
-        points = sampled_data[:, :6] if self.normals else sampled_data[:, :3]
-        irr = sampled_data[:, -1]
-        
-        points = torch.from_numpy(points.astype(self.dtype))
-        irr = torch.from_numpy(irr.astype(self.dtype))
-        
-        # resample
-        if self.resample:
-            choice = np.sort(np.random.choice(np.arange(0, sampled_data.shape[0]), size=self.npoints, replace=False))
-            try:
-                points = points[choice, :]
-            except ValueError:
-                print('WARNING: npoints exceeds the number of available points in sample.')
-            irr = irr[choice]
+            nan_mask = np.isnan(data).any(axis=1)
+            filtered_data = data[~nan_mask]
             
-        if self.transform:
-            points = self.transform_features(points)    
-            irr = self.transform_outputs(irr)
+            sampled_data = filtered_data
+            
+            points = sampled_data[:, :6] if self.normals else sampled_data[:, :3]
+            irr = sampled_data[:, -1]
+            
+            points = torch.from_numpy(points.astype(self.dtype))
+            irr = torch.from_numpy(irr.astype(self.dtype))
         
-        return points, irr
+            # resample
+            if self.resample:
+                choice = np.sort(np.random.choice(np.arange(0, sampled_data.shape[0]), size=self.npoints, replace=False))
+                try:
+                    points = points[choice, :]
+                except ValueError:
+                    print('WARNING: npoints exceeds the number of available points in sample.')
+                irr = irr[choice]
+                
+            if self.transform:
+                points = self.transform_features(points)    
+                irr = self.transform_outputs(irr)
+
+        if self.randomize_point_order:
+            random_indices = torch.randperm(points.shape[0])
+            points = points[random_indices]
+            irr = irr[random_indices]
+
+        return points, irr, index
     
     def __len__(self):
         return len(self.files)

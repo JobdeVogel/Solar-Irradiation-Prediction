@@ -10,8 +10,9 @@ import sys
 
 class STN3d(nn.Module):
     # Feature transformer
-    def __init__(self):
+    def __init__(self, device='cuda:0'):
         super(STN3d, self).__init__()
+        self.device = device
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
@@ -42,7 +43,7 @@ class STN3d(nn.Module):
         # Identity matrix
         iden = Variable(torch.from_numpy(np.array([1,0,0,0,1,0,0,0,1]).astype(np.float32))).view(1,9).repeat(batchsize,1)
         if x.is_cuda:
-            iden = iden.cuda()
+            iden = iden.to(self.device)
         x = x + iden
         
         # Matrix 3x3
@@ -94,9 +95,9 @@ class STNkd(nn.Module):
 class PointNetfeat(nn.Module):
     # Combines everything from input to global features
     
-    def __init__(self, global_feat = True, feature_transform = False):
+    def __init__(self, device='cuda:0', global_feat = True, feature_transform = False):
         super(PointNetfeat, self).__init__()
-        self.stn = STN3d()
+        self.stn = STN3d(device=device)
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
@@ -171,14 +172,14 @@ class PointNetfeat(nn.Module):
 class PointNetDenseCls(nn.Module):
     # Add the segmentation part
     
-    def __init__(self, k = 2500, m=0, feature_transform=False, single_output=False, config=None):
+    def __init__(self, k = 2500, m=0, feature_transform=False, config=None, device='cuda:0'):
         super(PointNetDenseCls, self).__init__()
         self.k = k
         self.m = m
+        self.device = device
         self.feature_transform = feature_transform
-        self.single_output = single_output
         self.config = config
-        self.feat = PointNetfeat(global_feat=False, feature_transform=feature_transform)
+        self.feat = PointNetfeat(global_feat=False, device=device, feature_transform=feature_transform)
         
         # ! Here we should change 1088 to 1091 since normal data is added
         self.conv1 = torch.nn.Conv1d(1088 + self.m, 512, 1)
@@ -191,7 +192,6 @@ class PointNetDenseCls(nn.Module):
             self.fc1 = nn.Linear(4 * self.k, 1024)  # Add an FC layer to reduce dimensionality
             self.fc2 = nn.Linear(1024, 512)  # Add another FC layer
             self.fc3 = nn.Linear(512, self.k)  # The final FC layer with 'k' output neurons
-        '''
         else:           
             fc1_kernels = self.config.fc1
             fc2_kernels = self.config.fc2
@@ -199,10 +199,10 @@ class PointNetDenseCls(nn.Module):
             
             self.conv4 = torch.nn.Conv1d(128, fc1_kernels, 1)
             
-            self.fc1 = nn.Linear(fc1_kernels * self.k, fc2_kernels)
+            self.fc1 = nn.Linear(fc1_kernels * self.k, self.k)
             self.fc2 = nn.Linear(fc2_kernels, fc3_kernels)
             self.fc3 = nn.Linear(fc3_kernels, self.k)
-        '''
+            
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
@@ -222,23 +222,57 @@ class PointNetDenseCls(nn.Module):
         x = x.view(batchsize, -1)
         
         # Pass it through FC layers
-        x = self.fc1(x)     
-        x = self.fc2(x)    
-        x = self.fc3(x)  # No activation function for the final output
-        
-        x = x.view(-1)
-        
-        if not self.single_output:
-            return x, trans, trans_feat
-        else:
-            return x
+        x = self.fc1(x)    
 
-def feature_transform_regularizer(trans):
+        # x = self.fc2(x)    
+        # x = self.fc3(x)  # No activation function for the final output
+        
+        return x, trans, trans_feat
+
+class dummy(nn.Module):
+    # Add the segmentation part
+    
+    def __init__(self, k = 2500, m=0, feature_transform=False, single_output=False, config=None, device='cuda:0'):
+        super(dummy, self).__init__()
+        self.k = k
+        self.fc1 = nn.Linear(3 * self.k, self.k)
+
+    def forward(self, x, meta=None):
+        batchsize = x.size()[0]
+    
+        x = x.reshape(batchsize, -1)
+        
+        x = self.fc1(x)
+        
+        # x = x.view(-1)
+        
+        return x, None, None
+
+
+def init_weights(m, config=None):
+    if config != None:
+        if config.initialization == 'kaiming':
+            if isinstance(m, nn.Linear) or isinstance(m, nn.Conv1d):
+                nn.init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+        elif config.initialization == 'xavier':
+            if isinstance(m, nn.Linear) or isinstance(m, nn.Conv1d):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+        elif config.initialization == None:
+            pass
+        else:
+            print('WARNING: weight initialization type does not exist!')
+            sys.exit()
+
+def feature_transform_regularizer(trans, device='cuda:0'):
     d = trans.size()[1]
     batchsize = trans.size()[0]
     I = torch.eye(d)[None, :, :]
     if trans.is_cuda:
-        I = I.cuda()
+        I = I.to(device)
     loss = torch.mean(torch.norm(torch.bmm(trans, trans.transpose(2,1)) - I, dim=(1,2)))
     return loss
 
@@ -246,6 +280,10 @@ if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
     normal_data = Variable(torch.rand(32,3,2500))
 
-    seg = PointNetDenseCls_normals(k=2500)
+
+    sim_data = sim_data[:, 0, :]
+    seg = dummy(k=2500, m=3)
     
-    out, _, _ = seg(sim_data, normal_data)
+    out, _, _ = seg(sim_data, meta=normal_data)
+    
+    print(out)

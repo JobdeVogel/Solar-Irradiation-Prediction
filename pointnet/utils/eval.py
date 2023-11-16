@@ -5,10 +5,13 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.gridspec import GridSpec
 import torch
 
+import wandb
+
 import os
+import sys
 
 def get_im_data(dataset, idx):
-    data, targets = dataset[idx]
+    data, targets, idxs = dataset[idx]
     
     if data.shape[1] > 3:
         points, meta = data[:, :3], data[:, 3:]
@@ -33,13 +36,22 @@ def compute_errors(targets, predictions):
     
     return targets - predictions
     
-def plot(points, vectors, targets, vector_length=0.001, show_normals=False, show=False, save=False, save_name='temp', save_path='./images', error=False):
+def plot(points, vectors, targets, vector_length=0.001, show_normals=False, show=False, save=False, save_name='temp', save_path='./images', error=False):    
+    if isinstance(points, torch.Tensor):
+        points = points.numpy()
+    
+    if isinstance(vectors, torch.Tensor):
+        vectors = vectors.numpy()
+
+    if isinstance(targets, torch.Tensor):
+        targets = targets.numpy()
+
     if not error:
         color_map = plt.get_cmap('coolwarm')
     else:
         color_map = plt.get_cmap('seismic')
 
-    norm = Normalize(vmin=min(targets), vmax=max(targets))
+    norm = Normalize(vmin=np.min(targets), vmax=np.max(targets))
 
     colors = color_map(norm(targets))[:, :3]
 
@@ -56,7 +68,7 @@ def plot(points, vectors, targets, vector_length=0.001, show_normals=False, show
     ax.set_ylim(-1, 1)
     ax.set_zlim(0, 1)
 
-    ax.set_position([0, 0.05, 1, 1.4])
+    ax.set_position([0, 0.05, 1, 2])
     
     if not error:
         norm = Normalize(vmin=0, vmax=1000)
@@ -94,10 +106,38 @@ def plot(points, vectors, targets, vector_length=0.001, show_normals=False, show
     if show:
         plt.show()
 
-    return plt
+    plt.close()
+
+    return
+
+def forward_loaded(points, meta, model, model_path=r'', device='cpu', config=None):   
+    
+    with wandb.init(mode="disabled", project="v2", config=config):
+        config = wandb.config
+    
+    model.load_state_dict(torch.load(model_path))
+
+    model.to(device)
+    
+    model.eval()
+    
+    # Move data to the GPU
+    points = torch.from_numpy(points).to(device)
+
+    meta = torch.from_numpy(meta).to(device)
+    
+    points = points.unsqueeze(dim=0)
+    meta = meta.unsqueeze(dim=0)
+    
+    points = points.transpose(2, 1)
+    meta = meta.transpose(2, 1)
+    
+    outputs, _, _ = model(points, meta=meta)
+    
+    return outputs
 
 if __name__ == '__main__':
-    from pointnet.dataset import IrradianceDataset
+    from pointnet.pointnet.dataset import IrradianceDataset
     
     dataset = IrradianceDataset(
             root="D:\\Master Thesis Data\\raw",
@@ -111,5 +151,6 @@ if __name__ == '__main__':
             preload=True
         )
 
-    points, vectors, targets = get_im_data(dataset, 0)
-    my_plot = plot(points, vectors, targets, show=True, save=True, save_name='temp', save_path='C:\\Users\\Job de Vogel\\Desktop')
+    points, meta, targets = get_im_data(dataset, 0)
+    
+    my_plot = plot(points, meta, targets, show=True, save=True, save_name='temp', save_path='C:\\Users\\Job de Vogel\\Desktop')
