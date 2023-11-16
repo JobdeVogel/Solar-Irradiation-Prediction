@@ -28,6 +28,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--cpu', action='store_true', help="run on cpu")
 parser.add_argument('--gpu', type=int, nargs='?', default=0, help='cuda device idx, defaults to 0')
 parser.add_argument('--feature_transform', action='store_true', help="feature transform 2")
+parser.add_argument('--eval', action='store_true', help="evaluate main")
 opt = parser.parse_args()
 
 # # Ensure deterministic behavior
@@ -473,12 +474,15 @@ def evaluate_main(opt, idx=0, model_path='', config=None):
         config = wandb.config
     
     dataset = get_data(config, slice=100, train=False)   
-    points, meta, targets = get_im_data(dataset, 2)
+    points, meta, targets = get_im_data(dataset, idx)
     
     model = build_model(config, 3)
     
-    outputs = forward_loaded(points, meta, model, model_path=model_path, device='cpu', config=None)
-    outputs = outputs.squeeze(dim=0).detach().numpy()
+    start = time.perf_counter()
+    outputs = forward_loaded(points, meta, model, model_path=model_path, device='cuda', config=None)
+    print(f'Predicted irradiance in {round(time.perf_counter()-start, 2)}s')
+    
+    outputs = outputs.squeeze(dim=0).detach().to('cpu').numpy()
     
     plot(points, meta, outputs, show=True, save=True, save_name=f'sample_{idx}', save_path='C:\\Users\\Job de Vogel\\Desktop')      
 
@@ -621,9 +625,10 @@ if __name__ == '__main__':
     else:
         print(f'Running script on {device} WITHOUT feature transform')
     
-    #model_path = r'C:\Users\Job de Vogel\OneDrive\Documenten\TU Delft\Master Thesis\Code\IrradianceNet\pointnet\utils\seg\irr_model_dummy-33axb288_epoch_0.pth'
+    if opt.eval:
+        model_path = r'C:\Users\Job de Vogel\OneDrive\Documenten\TU Delft\Master Thesis\Code\IrradianceNet\pointnet\utils\seg\irr_model_dummy-wd7k79l1_epoch_5.pth'
     
-    #evaluate_main(opt, idx=5, model_path=model_path, config=config)
-    
-    main(opt, config=config)
+        evaluate_main(opt, idx=50, model_path=model_path, config=config)
+    else:
+        main(opt, config=config)
 
