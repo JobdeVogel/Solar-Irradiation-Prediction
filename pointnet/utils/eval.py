@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('agg')
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import numpy as np

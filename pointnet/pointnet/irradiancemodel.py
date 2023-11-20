@@ -193,24 +193,21 @@ class PointNetDenseCls(nn.Module):
         self.conv1 = torch.nn.Conv1d(1024 + n + self.m, 512, 1) # 128 = config.k
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
+        self.conv4 = torch.nn.Conv1d(128, 1, 1)
         
-        if self.config == None:
-            self.conv4 = torch.nn.Conv1d(128, 4, 1)
-            
-            self.fc1 = nn.Linear(4 * self.k, 1024)  # Add an FC layer to reduce dimensionality
-            self.fc2 = nn.Linear(1024, 512)  # Add another FC layer
-            self.fc3 = nn.Linear(512, self.k)  # The final FC layer with 'k' output neurons
-        else:           
-            fc1_kernels = self.config.fc1
-            fc2_kernels = self.config.fc2
-            fc3_kernels = self.config.fc3
-            
-            self.conv4 = torch.nn.Conv1d(128, fc1_kernels, 1)
-            
-            self.fc1 = nn.Linear(fc1_kernels * self.k, self.k)
-            self.fc2 = nn.Linear(fc2_kernels, fc3_kernels)
-            self.fc3 = nn.Linear(fc3_kernels, self.k)
-            
+        # Create a list of fully connected layers with different sizes
+        # Assuming input_size is the input dimension of your data       
+        if len(self.config.hidden_layers) > 0:    
+            self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.config.hidden_layers[0])] +
+            [
+                nn.Linear(in_features, out_features)
+                for in_features, out_features in zip(self.config.hidden_layers, self.config.hidden_layers[1:])
+            ] +
+            [nn.Linear(self.config.hidden_layers[-1], self.k)]
+            )
+        else:
+            self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.k)])
+        
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
@@ -231,10 +228,8 @@ class PointNetDenseCls(nn.Module):
         x = x.view(batchsize, -1)
         
         # Pass it through FC layers
-        x = self.fc1(x)    
-
-        # x = self.fc2(x)    
-        # x = self.fc3(x)  # No activation function for the final output
+        for fc in self.fc_layers:
+              x = fc(x)
         
         return x, trans, trans_feat
 
