@@ -13,10 +13,10 @@ from tqdm.auto import tqdm
 
 from torch.utils.data import Dataset, DataLoader
 
-from pointnet.dataset import ShapeNetDataset, IrradianceDataset, CustomDataset
+from pointnet.dataset import ShapeNetDataset, IrradianceDataset
 from pointnet.irradiancemodel import PointNetDenseCls, feature_transform_regularizer, init_weights, dummy
 
-from eval import get_im_data, plot, compute_errors, forward_loaded
+from eval import get_im_data, plot, compute_errors
 
 import argparse
 
@@ -28,7 +28,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--cpu', action='store_true', help="run on cpu")
 parser.add_argument('--gpu', type=int, nargs='?', default=0, help='cuda device idx, defaults to 0')
 parser.add_argument('--feature_transform', action='store_true', help="feature transform 2")
-parser.add_argument('--eval', action='store_true', help="evaluate main")
 opt = parser.parse_args()
 
 # # Ensure deterministic behavior
@@ -41,11 +40,11 @@ opt = parser.parse_args()
 # Device configuration
 device = torch.device(f"cuda:{opt.gpu}" if torch.cuda.is_available() else "cpu")
 
-if device == 'parallel':
-    device = torch.device("cuda")
-
 if opt.cpu:
     device = "cpu"
+
+if opt.gpu == 'parallel':
+    device = "cuda"
 
 def get_data(config, slice=None, train=True):
     if train:
@@ -130,19 +129,24 @@ def build_scheduler(config, optimizer):
 
     return scheduler
 
-def build_model(config, m):    
+def build_model(config, m, parallel=False):
+    if config.k == 0:
+        n = 64
+    else:
+        n = config.k
+
     if config.architecture == 'PointNet':
         if config.meta:
-            model = PointNetDenseCls(k=config.npoints, m=m, config=config, device=device, feature_transform=config.feature_transform).to(device)
+            model = PointNetDenseCls(k=config.npoints, m=m, n=n, config=config, device=device, feature_transform=config.feature_transform).to(device)
         else:
-            model = PointNetDenseCls(k=config.npoints, config=config, device=device, feature_transform=config.feature_transform).to(device)
+            model = PointNetDenseCls(k=config.npoints, n=n, config=config, device=device, feature_transform=config.feature_transform).to(device)
     else:
         print(f'Model {config.architecture} is not available')
         sys.exit()
     
-    if config.parallel == True:
+    if parallel:
         model = nn.DataParallel(model)
-    
+
     return model
 
 def make(config):
@@ -231,6 +235,15 @@ def train_batch(inputs, targets, model, optimizer, criterion, config):
 
     return loss
 
+def train_log(loss, epoch, step, num_batch, interval=10):
+    #? Does step work in wandb or should examplect used?
+    yellow = lambda x: '\033[93m' + x + '\033[0m'
+    
+    # Where the magic happens
+    wandb.log({"epoch": epoch, "train_loss": loss}, step=step)
+    
+    print('[Epoch %d: it %s/%s] %s loss: %f' % (epoch, str(step).zfill(3), str(num_batch).zfill(3), yellow('train'), loss.item()))
+
 def test(model, loader, criterion, epoch, num_test_samples, config):
     model.eval()
 
@@ -274,6 +287,14 @@ def test_batch(inputs, targets, model, criterion, config):
 
     return loss
 
+def test_log(loss, epoch, step, num_batch):
+    blue = lambda x: '\033[94m' + x + '\033[0m'
+    
+    # Where the magic happens
+    wandb.log({"epoch": epoch, "test_loss": loss}, step=step)
+    
+    print('[Epoch %d: it %s/%s] %s loss: %f' % (epoch, str(step).zfill(3), str(num_batch).zfill(3), blue('test'), loss.item()))
+
 def evaluate(inputs, targets, model, epoch, i, max_i, path, config):
     eval_points = inputs[:, :3]
     eval_meta = inputs[:, 3:]
@@ -314,6 +335,16 @@ def evaluate(inputs, targets, model, epoch, i, max_i, path, config):
         print(e)
         print('WARNING: failed to generate image in run')
         pass
+
+class CustomDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx, :, :], np.array([]), idx
 
 def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, optimizer, scheduler, config):        
     # Tell wandb to watch what the model gets up to: gradients, weights, and more!
@@ -405,24 +436,33 @@ def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, opt
                                     
                 model = model.train()
 
-            # Evaluation
-            if step % config.eval_interval == 0 and (i != 0 and epoch != 0):                    
-                model = model.eval()
-                
-                print(f'Evaluating [Epoch {epoch}: it. {i}] on test sample {config.eval_sample} ...')
-                start = time.perf_counter()
-                with torch.no_grad():
-                    evaluate(eval_inputs, eval_targets, model, epoch, i, len(train_loader), path, config)
-                print(f'... Finished evaluating [Epoch {epoch}: it. {i}] in {round(time.perf_counter() - start, 2)}s')
+            try:
+                # Evaluation
+                if step % config.eval_interval == 0 and (i != 0 and epoch != 0):                    
+                    model = model.eval()
+                    
+                    print(f'Evaluating [Epoch {epoch}: it. {i}] on test sample {config.eval_sample} ...')
+                    start = time.perf_counter()
+                    with torch.no_grad():
+                        evaluate(eval_inputs, eval_targets, model, epoch, i, len(train_loader), path, config)
+                    print(f'... Finished evaluating [Epoch {epoch}: it. {i}] in {round(time.perf_counter() - start, 2)}s')
 
+                    model = model.train()
+            except:
                 model = model.train()
+                pass
             step += 1
                       
         scheduler.step()
         
         print('[Epoch %d] Saving dict state...' % (epoch))
-        torch.save(model.state_dict(), '%s/irr_model_%s_epoch_%d.pth' % (config.model_outf, wandb.run.name, epoch))
+        seg_path = os.path.join(config.model_outf, wandb.run.id)
 
+        if not os.path.exists(seg_path):
+            os.makedirs(seg_path)
+
+        torch.save(model.state_dict(), '%s/irr_model_%s_epoch_%d.pth' % (seg_path, wandb.run.name, epoch))
+    
     # export_model(model, points, 'IrradianceNet', r'models')
     
     return
@@ -446,9 +486,14 @@ def export_model(model, points, name, directory):
 
 def model_pipeline(config=None):        
     # tell wandb to get started
-    with wandb.init(mode="disabled", project="v2", config=config):
+    with wandb.init(mode="online", project="v2", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
+
+        if config.k == 0:
+            config.update({'feature_transform': False})
+        else:
+            config.update({'feature_transform': True})
 
         # # make the model, data, and optimization problem
         model, train_loader, test_loader, eval_dataset, criterion, optimizer, scheduler = make(config)
@@ -466,27 +511,9 @@ def model_pipeline(config=None):
         num_test_samples = int(math.floor(len(train_loader) / config.test_metrics_interval)) * config.epochs
         test(model, test_loader, criterion, 0, num_test_samples, config)
         '''
+        
 
-def evaluate_main(opt, idx=0, model_path='', config=None):
-    # Evaluate a model
-    with wandb.init(mode="disabled", project="v2", config=config):
-        # access all HPs through wandb.config, so logging matches execution!
-        config = wandb.config
-    
-    dataset = get_data(config, slice=100, train=False)   
-    points, meta, targets = get_im_data(dataset, idx)
-    
-    model = build_model(config, 3)
-    
-    start = time.perf_counter()
-    outputs = forward_loaded(points, meta, model, model_path=model_path, device='cuda', config=None)
-    print(f'Predicted irradiance in {round(time.perf_counter()-start, 2)}s')
-    
-    outputs = outputs.squeeze(dim=0).detach().to('cpu').numpy()
-    
-    plot(points, meta, outputs, show=True, save=True, save_name=f'sample_{idx}', save_path='C:\\Users\\Job de Vogel\\Desktop')      
-
-def main(opt, config=None):    
+def main(opt):    
     # Configuration
     sweep_config = {
         'method': 'random'
@@ -505,24 +532,20 @@ def main(opt, config=None):
         'optimizer': {
             'values': ['adam', 'sgd', 'adagrad']
             },
-        'feature_transform': {
-            'values': [True, False]
-            },
         'meta': {
-            'values': [True, False]
-        },
-        'fc1': {
-            'values': [2, 4, 8, 16]
-        },
-        'fc2': {
-            'values': [512, 1024, 2048, 4096]
-        },
-        'fc3': {
-            'values': [512, 1024, 2048, 4096]
+            'values': [True, False],
+            'probabilities': [0.75, 0.25]
         },
         'initialization': {
             'values': ['kaiming', 'xavier', None]
-        }
+        },
+        'k': {
+            'values': [0, 32, 64, 128, 256],
+            'probabilities': [0.5, 0.2, 0.1, 0.1, 0.1]
+          },
+        'batch_size': {
+            'values': [16, 32, 64, 128]
+          }
     }
     
     parameters_dict.update({
@@ -531,38 +554,36 @@ def main(opt, config=None):
             'distribution': 'log_uniform_values',
             'min': 1e-5,
             'max': 1e-2
-          },
-        'batch_size': {
-            # integers between 32 and 256
-            # with evenly-distributed logarithms 
-            'distribution': 'q_log_uniform_values',
-            'q': 8,
-            'min': 16,
-            'max': 64,
           }
         })
-    
+
     # Non-changing parameters
     parameters_dict.update({
-        'dataset': {'value': "C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data\\raw"}, 
+        'dataset': {'value': "D:\\graduation_jobdevogel\\raw"}, 
         'meta': {'value': True},
-        'epochs': {'value': 2},
+        'epochs': {'value': 5},
         'criterion': {'value': 'mse'},
         'scheduler': {'value': 'StepLR'},
         'model_outf': {'value': "seg"},
         'wandb_outf': {'value': '\\tudelft.net\student-homes\V\jobdevogeldevo\Desktop\\wandb'},
         'architecture': {'value': "PointNet"},
         'npoints': {'value': 2500},
-        'test_interval': {'value': 100},
-        'eval_interval': {'value': 100},
-        'train_metrics_interval': {'value': 1},
-        'train_slice': {'value': None},
+        'test_interval': {'value': 250},
+        'eval_interval': {'value': 250},
+        'train_metrics_interval': {'value': 10},
+        'test_metrics_interval': {'value': 100},
+        'train_slice': {'value': 7680},
         'test_slice': {'value': None},
         'resample': {'value': True},
-        'eval_sample': {'value': 0},
-        'preload_data': {'value': False}
+        'eval_sample': {'value': 80},
+        'preload_data': {'value': False},
+        'fc1': {'value': 1},
+        'fc2': {'value': 512},
+        'fc3': {'value': 512},
+        'randomize_point_order': {'value': False},
+        'train_slice': {'value': 7680}
         })
-    
+
     sweep_config['parameters'] = parameters_dict
 
     try:
@@ -570,65 +591,54 @@ def main(opt, config=None):
     except OSError:
         pass
     
-    try:
-        os.makedirs(config['model_outf'])
-    except OSError:
-        pass
+    # config = dict(
+    #     epochs=150,
+    #     batch_size=512,
+    #     learning_rate=0.0001,
+    #     dataset="D:\\graduation_jobdevogel\\raw",
+    #     model_outf="seg",
+    #     wandb_outf='\\tudelft.net\student-homes\V\jobdevogeldevo\Desktop\\wandb',
+    #     train_slice=7680, #7584,
+    #     test_slice=None,
+    #     architecture="PointNet",
+    #     optimizer='adam',
+    #     criterion='mse',
+    #     scheduler='StepLR',
+    #     feature_transform=opt.feature_transform,
+    #     npoints=2500,
+    #     eval_interval=250,
+    #     train_metrics_interval=10,
+    #     test_metrics_interval=100,
+    #     eval_sample=0,
+    #     resample=True,
+    #     meta=True,
+    #     preload_data=False,
+    #     fc1=1,
+    #     fc2=512,
+    #     fc3=512,
+    #     initialization=None,
+    #     randomize_point_order=False
+    #     )
+    
+    # try:
+    #     os.makedirs(config['model_outf'])
+    # except OSError:
+    #     pass
     
     # Build, train and analyze the model with the pipeline
-    model = model_pipeline(config)   
-    # sweep_id = wandb.sweep(sweep_config, project="IrradianceNet_sweep_initialization")
-    # sweep_id = 'mmoeeyhz'
+    #model = model_pipeline(config)
 
-    # wandb.agent(sweep_id, model_pipeline, count=25, project="IrradianceNet_sweep_initialization")
+    project = "IrradianceNet_sweep"
+    #sweep_id = wandb.sweep(sweep_config, project=project)
+    sweep_id = '85x58gz3'
+
+    wandb.agent(sweep_id, model_pipeline, count=75, project=project)
 
 if __name__ == '__main__':
-    # wandb.login()
-    
-    if device == 'parallel':
-        parallel = True
-    else:
-        parallel = False
-    
-    config = dict(
-        epochs=150,
-        batch_size=32,
-        learning_rate=0.0001,
-        dataset="C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data\\raw",
-        model_outf="seg",
-        wandb_outf='\\tudelft.net\student-homes\V\jobdevogeldevo\Desktop\\wandb',
-        train_slice=7584, #7584,
-        test_slice=None,
-        architecture="PointNet",
-        optimizer='adam',
-        criterion='mse',
-        scheduler='StepLR',
-        feature_transform=opt.feature_transform,
-        npoints=2500,
-        eval_interval=50,
-        train_metrics_interval=10,
-        test_metrics_interval=100,
-        eval_sample=0,
-        resample=True,
-        meta=True,
-        preload_data=False,
-        fc1=1,
-        fc2=512,
-        fc3=512,
-        initialization=None,
-        randomize_point_order=True,
-        parallel=parallel
-        )
-    
-    if opt.feature_transform:
-        print(f'Running script on {device} WITH feature transform')
-    else:
-        print(f'Running script on {device} WITHOUT feature transform')
-    
-    if opt.eval:
-        model_path = r'C:\Users\Job de Vogel\OneDrive\Documenten\TU Delft\Master Thesis\Code\IrradianceNet\pointnet\utils\seg\irr_model_dummy-wd7k79l1_epoch_5.pth'
-    
-        evaluate_main(opt, idx=50, model_path=model_path, config=config)
-    else:
-        main(opt, config=config)
+    wandb.login()
+    # if opt.feature_transform:
+    #     print(f'Running script on {device} WITH feature transform')
+    # else:
+    #     print(f'Running script on {device} WITHOUT feature transform')
+    main(opt)
 

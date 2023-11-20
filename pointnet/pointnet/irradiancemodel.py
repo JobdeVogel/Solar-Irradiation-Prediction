@@ -42,8 +42,10 @@ class STN3d(nn.Module):
 
         # Identity matrix
         iden = Variable(torch.from_numpy(np.array([1,0,0,0,1,0,0,0,1]).astype(np.float32))).view(1,9).repeat(batchsize,1)
+        
         if x.is_cuda:
             iden = iden.to(self.device)
+            
         x = x + iden
         
         # Matrix 3x3
@@ -53,7 +55,7 @@ class STN3d(nn.Module):
 
 class STNkd(nn.Module):
     # Second feature transformation
-    def __init__(self, k=64):
+    def __init__(self, k=64, device='cuda:0'):
         super(STNkd, self).__init__()
         self.conv1 = torch.nn.Conv1d(k, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
@@ -70,9 +72,11 @@ class STNkd(nn.Module):
         self.bn5 = nn.BatchNorm1d(256)
 
         self.k = k
+        self.device = device
 
     def forward(self, x):
         batchsize = x.size()[0]
+
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -80,12 +84,13 @@ class STNkd(nn.Module):
         x = x.view(-1, 1024)
 
         x = F.relu(self.bn4(self.fc1(x)))
+
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
         iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1,self.k*self.k).repeat(batchsize,1)
         if x.is_cuda:
-            iden = iden.cuda()
+            iden = iden.to(self.device)
         x = x + iden
         
         # Output is 64x64
@@ -95,22 +100,24 @@ class STNkd(nn.Module):
 class PointNetfeat(nn.Module):
     # Combines everything from input to global features
     
-    def __init__(self, device='cuda:0', global_feat = True, feature_transform = False):
+    def __init__(self, device='cuda:0', global_feat = True, feature_transform = False, n=64):
         super(PointNetfeat, self).__init__()
         self.stn = STN3d(device=device)
-        self.conv1 = torch.nn.Conv1d(3, 64, 1)
-        self.conv2 = torch.nn.Conv1d(64, 128, 1)
+        self.conv1 = torch.nn.Conv1d(3, n, 1)
+        self.conv2 = torch.nn.Conv1d(n, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
-        self.bn1 = nn.BatchNorm1d(64)
+        self.bn1 = nn.BatchNorm1d(n)
         self.bn2 = nn.BatchNorm1d(128)
         self.bn3 = nn.BatchNorm1d(1024)
         self.global_feat = global_feat
         self.feature_transform = feature_transform
+
         if self.feature_transform:
-            self.fstn = STNkd(k=64)
+            self.fstn = STNkd(k=n, device=device)
 
     def forward(self, x, meta=None):      
         n_pts = x.size()[2]
+
         trans = self.stn(x)
         
         x = x.transpose(2, 1)
@@ -118,6 +125,7 @@ class PointNetfeat(nn.Module):
         # Multiplication of input and first feature transformation
         x = torch.bmm(x, trans)
         x = x.transpose(2, 1)
+
         x = F.relu(self.bn1(self.conv1(x)))
 
         # Multiplication with second feature transformation
@@ -172,17 +180,17 @@ class PointNetfeat(nn.Module):
 class PointNetDenseCls(nn.Module):
     # Add the segmentation part
     
-    def __init__(self, k = 2500, m=0, feature_transform=False, config=None, device='cuda:0'):
+    def __init__(self, k = 2500, m=0, n=64, feature_transform=False, config=None, device='cuda:0'):
         super(PointNetDenseCls, self).__init__()
         self.k = k
         self.m = m
         self.device = device
         self.feature_transform = feature_transform
         self.config = config
-        self.feat = PointNetfeat(global_feat=False, device=device, feature_transform=feature_transform)
+        self.feat = PointNetfeat(global_feat=False, n=n, device=device, feature_transform=feature_transform)
         
         # ! Here we should change 1088 to 1091 since normal data is added
-        self.conv1 = torch.nn.Conv1d(1088 + self.m, 512, 1)
+        self.conv1 = torch.nn.Conv1d(1024 + n + self.m, 512, 1) # 128 = config.k
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
         
@@ -209,6 +217,7 @@ class PointNetDenseCls(nn.Module):
 
     def forward(self, x, meta=None):
         batchsize = x.size()[0]
+
         n_pts = x.size()[2]
         
         x, trans, trans_feat = self.feat(x, meta)       
@@ -281,8 +290,8 @@ if __name__ == '__main__':
     normal_data = Variable(torch.rand(32,3,2500))
 
 
-    sim_data = sim_data[:, 0, :]
-    seg = dummy(k=2500, m=3)
+    # sim_data = sim_data[:, 0, :]
+    seg = PointNetDenseCls(k=2500, m=3, n=64, feature_transform=True)
     
     out, _, _ = seg(sim_data, meta=normal_data)
     
