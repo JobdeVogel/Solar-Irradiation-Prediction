@@ -9,7 +9,6 @@ import time
 import numpy as np
 import torch
 import torch.nn as nn
-from tqdm.auto import tqdm
 
 from torch.utils.data import Dataset, DataLoader
 
@@ -21,21 +20,13 @@ from eval import get_im_data, plot, compute_errors
 import argparse
 
 import wandb
-import pprint
 import itertools
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cpu', action='store_true', help="run on cpu")
-parser.add_argument('--gpu', type=int, nargs='?', default=0, help='cuda device idx, defaults to 0')
+parser.add_argument('--gpu', type=int, nargs='?', default=0, help="cuda device idx, defaults to 0, or 'parallel'")
 parser.add_argument('--feature_transform', action='store_true', help="feature transform 2")
 opt = parser.parse_args()
-
-# # Ensure deterministic behavior
-# torch.backends.cudnn.deterministic = True
-# random.seed(hash("setting random seeds") % 2**32 - 1)
-# np.random.seed(hash("improves reproducibility") % 2**32 - 1)
-# torch.manual_seed(hash("by removing stochasticity") % 2**32 - 1)
-# torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
 
 # Device configuration
 device = torch.device(f"cuda:{opt.gpu}" if torch.cuda.is_available() else "cpu")
@@ -62,7 +53,7 @@ def get_data(config, slice=None, train=True):
         transform=True,
         resample=config.resample,
         preload=config.preload_data,
-        randomize_point_order=config.randomize_point_order
+        lex_sort=config.lex_sort
     )
 
     return dataset
@@ -176,41 +167,6 @@ def make(config):
     
     return model, train_loader, test_loader, test, criterion, optimizer, scheduler
 
-def train(model, loader, criterion, optimizer, scheduler, config):
-    # Tell wandb to watch what the model gets up to: gradients, weights, and more!
-    wandb.watch(model, criterion, log="all", log_freq=10)
-
-    model.train()
-
-    # Run training and track with wandb
-    total_batches = len(loader) * config.epochs
-    num_epoch_batches = len(loader)
-    step = 0  # number of examples seen
-    batch_ct = 0
-    
-    for epoch in tqdm(range(config.epochs)):
-        losses = []
-        
-        for i, data in enumerate(loader, 0):
-            points, targets = data
-            points = points.transpose(2, 1)
-
-            targets = targets.view(-1, 1)[:, 0] - 1
-            
-            loss, _, _ = train_batch(points, targets, model, optimizer, criterion, config)
-            
-            step +=  1
-            batch_ct += 1
-            
-            losses.append(loss)
-            
-            # Report metrics every 25th batch
-            if ((batch_ct + 1) % config.train_metrics_interval) == 0:
-                train_log(loss, epoch, step, num_epoch_batches)
-            
-        print(f'Avg. loss: {sum(losses) / len(losses)}')
-        # scheduler.step()
-
 def train_batch(inputs, targets, model, optimizer, criterion, config):
     inputs = inputs.transpose(2, 1)
 
@@ -243,32 +199,6 @@ def train_batch(inputs, targets, model, optimizer, criterion, config):
 
     return loss
 
-def train_log(loss, epoch, step, num_batch, interval=10):
-    #? Does step work in wandb or should examplect used?
-    yellow = lambda x: '\033[93m' + x + '\033[0m'
-    
-    # Where the magic happens
-    wandb.log({"epoch": epoch, "train_loss": loss}, step=step)
-    
-    print('[Epoch %d: it %s/%s] %s loss: %f' % (epoch, str(step).zfill(3), str(num_batch).zfill(3), yellow('train'), loss.item()))
-
-def test(model, loader, criterion, epoch, num_test_samples, config):
-    model.eval()
-
-    # Run the model on some test examples
-    with torch.no_grad():
-        j, data = next(enumerate(loader, 0))
-        
-        points, targets = data
-            
-        points = points.transpose(2, 1)
-        targets = targets.view(-1, 1)[:, 0] - 1
-        
-        loss = test_batch(points, targets, model, criterion, config)
-        
-        step = 0
-        test_log(loss, epoch, step, num_test_samples)
-
 def test_batch(inputs, targets, model, criterion, config):
     inputs = inputs.transpose(2, 1)
 
@@ -294,14 +224,6 @@ def test_batch(inputs, targets, model, criterion, config):
         loss += feature_transform_regularizer(trans_feat, device=device) * 0.001
 
     return loss
-
-def test_log(loss, epoch, step, num_batch):
-    blue = lambda x: '\033[94m' + x + '\033[0m'
-    
-    # Where the magic happens
-    wandb.log({"epoch": epoch, "test_loss": loss}, step=step)
-    
-    print('[Epoch %d: it %s/%s] %s loss: %f' % (epoch, str(step).zfill(3), str(num_batch).zfill(3), blue('test'), loss.item()))
 
 def evaluate(inputs, targets, model, epoch, i, max_i, path, config):
     eval_points = inputs[:, :3]
@@ -344,16 +266,6 @@ def evaluate(inputs, targets, model, epoch, i, max_i, path, config):
         print('WARNING: failed to generate image in run')
         pass
 
-class CustomDataset(Dataset):
-    def __init__(self, data):
-        self.data = data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[idx, :, :], np.array([]), idx
-
 def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, optimizer, scheduler, config):        
     # Tell wandb to watch what the model gets up to: gradients, weights, and more!
     wandb.watch(model, criterion, log="all", log_freq=10)
@@ -378,20 +290,15 @@ def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, opt
     eval_targets = torch.from_numpy(eval_targets_plot)
     ''''''
 
-    step = 0
-
-    # Create an instance of the dataset and a data loader
-    data = np.random.rand(7584, 2500, 6).astype(np.float32)
-    custom_dataset = CustomDataset(data)
-    dummy_loader = DataLoader(custom_dataset, batch_size=32, shuffle=True)
-
     print(f'Loading train samples with dataloader on {train_loader.num_workers} cpus (test dataloader is using workers={test_loader.num_workers})')
-
     test_loader = itertools.cycle(test_loader)
 
     model.to(device)
     model = model.train()
 
+    export_model(model, eval_inputs, 'IrradianceNet', r'models')
+
+    step = 0
     # Loop
     for epoch in range(config.epochs):
         losses = []
@@ -471,8 +378,6 @@ def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, opt
 
         torch.save(model.state_dict(), '%s/irr_model_%s_epoch_%d.pth' % (seg_path, wandb.run.name, epoch))
     
-    # export_model(model, points, 'IrradianceNet', r'models')
-    
     return
 
 def export_model(model, points, name, directory):
@@ -481,14 +386,19 @@ def export_model(model, points, name, directory):
     
     path = os.path.join(directory, name) + '.onnx'
     
-    # Save the model in the exchangeable ONNX format
-    points = points.to(device)
-        
-    input_names = ['points']
-    output_names = ["output", "trans", "trans_feat"]
+    x = points.unsqueeze(dim=0).transpose(2, 1)
+
+    meta = x[:, 3:, :].to(device)
+    x = x[:, :3, :].to(device)
+    
+    inputs = (x, meta)
+    
+    # Save the model in the exchangeable ONNX format        
+    input_names = ['points', 'meta']
+    output_names = ["output", "trans"]
         
     torch.onnx.disable_log()
-    torch.onnx.export(model, points, path, input_names=input_names, output_names=output_names)
+    torch.onnx.export(model, inputs, path, input_names=input_names, output_names=output_names)
         
     wandb.save("model.onnx")
 
@@ -508,18 +418,7 @@ def model_pipeline(config=None):
 
         # print(model)
         
-        pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, optimizer, scheduler, config)
-
-        '''
-        # USE THESE LINES TO RUN TRAIN AND TEST LOOP INDIVIDUALLY
-        
-        # and use them to train the model
-        train(model, train_loader, criterion, optimizer, scheduler, config
-        # and test its final performance
-        num_test_samples = int(math.floor(len(train_loader) / config.test_metrics_interval)) * config.epochs
-        test(model, test_loader, criterion, 0, num_test_samples, config)
-        '''
-        
+        pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, optimizer, scheduler, config)        
 
 def main(opt, config=None):    
     # Configuration
@@ -590,12 +489,12 @@ def main(opt, config=None):
         pass
     
     # Build, train and analyze the model with the pipeline
-    # model = model_pipeline(config)
+    model = model_pipeline(config)
 
-    project = "temp"
-    sweep_id = wandb.sweep(sweep_config, project=project)
-    #sweep_id = '85x58gz3
-    wandb.agent(sweep_id, model_pipeline, count=75, project=project)
+    # project = "temp"
+    # sweep_id = wandb.sweep(sweep_config, project=project)
+    # #sweep_id = '85x58gz3
+    # wandb.agent(sweep_id, model_pipeline, count=75, project=project)
 
 if __name__ == '__main__':
     # wandb.login()
@@ -623,7 +522,7 @@ if __name__ == '__main__':
         preload_data=False,
         hidden_layers=[],
         initialization=None,
-        randomize_point_order=False,
+        lex_sort=False,
         k=0
         )
     
