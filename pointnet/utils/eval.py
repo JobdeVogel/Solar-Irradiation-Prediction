@@ -28,7 +28,7 @@ def get_im_data(dataset, idx):
 def save_img(plt, name, path):
     path = os.path.join(path, name)
     
-    plt.savefig(path, dpi=600)
+    plt.savefig(path, dpi=125)
 
 def compute_errors(targets, predictions):
     if isinstance(predictions, torch.Tensor):
