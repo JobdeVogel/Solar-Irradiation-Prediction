@@ -187,6 +187,10 @@ class PointNetDenseCls(nn.Module):
         self.device = device
         self.feature_transform = feature_transform
         self.config = config
+        
+        self.fc_sorting = nn.Linear(self.k, self.k)
+        self.bn_sorting = nn.BatchNorm1d(self.k)
+        
         self.feat = PointNetfeat(global_feat=False, n=n, device=device, feature_transform=feature_transform)
         
         # ! Here we should change 1088 to 1091 since normal data is added
@@ -195,27 +199,39 @@ class PointNetDenseCls(nn.Module):
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
         self.conv4 = torch.nn.Conv1d(128, 1, 1)
         
-        # Create a list of fully connected layers with different sizes
-        # Assuming input_size is the input dimension of your data       
-        if len(self.config.hidden_layers) > 0:    
-            self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.config.hidden_layers[0])] +
-            [
-                nn.Linear(in_features, out_features)
-                for in_features, out_features in zip(self.config.hidden_layers, self.config.hidden_layers[1:])
-            ] +
-            [nn.Linear(self.config.hidden_layers[-1], self.k)]
-            )
-        else:
+        try:
+            # Create a list of fully connected layers with different sizes
+            # Assuming input_size is the input dimension of your data       
+            if len(self.config.hidden_layers) > 0:    
+                self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.config.hidden_layers[0])] +
+                [
+                    nn.Linear(in_features, out_features)
+                    for in_features, out_features in zip(self.config.hidden_layers, self.config.hidden_layers[1:])
+                ] +
+                [nn.Linear(self.config.hidden_layers[-1], self.k)]
+                )
+            else:
+                self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.k)])
+        except AttributeError as e:
             self.fc_layers = nn.ModuleList([nn.Linear(self.k, self.k)])
-        
+            
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
 
     def forward(self, x, meta=None):
+        if isinstance(x, tuple):
+            # This input is used for onnx export, extract meta from input            
+            x = x.unsqueeze(dim=0).transpose(2, 1)
+
+            meta = x[:, 3:, :]
+            x = x[:, :3, :]            
+        
         batchsize = x.size()[0]
 
         n_pts = x.size()[2]
+        
+        x = self.fc_sorting(x)
         
         x, trans, trans_feat = self.feat(x, meta)       
         
