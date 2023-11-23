@@ -135,7 +135,7 @@ class IrradianceDataset(data.Dataset):
                  resample=False,
                  preload=False,
                  device=torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu"),
-                 randomize_point_order=False
+                 lex_sort=False
                  ):
         self.root = root
         self.npoints = npoints
@@ -150,7 +150,7 @@ class IrradianceDataset(data.Dataset):
         self.preload = preload
         self.preload_data = None
         self.device = device
-        self.randomize_point_order = randomize_point_order
+        self.lex_sort = lex_sort
         
         np.random.seed(self.seed)
         random.seed(self.seed)
@@ -288,10 +288,24 @@ class IrradianceDataset(data.Dataset):
                 points = self.transform_features(points)    
                 irr = self.transform_outputs(irr)
 
-        if self.randomize_point_order:
-            random_indices = torch.randperm(points.shape[0])
-            points = points[random_indices]
-            irr = irr[random_indices]
+        def lexsort(keys, dim=-1):
+            if keys.ndim < 2:
+                raise ValueError(f"keys must be at least 2 dimensional, but {keys.ndim=}.")
+            if len(keys) == 0:
+                raise ValueError(f"Must have at least 1 key, but {len(keys)=}.")
+            
+            idx = keys[0].argsort(dim=dim, stable=True)
+            for k in keys[1:]:
+                idx = idx.gather(dim, k.gather(dim, idx).argsort(dim=dim, stable=True))
+            
+            return idx
+    
+        if self.lex_sort:
+            flipped = torch.flip(points, dims=(1,))
+            idx = lexsort(flipped.T)
+
+            points = points[idx, :]
+            irr = irr[idx]
 
         return points, irr, index
     
