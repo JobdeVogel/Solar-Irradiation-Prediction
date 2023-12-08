@@ -99,9 +99,10 @@ def par_convergence(model, parameters, output_file):
             writer = csv.writer(file)
             writer.writerow(values)
             
-def errors(df):
+def errors(df):    
     rmses = []
     max_errors = []
+    stds = []
     for i in range(df.shape[1]):
         column_index = i
 
@@ -111,14 +112,17 @@ def errors(df):
         squared_errors = (selected_column - comparison_column) ** 2
         mean = squared_errors.mean()
         rmse = math.sqrt(mean)  
+            
+        error = np.max(np.abs(selected_column - comparison_column))
+        std = np.std(np.abs(selected_column - comparison_column))
         
-        max_error = np.max(np.abs(selected_column - comparison_column))
         max_index = np.argmax(np.abs(selected_column - comparison_column))
         
         rmses.append(rmse)
-        max_errors.append(max_error)
+        max_errors.append(error)
+        stds.append(std)
         
-    return rmses, max_errors
+    return rmses, max_errors, stds
     
 def is_float(string):
     try:
@@ -167,9 +171,15 @@ def plot(input_file, output_file, params):
     irradiance = pd.read_csv(output_file, header=None)
 
     if irradiance.shape[1] > len(params):
+        print(irradiance.shape[1])
+        print(len(params))
+        
         irradiance = irradiance.iloc[:, :len(params)]
+
         print('WARNING: number of results higher than number of params')
     elif len(params) > irradiance.shape[1]:
+        print(irradiance.shape[1])
+        print(len(params))
         params = params[:irradiance.shape[1]]
         print('WARNING: number of params higher than number of results')
     
@@ -178,7 +188,7 @@ def plot(input_file, output_file, params):
     # Remove the times from the data
     irradiance = irradiance.iloc[:-1, :]
     
-    rmses, max_errors = errors(irradiance)
+    rmses, max_errors, stds = errors(irradiance)
 
     rmses = np.array(rmses)
     times = np.array(times)
@@ -210,7 +220,7 @@ def plot(input_file, output_file, params):
     
     plt.grid(True)
     
-    annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+    annot = ax.annotate("", xy=(0,0), xytext=(20,-20),textcoords="offset points",
                     bbox=dict(boxstyle="round", fc="w"),
                     arrowprops=dict(arrowstyle="->"))
     
@@ -286,10 +296,62 @@ def plot(input_file, output_file, params):
                 update_annot(ind)
                 annot.set_visible(True)
                 fig.canvas.draw_idle()
-            else:
-                if vis:
-                    annot.set_visible(False)
-                    fig.canvas.draw_idle()
+            # else:
+            #     if vis:
+            #         annot.set_visible(False)
+            #         fig.canvas.draw_idle()
+    
+    fig.canvas.mpl_connect("motion_notify_event", hover)
+    
+    plt.show()
+    
+    
+    
+    
+    ######
+    fig,ax = plt.subplots()
+    
+    plt.xlabel('Standard_Deviation')
+    plt.ylabel('Computation Time (s)')
+    plt.title('Standard Deviation\'s for parameter convergence test')
+    
+    sc = plt.scatter(stds,times, c=c, norm=norm)
+    
+    plt.grid(True)
+    
+    annot.set_visible(False)
+    
+    annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc="w"),
+                    arrowprops=dict(arrowstyle="->"))
+    
+    annot.set_visible(False)
+    
+    def update_annot(ind):
+        pos = sc.get_offsets()[ind["ind"][0]]
+        annot.xy = pos
+        text = "Index: {}\nRMSE: {}\nParams:\n{}".format(
+                                "".join(list(map(str,ind["ind"]))[0]), 
+                                "".join([str(round(rmses[n], 2)) for n in ind["ind"]][0]),
+                                "".join([annotations[n] for n in ind["ind"]][0])
+                                )
+        annot.set_text(text)
+        
+        # annot.get_bbox_patch().set_facecolor(cmap(norm(indices[ind["ind"][0]])))
+        # annot.get_bbox_patch().set_alpha(0.4)
+    
+    def hover(event):
+        vis = annot.get_visible()
+        if event.inaxes == ax:
+            cont, ind = sc.contains(event)
+            if cont:
+                update_annot(ind)
+                annot.set_visible(True)
+                fig.canvas.draw_idle()
+            # else:
+            #     if vis:
+            #         annot.set_visible(False)
+            #         fig.canvas.draw_idle()
     
     fig.canvas.mpl_connect("motion_notify_event", hover)
     
@@ -440,7 +502,10 @@ if __name__=='__main__':
             '-ab 12 -aa 0 -ar 2048 -ad 8192 -as 4096 -c 1 -dc 0.75 -dp 512 -dr 3 -ds 0.05 -dt 0.15 -lr 8 -lw 4e-07 -ss 1.0 -st 0.15 -w -g'
             ]
 
-    input_file = r"C:\\Users\\Job de Vogel\\Desktop\\results.csv"
-    output_file = r"C:\\Users\\Job de Vogel\\Desktop\\results_flipped.csv"
+    input_file = r"C:\\Users\\Job de Vogel\\Desktop\\Other\\results.csv"
+    output_file = r"C:\\Users\\Job de Vogel\\Desktop\\Other\\results_flipped.csv"
+    
+    # input_file = r"C:\\Users\\Job de Vogel\\Desktop\\results.csv"
+    # output_file = r"C:\\Users\\Job de Vogel\\Desktop\\results_flipped.csv"
     # par_convergence(model, arguments, input_file)
     plot(input_file, output_file, arguments)
