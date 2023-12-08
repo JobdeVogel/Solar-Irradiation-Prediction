@@ -2,18 +2,14 @@ import sys
 sys.path.append("../")
 
 import os
-import random
-import math
 import time
 
 import numpy as np
 import torch
 import torch.nn as nn
 
-from torch.utils.data import Dataset, DataLoader
-
-from pointnet.dataset import ShapeNetDataset, IrradianceDataset
-from pointnet.irradiancemodel import PointNetDenseCls, feature_transform_regularizer, init_weights, dummy
+from pointnet.dataset import IrradianceDataset
+from pointnet.irradiancemodel import PointNetDenseCls, feature_transform_regularizer, init_weights
 
 from eval import get_im_data, plot, compute_errors
 
@@ -404,7 +400,7 @@ def export_model(model, points, name, directory):
 
 def model_pipeline(config=None):        
     # tell wandb to get started
-    with wandb.init(mode="disabled", project="v2", config=config, allow_val_change=True):        
+    with wandb.init(mode="online", project="v8", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
 
@@ -444,24 +440,24 @@ def main(opt, config=None):
     # Sweep parameters
     parameters_dict = {
         'optimizer': {
-            'values': ['adam', 'sgd', 'adagrad']
+            'values': ['adam']
             },
         'meta': {
-            'values': [True, False],
-            'probabilities': [0.75, 0.25]
+            'values': [True],
+            'probabilities': [1]
             },
         'initialization': {
-            'values': ['kaiming', 'xavier', None]
+            'values': [None]
             },
         'k': {
-            'values': [0, 32, 64, 128, 256],
-            'probabilities': [0.5, 0.2, 0.1, 0.1, 0.1]
+            'values': [0],
+            'probabilities': [1]
             },
         'batch_size': {
-            'values': [16, 32, 64, 128]
+            'values': [32]
             },
         'scheduler': {
-            'values': ['StepLR', 'plateau']
+            'values': ['StepLR']
         }
     }
     
@@ -470,7 +466,7 @@ def main(opt, config=None):
             # a flat distribution between 0 and 0.1
             'distribution': 'log_uniform_values',
             'min': 1e-5,
-            'max': 1e-2
+            'max': 1e-4
             }
         })
 
@@ -491,18 +487,18 @@ def main(opt, config=None):
     # Build, train and analyze the model with the pipeline
     model = model_pipeline(config)
 
-    # project = "temp"
+    # project = "v8"
     # sweep_id = wandb.sweep(sweep_config, project=project)
-    # #sweep_id = '85x58gz3
-    # wandb.agent(sweep_id, model_pipeline, count=75, project=project)
+    # # #sweep_id = '85x58gz3
+    # wandb.agent(sweep_id, model_pipeline, count=5, project=project)
 
 if __name__ == '__main__':
-    # wandb.login()
+    wandb.login()
     
     config = dict(
         epochs=5,
         batch_size=32,
-        learning_rate=0.0001,
+        learning_rate=0.001,
         dataset="C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data",
         model_outf="seg",
         wandb_outf='\\tudelft.net\student-homes\V\jobdevogeldevo\Desktop\\wandb',
