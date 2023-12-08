@@ -33,3 +33,4 @@ pointnet/utils/__pycache__/eval.cpython-38.pyc
 pointnet/utils/__pycache__/irradiancenet.cpython-38.pyc
 test.py
 input_output/__pycache__/
+input_output/__pycache__/save.cpython-37.pyc
