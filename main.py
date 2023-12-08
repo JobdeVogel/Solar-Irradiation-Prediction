@@ -331,7 +331,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
     # Compute the outlines
     sample.compute_outlines(patch_outline, all_building_outlines, all_heights)
     
-    # save the outlines
+    # # save the outlines
     # sample.save_outlines()
     
     # Check if FSI is above minimum FSI
@@ -367,7 +367,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
             logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.simulate(idx)
 
-        # Store the sensors, including irradiance values, as arrays in the sample object
+        # # Store the sensors, including irradiance values, as arrays in the sample object
         sample.store_sensors_as_arrays()
         
         # Save the detailed geometry
@@ -420,7 +420,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     samples = []
 
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines))[start_idx:]:
+    for idx in range(len(patch_outlines))[395:396]:
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         
