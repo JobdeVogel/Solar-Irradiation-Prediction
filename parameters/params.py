@@ -14,9 +14,10 @@ VISUALIZE_MESH = False
 # Load 3DBAG using load_3d_bag.file.py
 _FACE_MERGE_TOLERANCE = 0.01
 
+
 # Patch outline using load_3d_bag.outlines.py
 SIZE = 100
-MIN_COVERAGE = 25 #less coverage is more samples
+MIN_COVERAGE = 100 #less coverage is more samples
 TRANSLATE_TO_ORIGIN = True
 FSI = True
 _SPLIT_TOLERANCE = 0.01
@@ -35,7 +36,7 @@ _WALL_RAY_TOLERANCE = 0.1
 QUAD_ONLY = False
 
 # Validation
-MAX_AREA_ERROR = 0.001 # Quite strict, but sure enough to get accurate models
+MAX_AREA_ERROR = 0.01 # Quite strict, but sure enough to get accurate models
 
 # Save settings
 PICKLE_PROTOCOL = 2
