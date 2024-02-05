@@ -57,7 +57,10 @@ def postprocess_mesh(mesh, check=False):
     rebuild_mesh.Faces.CullDegenerateFaces()
     
     # Delete zero area mesh faces
-    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[1] + rebuild_mesh.Faces.GetZeroAreaFaces()[2]
+    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[1]
+    rebuild_mesh.Faces.DeleteFaces(indices, True)
+        
+    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[2]
     rebuild_mesh.Faces.DeleteFaces(indices, True)
         
     return rebuild_mesh
