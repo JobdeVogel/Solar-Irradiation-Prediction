@@ -12,7 +12,6 @@ import gc
 
 def task(file, logger):
     try:
-        print(4/0)
         bag_file = os.path.join(BAG_PATH, file)
 
         geometry_path = os.path.join(GEOMETRY_PATH, file[:-4])
