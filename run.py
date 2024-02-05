@@ -12,6 +12,7 @@ import gc
 
 def task(file, logger):
     try:
+        print(4/0)
         bag_file = os.path.join(BAG_PATH, file)
 
         geometry_path = os.path.join(GEOMETRY_PATH, file[:-4])
@@ -28,8 +29,9 @@ def task(file, logger):
             os.makedirs(raw_path)
 
         main(bag_file, 0, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, raw_path=raw_path)
-    except:
+    except Exception as e:
         logger.critical("Task in multiprocessing failed!")
+        logger.critical(e)
 
 def process(info):
     try:
@@ -51,8 +53,9 @@ def process(info):
         del identifier
         del logger
         gc.collect()   
-    except:
+    except Exception as e:
         logger.critical("Process in multiprocessing failed!")
+        logger.critical(e)
 
 if __name__ =='__main__':
     MAIN_LOGGER = generate_logger('main', stdout=True)  
