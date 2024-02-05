@@ -22,6 +22,7 @@ import random
 import string
 import sys
 import argparse
+import cProfile, pstats
 
 import gc
 
@@ -33,9 +34,12 @@ from input_output import save, serialize
 from augment import augmentation
 from simulate import run
 from visualize.mesh import generate_colored_mesh, legend
+from visualize.pointcloud import plot
 
 from log.logger import generate_logger
 from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, MAX_AREA_ERROR
+
+from visualize import pointcloud
 
 parser = argparse.ArgumentParser(prog='name', description='random info', epilog='random bottom info')
 parser.add_argument('-b', '--BAG_FILE_PATH', type=str, nargs='?', default=BAG_FILE_PATH, help='')
@@ -103,7 +107,7 @@ class Sample:
         self.patch_outline = patch_outline
         
         try:
-            # Extract the building outlines that correspond with patch outline
+            # Extract the building outlines that correspond with patch outline            
             self.building_outlines, self.courtyard_outlines, self.heights, self.FSI_score, self.envelope_area, self.building_area = outlines.generate_building_outlines(
                 patch_outline, 
                 all_building_outlines, 
@@ -113,7 +117,18 @@ class Sample:
             self.logger.critical(f'Outlines computation for sample {self.idx} failed')
             self.logger.critical(e)
     
-    def compute_mesh(self, rough=True):
+    def compute_mesh(self, rough=True):        
+        # Generate meshes
+        self.ground, self.walls, self.roofs, self.rough_ground, self.rough_walls, self.rough_roofs = meshing.generate_mesh(
+            self.patch_outline, 
+            self.building_outlines, 
+            self.courtyard_outlines, 
+            self.heights, 
+            GRID_SIZE, 
+            SIZE, 
+            rough=rough)
+        
+        # Generate meshes       
         try:
             # Generate meshes
             self.ground, self.walls, self.roofs, self.rough_ground, self.rough_walls, self.rough_roofs = meshing.generate_mesh(
@@ -323,8 +338,17 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         all_heights (list[float]): Heights of all buildings
         idx (int): Patch index to compute
         run_irradiance_simulation (bool, optional): Run a solar irradiance simulation. Defaults to False.
+        
+    Returns:
+        sample
+        validity:
+            * 0: valid
+            * 1: not valid due to small FSI
+            * 2: not valid due to wrong mesh splitting
+    
     """
-
+    name = idx
+        
     # Initializa a sample
     sample = Sample(idx, logger, geometry_path, irradiance_path, outlines_path, raw_path)
     
@@ -344,10 +368,11 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
 
         # Check if horizontal mesh area close enough to expected area
         valid = sample.validate()
-        
+
         if not valid:
             logger.warning(f'Area of sample {sample.idx} not in line with maximum area error, most likely due to invalid boolean mesh split. Therefore this sample will be skipped. Change the error with the MAX_AREA_ERROR argument.')
-            return
+            
+            return None, 2
 
         # Compute the sensors
         logger.info(f'Computing sensors for mesh patch[{sample.idx}]')
@@ -365,10 +390,14 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
             # sample.to_hbjson(0, "C:\\Users\\Job de Vogel\\Desktop")
             
             logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
+            
             sample.simulate(idx)
 
         # # Store the sensors, including irradiance values, as arrays in the sample object
         sample.store_sensors_as_arrays()
+        
+        # array = sample.arrays[0]
+        # plot(0, array, vectors=[], show_normals=False)
         
         # Save the detailed geometry
         logger.info(f'Saving mesh patch[{sample.idx}] and generating visualization')
@@ -384,8 +413,11 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         del sample
         
         gc.collect()
+        
+        return sample, 0
     else:
         logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
+        return None, 1
 
 def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_path=IRRADIANCE_PATH, outlines_path=OUTLINES_PATH, raw_path=RAW_PATH):
     """Generate a sample, and optionally simulate solar irradiance.
@@ -395,6 +427,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         start_idx (int): First patch sample index to compute
     """
     
+    start = time.perf_counter()
     # Extract roof and wall meshes from 3D BAG dataset
     roof_meshes, wall_meshes, bbox = file.load(filename)
 
@@ -406,12 +439,20 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     # Generate the building outlines for ALL building meshes
     all_building_outlines, all_heights = outlines.extract_building_outlines(wall_meshes, roof_meshes)
     
-    # Sort the building_outlines to format [outer, inner_1, inner_2, etc.]
-    for i, building_outline in enumerate(all_building_outlines):
+    # Sort the building_outlines to inners and outers
+    for i, (building_outline, height) in enumerate(zip(all_building_outlines, all_heights)):
         # If there are inner courtyards
         if len(building_outline) > 1:
-            sorted_outlines = outlines.find_outer_polyline(building_outline)
-            all_building_outlines[i] = sorted_outlines
+            outers, inners = outlines.find_outer_polyline(building_outline)
+            
+            if len(inners) > 0:
+                all_building_outlines[i] = outers + inners
+            else:
+                all_building_outlines[i] = [outers[0]]
+                
+                for outer in outers[1:]:
+                    all_building_outlines.append([outer])
+                    all_heights.append(height)
     
     # Serialize the building outlines to avoid in-place changes
     all_building_outlines = serialize.serialize(all_building_outlines)
@@ -419,8 +460,12 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     # Store the samples
     samples = []
 
+    fsi_invality = 0
+    mesh_split_invality = 0
+    unknown_invality = 0
+    
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines))[395:396]:
+    for idx in range(len(patch_outlines))[:1]:
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         
@@ -433,17 +478,25 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         patch_outline = patch_outlines[idx]
         
         try:
-            # # Run the generation and simulation for one ground patch sample
-            sample = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
-            
-            # Append the sample
-            samples.append(sample)
+            # Run the generation and simulation for one ground patch sample
+            sample, validity = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
+        
+            if validity == 1:
+                fsi_invality += 1
+            elif validity == 2:
+                mesh_split_invality += 1
         except Exception as e:
             logger.critical(f"Error message: {e}")
             logger.critical(f"Running task with index {idx} failed!")
-        
+            unknown_invality += 1         
+            
         logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
-
+    
+    print('\n')
+    logger.info(f'{len(patch_outlines) - fsi_invality - mesh_split_invality - unknown_invality}/{len(patch_outlines)} valid samples generated')
+    logger.info(f'{fsi_invality}/{len(patch_outlines)} samples invalid due to low FSI value (minimum: {MIN_FSI})')
+    logger.info(f'{mesh_split_invality}/{len(patch_outlines)} samples invalid due to mesh split error (max area error: {MAX_AREA_ERROR})')
+    logger.info(f'{unknown_invality}/{len(patch_outlines)} samples invalid due to unknown critical error')
     return samples
 
 if __name__ == '__main__':
@@ -476,6 +529,12 @@ if __name__ == '__main__':
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]
     # delete_dataset(folder_paths, logger, secure=True)
     
+    profiler = cProfile.Profile()
+    profiler.enable()
+    
     # Run the sample generation
     main(filename, start_idx, logger)
     
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    stats.print_stats()
