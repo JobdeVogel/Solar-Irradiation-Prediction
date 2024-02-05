@@ -163,7 +163,7 @@ def make(config):
     
     return model, train_loader, test_loader, test, criterion, optimizer, scheduler
 
-def train_batch(inputs, targets, model, optimizer, criterion, config):
+def train_batch(inputs, targets, model, optimizer, criterion, config, idxs=[], debug=False, debug_loss=0.05):
     inputs = inputs.transpose(2, 1)
 
     points = inputs[:, :3, :]
@@ -185,6 +185,16 @@ def train_batch(inputs, targets, model, optimizer, criterion, config):
         outputs, trans, trans_feat = model(points, meta=None)
 
     loss = criterion(outputs, targets)
+    
+    if debug:
+        if loss.item() > debug_loss:
+            reducted_crit = nn.MSELoss(reduction='none')
+            
+            reducted_losses = torch.mean(reducted_crit(outputs, targets), dim=1)
+        
+            tuples = [(i.item(), round(x.item(), 3)) for i, x in zip(idxs, reducted_losses)]
+            tuples.sort(key=lambda a: a[1], reverse=True)
+            print(tuples)
 
     if config.feature_transform:
         loss += feature_transform_regularizer(trans_feat, device=device) * 0.001
@@ -299,13 +309,16 @@ def pipeline_loop(model, train_loader, test_loader, eval_dataset, criterion, opt
     for epoch in range(config.epochs):
         losses = []
 
+        last_train_loss = 0
+
         for i, data in enumerate(train_loader, 0):
             if i == 0  and epoch == 0:
                 start = time.time()
 
             inputs, targets, idxs = data
 
-            loss = train_batch(inputs, targets, model, optimizer, criterion, config)
+            loss = train_batch(inputs, targets, model, optimizer, criterion, config, idxs=idxs, debug=False, debug_loss=last_train_loss)
+            last_train_loss = loss
             losses.append(loss)
 
             if i % config.train_metrics_interval == 0 and i != 0:
@@ -400,7 +413,7 @@ def export_model(model, points, name, directory):
 
 def model_pipeline(config=None):        
     # tell wandb to get started
-    with wandb.init(mode="online", project="v8", config=config, allow_val_change=True):        
+    with wandb.init(mode="online", project="p3", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
 
@@ -487,7 +500,7 @@ def main(opt, config=None):
     # Build, train and analyze the model with the pipeline
     model = model_pipeline(config)
 
-    # project = "v8"
+    # project = "p3"
     # sweep_id = wandb.sweep(sweep_config, project=project)
     # # #sweep_id = '85x58gz3
     # wandb.agent(sweep_id, model_pipeline, count=5, project=project)
@@ -496,23 +509,23 @@ if __name__ == '__main__':
     wandb.login()
     
     config = dict(
-        epochs=5,
+        epochs=25,
         batch_size=32,
         learning_rate=0.001,
         dataset="C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\data\\BEEST_data",
         model_outf="seg",
         wandb_outf='\\tudelft.net\student-homes\V\jobdevogeldevo\Desktop\\wandb',
-        train_slice=7680, #7584,
-        test_slice=None,
+        train_slice=7552, #7584,
+        test_slice=1792,
         architecture="PointNet",
         optimizer='adam',
         criterion='mse',
         scheduler='StepLR',
         npoints=2500,
         eval_interval=250,
-        train_metrics_interval=10,
+        train_metrics_interval=1,
         test_metrics_interval=100,
-        eval_sample=0,
+        eval_sample=88,
         resample=True,
         meta=True,
         preload_data=False,
