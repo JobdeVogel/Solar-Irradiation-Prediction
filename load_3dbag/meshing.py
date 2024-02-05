@@ -47,36 +47,17 @@ def postprocess_mesh(mesh, check=False):
     rebuild_mesh.Vertices.AddVertices(vertices)
     rebuild_mesh.Faces.AddFaces(faces)
     
-    # Check if the mesh is valid
-    if check:
-        print(f'Adding vertices and faces: {rebuild_mesh.IsValidWithLog()}')
-    
     # Compute the normals
     rebuild_mesh.Normals.ComputeNormals()
-    
-    # Check if the mesh is valid
-    if check:
-        print(f'Computing normals: {rebuild_mesh.IsValidWithLog()}')
-    
+        
     # Transform the mesh to a compact shape
     rebuild_mesh.Compact()
-    
-    # Check if the mesh is valid
-    if check:
-        print(f'Compact: {rebuild_mesh.IsValidWithLog()}')
         
     # Cull degenerate faces
     rebuild_mesh.Faces.CullDegenerateFaces()
     
-    # Check if the mesh is valid
-    if check:
-        print(f'Cull degenerate faces: {rebuild_mesh.IsValidWithLog()}')
-    
     # Delete zero area mesh faces
-    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[1]
-    rebuild_mesh.Faces.DeleteFaces(indices, True)
-    
-    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[2]
+    indices =  rebuild_mesh.Faces.GetZeroAreaFaces()[1] + rebuild_mesh.Faces.GetZeroAreaFaces()[2]
     rebuild_mesh.Faces.DeleteFaces(indices, True)
         
     return rebuild_mesh
@@ -360,7 +341,26 @@ def generate_vertical(building_outlines, courtyard_outlines, heights, grid_size,
         logger.debug(f'Generated {len(meshes)} meshes and outlines.')
     return meshes
 
-def generate_horizontal(ground_outline, building_curves, courtyard_curves, heights, grid_size, size, logger=False):
+def extrude(polyline):
+    lower_polyline = rg.Polyline(
+        [p + rg.Vector3d(0,0,-1) for p in polyline]
+    )
+    
+    mesh = rg.Mesh()
+    for pt in lower_polyline:
+        mesh.Vertices.Add(pt)
+        mesh.Vertices.Add(pt + rg.Vector3d(0,0,2))
+    
+    for i in range(len(polyline) - 1):
+        mesh.Faces.AddFace(i * 2, i * 2 + 1, (i + 1) * 2 + 1, (i + 1) * 2)
+    
+    mesh.Vertices.CullUnused()
+    mesh.Vertices.CombineIdentical(True, True)
+    mesh.RebuildNormals()
+    
+    return mesh
+
+def generate_horizontal(ground_outline, building_polylines, courtyard_polylines, building_curves, courtyard_curves, heights, grid_size, size, logger=False):
     """Generate ground and roofs by splitting a mesh plane
 
     Args:
@@ -395,6 +395,7 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
     
     # Store the splitters in a list
     splitters = []
+    valid = []
     
     # Iterate over the buildings
     for outline_set in building_curves:
@@ -420,15 +421,19 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
     
     # Store the splitters in a list
     roofs = []
-    
+
     # Iterate over the splitters and buildings
     for sample, (splitter_set, building_curve_set, courtyard_curve_set) in enumerate(zip(splitters, building_curves, courtyard_curves)):
+        
         # Store the roof meshes for a single building in a temp mesh
         temp_roofs = rg.Mesh()
         
         # Iterate over the building outlines
         for splitter, building_curve in zip(splitter_set, building_curve_set):
+            success = False
+            
             # Split the mesh
+            # ----- WARNING: VERY TIME CONSUMING! -----
             elements = mesh_plane.Split(splitter)
             
             # Postprocess the mesh elements
@@ -436,11 +441,10 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
             
             # If more than one splitting elements returned
             if len(elements) > 1:
+                success = True
+                
                 # Check if the element is inside the building or outside (part of the ground)
                 relations = [is_inside(element, [building_curve]) for element in elements]
-                
-                temp = building_curve.Duplicate()
-                temp = temp.TryGetPolyline()[1]
                                 
                 # Generate a roof mesh
                 roof = rg.Mesh()
@@ -466,11 +470,11 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
             else:
                 if logger:
                     logger.warning("Splitting did not result in multiple elements")
-
+        
         # Check if this building has courtyards
-        if len(courtyard_curve_set) > 0:
+        if len(courtyard_curve_set) > 0 and success:
             # Iterate over the polylines in the courtyards
-            for courtyard_curve in courtyard_curve_set:
+            for i, courtyard_curve in enumerate(courtyard_curve_set):
                 # Generate a splitter for the courtyard
                 splitter = rg.Mesh.CreateFromCurveExtrusion(courtyard_curve, rg.Vector3d(0,0,2), params, bbox)
                 
@@ -481,10 +485,6 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                 if len(elements) > 1:
                     # Check if the element is inside the courtyard or outside (part of the roof)     
                     relations = [is_inside(element, [courtyard_curve]) for element in elements]
-                    
-                    if sum(relations) == 0:
-                        temp = building_curve.Duplicate()
-                        temp = temp.TryGetPolyline()[1]
                     
                     # Generate a new roof mesh
                     roof = rg.Mesh()
@@ -501,16 +501,26 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
                         else:
                             # Add to the roof elements
                             roof.Append(element)
+                            temp_roofs = element
                     
                     # Add the courtyard elements to the mesh plane
                     mesh_plane.Append(courtyard_elements)
+                else:
+                    if logger:
+                        logger.warning("Splitting did not result in multiple elements")
         
-        # Add the roof to the list of roofs
-        roofs.append(roof)
+        if success:
+            # Add the roof to the list of roofs
+            roofs.append(roof)
+            valid.append(True)
+        else:
+           valid.append(False)
    
     # Postprocess the ground mesh plane mesh
     ground = postprocess_mesh(mesh_plane)
     
+    heights = [height for i, height in enumerate(heights) if valid[i]]
+
     # Iterate over the roof meshes to translate to the correct height
     for i, (mesh, height) in enumerate(zip(roofs, heights)):
         # Generate a duplicate translated mesh
@@ -525,16 +535,18 @@ def generate_horizontal(ground_outline, building_curves, courtyard_curves, heigh
         # Set the translated mesh after postprocessing
         roofs[i] = postprocess_mesh(translated_mesh)
     
-    valid = []
-    for roof in roofs:
+    for i, roof in enumerate(roofs):
         if len(roof.Vertices) < 3:
-            valid.append(False)
+            valid[i] = False
         elif len(roof.Faces) == 0:
-            valid.append(False)
-        else:
-            valid.append(True)
-     
-    return ground, roofs, valid
+            valid[i] = False
+
+    invalid_idxs = []
+    for i, val in enumerate(valid):
+        if not val:
+            invalid_idxs.append(i)
+
+    return ground, roofs, invalid_idxs
 
 '''
 REMESHING FUNCTIONS
@@ -602,23 +614,31 @@ def generate_mesh(patch_outline, building_outlines, courtyard_outlines, building
     courtyard_polylines, courtyard_curves = project_outlines_to_world_xy(courtyard_outlines)
     
     if logger:
+        logger.info(f'Generating roofs and ground for mesh patch')
+    
+#    ground_mesh, building_meshes, building_polylines, courtyard_polylines, all_heights = _generate_horizontal(patch_outline, building_polylines, courtyard_polylines, building_heights, grid_size, size)
+    mesh_plane, roofs, valid = generate_horizontal(patch_outline, building_polylines, courtyard_polylines, building_curves, courtyard_curves, building_heights, grid_size, size)
+    
+    # Overwite invalid outlines and heights
+    building_polylines = [i for j, i in enumerate(building_polylines) if j not in valid]
+    building_curves = [i for j, i in enumerate(building_curves) if j not in valid]
+    courtyard_polylines = [i for j, i in enumerate(courtyard_polylines) if j not in valid]
+    courtyard_curves = [i for j, i in enumerate(courtyard_curves) if j not in valid]
+    building_heights = [i for j, i in enumerate(building_heights) if j not in valid]
+    
+    if logger:
         logger.info(f'Generating walls for mesh patch')
     
     # Generate the walls for the building outlines and compute corresponding heights
     # Requires outlines in format polylines
     walls = generate_vertical(building_polylines, courtyard_polylines, building_heights, grid_size)
     
-    if logger:
-        logger.info(f'Generating ground and roofs for mesh patch')
-    
     # Compute the mesh plane for the ground and roofs
-    # Requires outlines in format curves
-    mesh_plane, roofs, valid = generate_horizontal(patch_outline, building_curves, courtyard_curves, building_heights, grid_size, size)
-    
+    # Requires outlines in format curves    
     if rough:
         if logger:
             logger.info(f'Generating rough meshes')
-        
+            
         rough_ground = remesh_horizontal(mesh_plane)
         rough_roofs = [remesh_horizontal(roof) for roof in roofs]
         

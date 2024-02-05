@@ -56,13 +56,17 @@ def offset_points(points, vectors, offset):
         points (list[rg.Point3d]): list of offsetted points
     """
     
-    # Convert the points and vectors to numpy arrays
-    np_points = np.array([[point.X, point.Y, point.Z] for point in points])
-    np_vectors = np.array([[vector.X, vector.Y, vector.Z] for vector in vectors]) * offset
-    
-    # Offset the points
-    new_points = np_points + np_vectors
-    points = [rg.Point3d(*point) for point in new_points]
+    try:
+        # Convert the points and vectors to numpy arrays
+        np_points = np.array([[point.X, point.Y, point.Z] for point in points])
+        np_vectors = np.array([[vector.X, vector.Y, vector.Z] for vector in vectors]) * offset
+        
+        # Offset the points
+        new_points = np_points + np_vectors
+        points = [rg.Point3d(*point) for point in new_points]
+    except:
+        offset_vectors = [rg.Vector3d(vector) * offset for vector in vectors]
+        points = [point + vector for point, vector in zip(points, vectors)]
     
     return points
 

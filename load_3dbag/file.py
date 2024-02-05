@@ -124,15 +124,18 @@ def partition_mesh(mesh, logger=False):
         else:
             floor_faces_idxs.append(i)
     
+    
     # Check if the floor, wall and roof has enough faces to be valid
     valid = True
-    if len(floor_faces_idxs) == 0 or len(wall_faces_idxs) == 0 or len(roof_faces_idxs) == 0:
+    if len(wall_faces_idxs) == 0:
         valid = False
         
         if logger:
             logger.warning("File contains meshes without roofs, walls or floors.")
         
         return valid, roof_mesh, wall_mesh, floor_mesh
+    
+    valid = True
     
     # Transform indices to Sytem arrays
     roof_idxs = System.Array[System.Int32](wall_faces_idxs + floor_faces_idxs)
@@ -161,7 +164,10 @@ def level_mesh(roof_mesh, wall_mesh, floor_mesh):
     """
     
     # Get the height of the building based on the first face in the floor mesh
-    height = floor_mesh.Faces.GetFaceCenter(0).Z
+    try:
+        height = floor_mesh.Faces.GetFaceCenter(0).Z
+    except:
+        height = min([vertex.Z for vertex in wall_mesh.Vertices])    
     
     # Move the meshes to the correct height
     roof_mesh.Translate(0, 0, -height)
@@ -181,7 +187,7 @@ def load(path, logger=False):
         wall_meshes (list[rg.Mesh]): wall meshes
         bbox (rg.BoundingBox): Boundingbox around building geometry
     """
-    
+
     # Load the mesh from the .obj path
     mesh = load_obj(path)
     
@@ -191,15 +197,15 @@ def load(path, logger=False):
     # Store the roof an wall meshes in lists
     roof_meshes = []
     wall_meshes = []
-    
-    for mesh in mesh.SplitDisjointPieces():
+
+    for i, mesh in enumerate(mesh.SplitDisjointPieces()):
         # Partition the mesh in roofs, walls and floors, check if splitting is valid
         valid, roof_mesh, wall_mesh, floor_mesh = partition_mesh(mesh)
         
         # Go to next iteration, skip this mesh
         if not valid:
             continue
-        
+            
         # Move the meshes to ground level z = 0
         roof_mesh, wall_mesh, floor_mesh = level_mesh(roof_mesh, wall_mesh, floor_mesh)
         

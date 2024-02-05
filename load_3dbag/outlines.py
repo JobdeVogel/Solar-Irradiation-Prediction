@@ -4,6 +4,7 @@ This module contains all functions regarding flat polylines, curves and rectangl
 
 import Rhino.Geometry as rg
 import System
+import sys
 
 from parameters.params import TRANSLATE_TO_ORIGIN, FSI, _SPLIT_TOLERANCE, MIN_AREA
 
@@ -185,19 +186,22 @@ def extract_building_outlines(wall_meshes, roof_meshes, tolerance=_SPLIT_TOLERAN
             if len(outlines) != 0:
                 # If not, append the outlines and the building height
                 building_outlines.append(outlines)
-                building_heights.append(roof.Faces.GetFaceCenter(0).Z)
+                try:
+                    building_heights.append(roof.Faces.GetFaceCenter(0).Z)
+                except:
+                    building_heights.append(max([vertex.Z for vertex in wall.Vertices]))
             else:
                 if logger:
-                    logger.warning('Mesh ' + str(i) + ' does not have naked edges with height lower than tolerance ' + str(tolerance) + '. This building if floating above the ground.')
+                    print('Mesh ' + str(i) + ' does not have naked edges with height lower than tolerance ' + str(tolerance) + '. This building if floating above the ground.')
         else:
             if logger:
-                logger.warning('Mesh ' + str(i) + ' naked edges extraction failed. This mesh is most likely closed.')
+                print('Mesh ' + str(i) + ' naked edges extraction failed. This mesh is most likely closed.')
     
     return building_outlines, building_heights
 
 # Find which polyline is the outer polyline of a mesh surface
 def find_outer_polyline(polylines):
-    """Give multiple polylines, find which polyline has the longest length, and is most likely  the outer polyline
+    """Given multiple polylines, find which polyline has the longest length, and is most likely  the outer polyline
     
     # ! IMPROVE: This assumption is theoratically not always correct
 
@@ -208,20 +212,33 @@ def find_outer_polyline(polylines):
         outer + inner (list[rg.Polyline]): ordered list of polylines
     """
     # Store the lengths of the polylines and which polylines are inner polylines
-    lengths = []
-    inner = []
+    outers = []
+    inners = []
     
-    # Forr each polyline, compute the length
-    for polyline in polylines:
-        lengths.append(polyline.Length)
-        inner.append(polyline)
+    curves = [polyline.ToNurbsCurve() for polyline in polylines]
     
-    # Delete the polyline with the longest length
-    idx = lengths.index(max(lengths))
-    outer = [polylines[idx]]
-    del inner[idx]
-    
-    return outer + inner
+    for inner in polylines:
+        
+        inside_any = False
+        for outer in curves:
+            is_inside = []
+            for point in inner:
+                
+                if outer.Contains(point, rg.Plane.WorldXY) == rg.PointContainment.Inside:
+                    is_inside.append(True)
+                else:
+                    is_inside.append(False)
+         
+            if all(is_inside):
+                # The inner is inside this outside
+                inside_any = True
+                break
+        if inside_any:
+            inners.append(inner)
+        else:
+            outers.append(inner)
+
+    return outers, inners
 
 def find_segments(segments, base_curve):
     """Find which segments from a segmented curve should be kept and which
@@ -295,7 +312,7 @@ def cut_polyline(ground_outline, building_outline, tolerance=_SPLIT_TOLERANCE, m
     
     if len(polylines) == 0:
         if logger:
-            logger.warning("cut_polyline() was not able to extract polylines")
+            print("cut_polyline() was not able to extract polylines")
     
     valid_polylines = []
     for polyline in polylines:
@@ -342,10 +359,54 @@ def compute_FSI(ground_outline, building_outlines, logger=False):
                     )
             except:
                 if logger:
-                    logger.warning("RESOLVE: Polyline was not closed so area not added to FSI")
+                    print("RESOLVE: Polyline was not closed so area not added to FSI")
     
     return sum(building_areas) / ground_area, ground_area, building_areas
+
+def fix_self_intersections(polyline):
+    curve = polyline.ToPolylineCurve()
+    intersections = rg.Intersect.Intersection.CurveSelf(curve, 0.001)
     
+    if intersections > 0:
+        intersect = True
+    else:
+        intersect = False
+    
+    parameters = []
+    for event in intersections:
+        event_parameters = System.Array[float]([event.ParameterA, event.ParameterB])
+        
+        parameters += event_parameters
+    
+    curve_segments = curve.Split(parameters)
+    
+    polyline_segments = []
+    polyline_lengths = []
+    for curve in curve_segments:
+        polyline = curve.TryGetPolyline()[1]
+        polyline_segments.append(polyline)
+        polyline_lengths.append(polyline.Length)
+    
+    polylines_sorted = [pl for _, pl  in sorted(zip(polyline_lengths, polyline_segments))]
+    
+    if len(intersections) == 0:
+        polyline = polyline
+    if len(intersections) == 1:
+        polyline = polylines_sorted[-1]
+        
+        # CHECK IF CLOSED!!!
+    elif len(intersections) > 1:
+        polylines_sorted_inv = polylines_sorted[::-1]
+        
+        curves = System.Array[rg.Curve](
+            [polylines_sorted_inv[i].ToNurbsCurve() for i in range(0, len(intersections))]
+            )
+        
+        polyline = rg.NurbsCurve.JoinCurves(curves)[0].TryGetPolyline()[1]
+    
+    return polyline, intersect
+
+
 def generate_building_outlines(ground_outline, all_building_outlines, heights, translate_to_origin=TRANSLATE_TO_ORIGIN, fsi=FSI, logger=False):    
     """Compute the building outlines that are inside a ground outline. If a building polyline intersects
     with the ground outline, the building outlines are splitted in multiple segmenets and then closed.
@@ -402,6 +463,7 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
             
                     # No courtyards are available, so add empty list
                     courtyards.append([])
+        
         # There are polylines, so there is at least one courtyard
         else:
             # First find the courtyards
@@ -441,7 +503,7 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
                 else:
                     # Add an empty list
                     courtyards.append([])
-
+     
     # Translate all outlines to the origin
     if translate_to_origin:
         for outlines in included_polylines:
@@ -467,4 +529,36 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
 
     if logger:
         logger.debug(f'Generated {len(building_outlines)} building_outlines and {num_of_courtyards} courtyards with FSI {round(FSI_score, 2)}.')
+    
+    building_curves = []
+    for outlines in building_outlines:
+        building_curves.append([out.ToNurbsCurve() for out in outlines])
+    
+    # Sometimes a building outline is accidently a courtyard, this is fixed here:
+    pops = []
+    # Iterate over potential courtyards
+    for i, potential_courtyards in enumerate(building_outlines):
+        for potential_courtyard in potential_courtyards:
+            
+            # Iterate over buildings
+            for j, curves in enumerate(building_curves):
+                for curve in curves:
+                    inside = []
+                    
+                    for point in potential_courtyard:
+                        if curve.Contains(point, rg.Plane.WorldXY) == rg.PointContainment.Inside:
+                            inside.append(True)
+                        else:
+                            #This is not a potential courtyard for this building
+                            inside.append(False)
+                            break
+                    
+                    if all(inside):
+                        courtyard_outlines[j].append(potential_courtyard)
+                        pops.append(i)
+    
+    building_outlines = [i for j, i in enumerate(building_outlines) if j not in pops]
+    courtyard_outlines = [i for j, i in enumerate(courtyard_outlines) if j not in pops]
+    building_heights = [i for j, i in enumerate(building_heights) if j not in pops]
+    
     return building_outlines, courtyard_outlines, building_heights, FSI_score, envelope_area, building_area
