@@ -383,9 +383,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         sample.augment()
         
         # Iterate over the augmentations
-        for idx in range(sample.count):
-                    
-            print('389')                            
+        for idx in range(sample.count):                       
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
             
@@ -418,7 +416,6 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
 
         return 0
     else:
-        print('finished')
         logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
         return 1
 
@@ -497,7 +494,6 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
             
         logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
     
-    print('\n')
     logger.info(f'{len(patch_outlines) - fsi_invality - mesh_split_invality - unknown_invality}/{len(patch_outlines)} valid samples generated')
     logger.info(f'{fsi_invality}/{len(patch_outlines)} samples invalid due to low FSI value (minimum: {MIN_FSI})')
     logger.info(f'{mesh_split_invality}/{len(patch_outlines)} samples invalid due to mesh split error (max area error: {MAX_AREA_ERROR})')
