@@ -23,6 +23,7 @@ import string
 import sys
 import argparse
 import cProfile, pstats
+import traceback
 
 import gc
 
@@ -383,7 +384,8 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         
         # Iterate over the augmentations
         for idx in range(sample.count):
-                                                
+                    
+            print('389')                            
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
             
@@ -413,11 +415,12 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         del sample
         
         gc.collect()
-        
-        return sample, 0
+
+        return 0
     else:
+        print('finished')
         logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
-        return None, 1
+        return 1
 
 def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_path=IRRADIANCE_PATH, outlines_path=OUTLINES_PATH, raw_path=RAW_PATH):
     """Generate a sample, and optionally simulate solar irradiance.
@@ -465,7 +468,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     unknown_invality = 0
     
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines))[:1]:
+    for idx in range(len(patch_outlines)):
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         
@@ -479,7 +482,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         
         try:
             # Run the generation and simulation for one ground patch sample
-            sample, validity = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
+            validity = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
         
             if validity == 1:
                 fsi_invality += 1
@@ -488,6 +491,8 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         except Exception as e:
             logger.critical(f"Error message: {e}")
             logger.critical(f"Running task with index {idx} failed!")
+            logger.cirtical(f"{traceback.format_exc()}")
+            
             unknown_invality += 1         
             
         logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
@@ -529,12 +534,12 @@ if __name__ == '__main__':
     folder_paths = [GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH]
     # delete_dataset(folder_paths, logger, secure=True)
     
-    profiler = cProfile.Profile()
-    profiler.enable()
+    # profiler = cProfile.Profile()
+    # profiler.enable()
     
     # Run the sample generation
     main(filename, start_idx, logger)
     
-    profiler.disable()
-    stats = pstats.Stats(profiler).sort_stats('cumtime')
-    stats.print_stats()
+    # profiler.disable()
+    # stats = pstats.Stats(profiler).sort_stats('cumtime')
+    # stats.print_stats()
