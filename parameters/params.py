@@ -16,7 +16,7 @@ _FACE_MERGE_TOLERANCE = 0.01
 
 
 # Patch outline using load_3d_bag.outlines.py
-SIZE = 200
+SIZE = 100
 MIN_COVERAGE = 100 #less coverage is more samples
 TRANSLATE_TO_ORIGIN = True
 FSI = True
