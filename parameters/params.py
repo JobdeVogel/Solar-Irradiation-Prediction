@@ -7,7 +7,7 @@ abs_path = os.path.dirname(os.path.dirname(__file__))
 GRID_SIZE = 1.0
 OFFSET = 0.01
 NUM_AUGMENTS = 1
-MIN_FSI = 0.2
+MIN_FSI = 0.15
 MIN_AREA = 10
 VISUALIZE_MESH = False
 
@@ -16,11 +16,11 @@ _FACE_MERGE_TOLERANCE = 0.01
 
 
 # Patch outline using load_3d_bag.outlines.py
-SIZE = 100
+SIZE = 200
 MIN_COVERAGE = 100 #less coverage is more samples
 TRANSLATE_TO_ORIGIN = True
 FSI = True
-_SPLIT_TOLERANCE = 0.01
+_SPLIT_TOLERANCE = 0.001
 
 # Meshing using load_3d_bag.meshing.py
 MAX_CONTAINMENT_ITERATIONS = 50
@@ -57,7 +57,7 @@ RAW_PATH = os.path.join(_DATA_PATH, 'raw')
 GEOMETRY_PATH = os.path.join(_DATA_PATH, 'geometry')
 OUTLINES_PATH = os.path.join(_DATA_PATH, 'outlines')
 HBJSON_PATH = os.path.join(_DATA_PATH, 'models')
-BAG_FILE_PATH = os.path.join(_DATA_PATH, 'bag\\9-284-556-LoD12-3D.obj')
+BAG_FILE_PATH = os.path.join(_DATA_PATH, 'bag\\8-304-528-LoD12-3D.obj') # for single simulations
 
 # Simulation
 WEA = os.path.join(_DATA_PATH, 'wea\\NLD_Amsterdam.062400_IWEC.epw')
