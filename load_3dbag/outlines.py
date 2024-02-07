@@ -56,8 +56,8 @@ def divide_domain(domain, size, min_coverage):
     step_size = size * min_coverage / 100
     
     # Compute number of steps in x and y direction
-    x_steps = (x_size // step_size) - 1
-    y_steps = (y_size // step_size) - 1
+    x_steps = (x_size // step_size)
+    y_steps = (y_size // step_size)
     
     # Store the new subdivide domains
     sub_domains = []
