@@ -365,7 +365,7 @@ Line #|      Hits|         Time| Time per hit|      %|Source code
     35|         0|            0|            0|  0.00%|    patch_outline = patch_outlines[idx]
     36|         0|            0|            0|  0.00%|
     37|         0|            0|            0|  0.00%|    print('Generating outlines...')
-    38|         0|            0|            0|  0.00%|    building_outlines, courtyard_outlines, building_heights, FSI_score, envelope_area, building_area = outlines.generate_building_outlines(patch_outline, wall_meshes, heights)
+    38|         0|            0|            0|  0.00%|    building_outlines, courtyard_outlines, building_heights, GSI_score, envelope_area, building_area = outlines.generate_building_outlines(patch_outline, wall_meshes, heights)
     39|         0|            0|            0|  0.00%|
     40|         0|            0|            0|  0.00%|    grid_size = 1.0
     41|         0|            0|            0|  0.00%|

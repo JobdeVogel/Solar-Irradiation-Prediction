@@ -7,7 +7,13 @@ abs_path = os.path.dirname(os.path.dirname(__file__))
 GRID_SIZE = 1.0
 OFFSET = 0.01
 NUM_AUGMENTS = 1
-MIN_FSI = 0.15
+
+'''
+When the size of the dataset sample is increased, it is recommended
+to also reduce the minimum GSI. Bigger patches of land typically have
+a lower GSI.
+'''
+MIN_GSI = 0.15
 MIN_AREA = 10
 VISUALIZE_MESH = False
 
@@ -16,10 +22,28 @@ _FACE_MERGE_TOLERANCE = 0.01
 
 
 # Patch outline using load_3d_bag.outlines.py
+'''
+For size it is important to note that the 3D BAG has patches of different
+sizes. Size 10 has an outline of slightly more than 600x600m. If the given
+size is greater than the 3D BAG sample size, it will be skipped. This means
+that a dense area will be skipped.
+
+Size indication:
+* BAG size 11: 300x300m
+* BAG size 10: 600x600m
+* BAG size 9: 1200x1200m
+* BAG size 8: 2400x2400m
+'''
+
 SIZE = 100
+
+'''
+MIN_COVERAGE is a percentage of the area that will NOT be reused in the next sample.
+A min coverage of 80 means that 20% of the sample will be reused in the next sample.
+'''
 MIN_COVERAGE = 100 #less coverage is more samples
 TRANSLATE_TO_ORIGIN = True
-FSI = True
+GSI = True
 _SPLIT_TOLERANCE = 0.001
 
 # Meshing using load_3d_bag.meshing.py

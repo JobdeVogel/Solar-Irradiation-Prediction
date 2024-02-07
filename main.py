@@ -24,6 +24,7 @@ import sys
 import argparse
 import cProfile, pstats
 import traceback
+import psutil
 
 import gc
 
@@ -38,7 +39,7 @@ from visualize.mesh import generate_colored_mesh, legend
 from visualize.pointcloud import plot
 
 from log.logger import generate_logger
-from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, MAX_AREA_ERROR
+from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_GSI, VISUALIZE_MESH, MAX_AREA_ERROR
 
 from visualize import pointcloud
 
@@ -56,14 +57,14 @@ parser.add_argument('-na', '--NUM_AUGMENTS', type=int, nargs='?', default=NUM_AU
 parser.add_argument('-ma', '--MIN_AREA', type=float, nargs='?', default=MIN_AREA, help='')
 parser.add_argument('-w', '--WEA', type=str, nargs='?', default=WEA, help='')
 parser.add_argument('-sa', '--SIMULATION_ARGUMENTS', type=str, nargs='?', default=SIMULATION_ARGUMENTS, help='')
-parser.add_argument('-f', '--MIN_FSI', type=float, nargs='?', default=MIN_FSI, help='')
+parser.add_argument('-f', '--MIN_GSI', type=float, nargs='?', default=MIN_GSI, help='')
 parser.add_argument('-v', '--VISUALIZE_MESH', default=VISUALIZE_MESH, action='store_true', help='')
 parser.add_argument('-ae', '--MAX_AREA_ERROR', type=float, nargs='?', default=MAX_AREA_ERROR, help='')
 parser.add_argument('-l', '--LOG', default=False, action='store_true', help='')
 parser.add_argument('-std', '--STDOUT', default=False, action='store_true', help='')
 
 args= parser.parse_args()
-BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_FSI, VISUALIZE_MESH, MAX_AREA_ERROR, LOG, STD = vars(args).values()
+BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_GSI, VISUALIZE_MESH, MAX_AREA_ERROR, LOG, STD = vars(args).values()
 
 class Sample:
     def __init__(self, idx, logger, geometry_path, irradiance_path, outlines_path, raw_path):
@@ -94,7 +95,7 @@ class Sample:
         self.arrays = []
         
         self.models = []
-        self.FSI_score = 0
+        self.GSI_score = 0
         self.envelope_area = 0
         self.building_area = 0
         
@@ -109,7 +110,7 @@ class Sample:
         
         try:
             # Extract the building outlines that correspond with patch outline            
-            self.building_outlines, self.courtyard_outlines, self.heights, self.FSI_score, self.envelope_area, self.building_area = outlines.generate_building_outlines(
+            self.building_outlines, self.courtyard_outlines, self.heights, self.GSI_score, self.envelope_area, self.building_area = outlines.generate_building_outlines(
                 patch_outline, 
                 all_building_outlines, 
                 all_heights)
@@ -344,7 +345,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         sample
         validity:
             * 0: valid
-            * 1: not valid due to small FSI
+            * 1: not valid due to small GSI
             * 2: not valid due to wrong mesh splitting
     
     """
@@ -359,12 +360,12 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
     # # save the outlines
     # sample.save_outlines()
     
-    # Check if FSI is above minimum FSI
-    if sample.FSI_score > MIN_FSI:
+    # Check if GSI is above minimum GSI
+    if sample.GSI_score > MIN_GSI:
         t_preprocessing = time.perf_counter()
         
         # Generate meshes
-        logger.info(f'Started preprocessing mesh for patch[{sample.idx}] with FSI value of {round(sample.FSI_score, 2)}')
+        logger.info(f'Started preprocessing mesh for patch[{sample.idx}] with GSI value of {round(sample.GSI_score, 2)}')
         sample.compute_mesh()    
 
         # Check if horizontal mesh area close enough to expected area
@@ -397,7 +398,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         sample.store_sensors_as_arrays()
         
         # array = sample.arrays[0]
-        # plot(0, array, vectors=[], show_normals=False)
+        # plot(0, array, vectors=[], targets=array[:, 6].T, show_normals=False)
         
         # Save the detailed geometry
         logger.info(f'Saving mesh patch[{sample.idx}] and generating visualization')
@@ -416,7 +417,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
 
         return 0
     else:
-        logger.info(f'FSI_score {round(sample.FSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
+        logger.info(f'GSI_score {round(sample.GSI_score, 2)} of sample {sample.idx} not high enough to continue generating sample.')
         return 1
 
 def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_path=IRRADIANCE_PATH, outlines_path=OUTLINES_PATH, raw_path=RAW_PATH):
@@ -460,12 +461,12 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     # Store the samples
     samples = []
 
-    fsi_invality = 0
+    gsi_invality = 0
     mesh_split_invality = 0
     unknown_invality = 0
     
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines)):
+    for idx in range(len(patch_outlines))[115:]:
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         
@@ -478,24 +479,36 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         patch_outline = patch_outlines[idx]
         
         try:
+            print(4/0)
             # Run the generation and simulation for one ground patch sample
             validity = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
         
             if validity == 1:
-                fsi_invality += 1
+                gsi_invality += 1
             elif validity == 2:
                 mesh_split_invality += 1
         except Exception as e:
+            print('----------------------------------------')
             logger.critical(f"Error message: {e}")
             logger.critical(f"Running task with index {idx} failed!")
-            logger.cirtical(f"{traceback.format_exc()}")
             
-            unknown_invality += 1         
+            print('')
+            # Getting % usage of virtual_memory ( 3rd field)
+            logger.info(f'RAM memory {psutil.virtual_memory()[2]}% used')
+            
+            # Getting usage of virtual_memory in GB ( 4th field)
+            logger.info(f'RAM Used: {round(psutil.virtual_memory()[3]/1000000000, 2)} GB')
+            print('')
+            
+            logger.critical(f"{traceback.format_exc()}")
+            print('----------------------------------------')
+            
+            unknown_invality += 1    
             
         logger.info(f'Finished computing patch[{idx}] in {round(time.perf_counter() - start, 2)}s.')
     
-    logger.info(f'{len(patch_outlines) - fsi_invality - mesh_split_invality - unknown_invality}/{len(patch_outlines)} valid samples generated')
-    logger.info(f'{fsi_invality}/{len(patch_outlines)} samples invalid due to low FSI value (minimum: {MIN_FSI})')
+    logger.info(f'{len(patch_outlines) - gsi_invality - mesh_split_invality - unknown_invality}/{len(patch_outlines)} valid samples generated')
+    logger.info(f'{gsi_invality}/{len(patch_outlines)} samples invalid due to low GSI value (minimum: {MIN_GSI})')
     logger.info(f'{mesh_split_invality}/{len(patch_outlines)} samples invalid due to mesh split error (max area error: {MAX_AREA_ERROR})')
     logger.info(f'{unknown_invality}/{len(patch_outlines)} samples invalid due to unknown critical error')
     return samples
