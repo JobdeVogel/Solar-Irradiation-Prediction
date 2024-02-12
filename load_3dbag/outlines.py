@@ -6,7 +6,7 @@ import Rhino.Geometry as rg
 import System
 import sys
 
-from parameters.params import TRANSLATE_TO_ORIGIN, FSI, _SPLIT_TOLERANCE, MIN_AREA
+from parameters.params import TRANSLATE_TO_ORIGIN, GSI, _SPLIT_TOLERANCE, MIN_AREA
 
 # Get the x,y domain of a bbox
 def get_domain(bbox):
@@ -347,7 +347,7 @@ def translate(outline, ground_outline, height=0):
     translation = rg.Transform.Translation(-x, -y, height)
     outline.Transform(translation)
 
-def compute_FSI(ground_outline, building_outlines, logger=False):
+def compute_GSI(ground_outline, building_outlines, logger=False):
     ground_area = rg.AreaMassProperties.Compute(ground_outline.ToNurbsCurve()).Area
     
     building_areas = []
@@ -359,7 +359,7 @@ def compute_FSI(ground_outline, building_outlines, logger=False):
                     )
             except:
                 if logger:
-                    print("RESOLVE: Polyline was not closed so area not added to FSI")
+                    print("RESOLVE: Polyline was not closed so area not added to GSI")
     
     return sum(building_areas) / ground_area, ground_area, building_areas
 
@@ -407,7 +407,7 @@ def fix_self_intersections(polyline):
     return polyline, intersect
 
 
-def generate_building_outlines(ground_outline, all_building_outlines, heights, translate_to_origin=TRANSLATE_TO_ORIGIN, fsi=FSI, logger=False):    
+def generate_building_outlines(ground_outline, all_building_outlines, heights, translate_to_origin=TRANSLATE_TO_ORIGIN, gsi=GSI, logger=False):    
     """Compute the building outlines that are inside a ground outline. If a building polyline intersects
     with the ground outline, the building outlines are splitted in multiple segmenets and then closed.
 
@@ -416,13 +416,13 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
         all_building_outlines (list[list[rg,Polyline]]): all building outlines
         heights (listt[float]): all heights of the buildings
         translate_to_origin (bool, optional): indicates if outlines should be moved to origin. Defaults to TRANSLATE_TO_ORIGIN.
-        fsi (bool, optional): Indicates if fsi should be computed. Defaults to FSI.
+        gsi (bool, optional): Indicates if gsi should be computed. Defaults to GSI.
 
     Returns:
         building_outlines (list[list[rg.Polyline]]): outlines for the buildings (including splitted intersecting building outlines)
         courtyard_outlines (list[list[rg.Polyline]]): outlines for the courtyards, empty if no courtyard available
         building_heights (list[float]): heights of the included buildings
-        FSI_score (float): fsi score, None if not computed
+        GSI_score (float): gsi score, None if not computed
         envelope_area (float): area of envelope in m2, None if not computed 
         building_area (float): area of all building, courtyards included in m2, None if not computed
     """
@@ -517,10 +517,10 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
         # Translate the ground outline to the origin    
         translate(ground_outline, ground_outline)
     
-    if fsi:
-        FSI_score, envelope_area, building_area = compute_FSI(ground_outline, included_polylines)
+    if gsi:
+        GSI_score, envelope_area, building_area = compute_GSI(ground_outline, included_polylines)
     else:
-        FSI_score = None
+        GSI_score = None
         envelope_area = None
         building_area = None
 
@@ -528,7 +528,7 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
     courtyard_outlines = courtyards
 
     if logger:
-        logger.debug(f'Generated {len(building_outlines)} building_outlines and {num_of_courtyards} courtyards with FSI {round(FSI_score, 2)}.')
+        logger.debug(f'Generated {len(building_outlines)} building_outlines and {num_of_courtyards} courtyards with GSI {round(GSI_score, 2)}.')
     
     building_curves = []
     for outlines in building_outlines:
@@ -561,4 +561,4 @@ def generate_building_outlines(ground_outline, all_building_outlines, heights, t
     courtyard_outlines = [i for j, i in enumerate(courtyard_outlines) if j not in pops]
     building_heights = [i for j, i in enumerate(building_heights) if j not in pops]
     
-    return building_outlines, courtyard_outlines, building_heights, FSI_score, envelope_area, building_area
+    return building_outlines, courtyard_outlines, building_heights, GSI_score, envelope_area, building_area
