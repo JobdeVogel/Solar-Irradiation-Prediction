@@ -79,7 +79,7 @@ use_voting: False
 # ---------------------------------------------------------------------------- #
 log_dir: 'IrradianceNet'
 save_freq: -1 # save epoch every xxx epoch114s, -1 only save last and best. 
-val_freq: 5
+val_freq: 1
 
 wandb:
   project: IrradianceNet
