@@ -29,14 +29,9 @@ from openpoints.models import build_model_from_cfg
 import warnings
 import shutil
 
-from visualize import visualize as vis
+from visualize import plot, from_sample
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
-try:
-    os.rmdir('D:\\Master Thesis Data\\processed')
-except:
-    print('Path does not exist')
 
 def write_to_csv(oa, macc, miou, ious, best_epoch, cfg, write_header=True, area=5):
     ious_table = [f'{item:.2f}' for item in ious]
@@ -134,6 +129,7 @@ def main(gpu, cfg):
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
     
     if cfg.rank == 0:
+        #if not cfg.wandb.sweep:
         Wandb.launch(cfg, cfg.wandb.use_wandb)
         writer = SummaryWriter(log_dir=cfg.run_dir) if cfg.is_training else None
     else:
@@ -170,8 +166,7 @@ def main(gpu, cfg):
     # optimizer & scheduler
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
-    
-    
+
     # build dataset
     val_loader = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                            cfg.dataset,
@@ -200,7 +195,7 @@ def main(gpu, cfg):
     
     if cfg.pretrained_path is not None:
         print('Pretrained path is commented and not implemented yet')
-    
+        
     '''
     if cfg.pretrained_path is not None:
         if cfg.mode == 'resume':
@@ -268,9 +263,8 @@ def main(gpu, cfg):
                 logging.info('`num_per_class` attribute is not founded in dataset')
 
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
-    
-    if cfg.regression:
-        l1_criterion = torch.nn.L1Loss().cuda()
+
+    mse_criterion = torch.nn.MSELoss().cuda()
     
     # ===> start training
     if cfg.use_amp:
@@ -279,8 +273,24 @@ def main(gpu, cfg):
         scaler = None
 
     best_val, best_epoch = 0., 0
-     
+    
+    evaluation_test_array = next(iter(val_loader))
+    evaluation_train_array = next(iter(train_loader))
+    
     total_iter = 0
+    
+    if cfg.wandb.use_wandb:
+        logging.info('Logging initial images...')
+        max_images = min([2, cfg.batch_size])
+        for idx in range(max_images):
+            if idx == 0:
+                image_path = eval_image(model, evaluation_test_array, idx, f'Epoch base test sample base', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
+                wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+
+            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample base', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
+            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+    
+    logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         
         # ! Only important for distributed gpu
@@ -289,11 +299,9 @@ def main(gpu, cfg):
         if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
             train_loader.dataset.epoch = epoch - 1
         
-        
         train_loss, train_rmse, total_iter = \
-            train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer)
+            train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer)
         
-
         # ! Log the results from the epoch step
         is_best = False
         
@@ -303,24 +311,44 @@ def main(gpu, cfg):
             if eval_loss > best_val:
                 is_best = True
                 best_val = eval_loss
-            
+        
         # ! Log to the writer
         lr = optimizer.param_groups[0]['lr']
         
-        logging.info(f'Epoch {epoch} LR {lr:.6f} '
-                     f'train loss {train_loss:.2f}, eval loss {eval_loss:.2f}, best val miou {best_val:.2f}')
-        if writer is not None:
-            writer.add_scalar('best_val', best_val, epoch)
-            writer.add_scalar('eval loss (mse)', eval_loss, epoch)
-            writer.add_scalar('eval loss (rmse)', eval_rmse, epoch)
-            writer.add_scalar('train loss (mse)', train_loss, epoch)
-            writer.add_scalar('train loss (rmse)', train_rmse, epoch)
-            writer.add_scalar('lr', lr, epoch)
+        if cfg.wandb.use_wandb:
+            logging.info(f'Logging images for epoch {epoch}')
+            max_images = min([2, cfg.batch_size])
+            for idx in range(max_images):
+                if idx == 0:
+                    image_path = eval_image(model, evaluation_test_array, idx, f'Epoch {epoch} test sample {idx}', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
+                    wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+
+                image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
+                wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+    
+        if epoch % cfg.val_freq == 0:
+            logging.info(f'Epoch {epoch} LR {lr:.6f} '
+                     f'train loss {train_loss:.2f}, eval loss {eval_loss:.2f}')
+        else:
+            logging.info(f'Epoch {epoch} LR {lr:.6f} '
+                     f'train loss {train_loss:.2f}')
         
+        if writer is not None:           
+            if epoch % cfg.val_freq == 0:
+                writer.add_scalar('Evaluation Loss (mse)', eval_loss, epoch)
+                writer.add_scalar('Evaluation Loss (rmse) [kWh/m2]', eval_rmse, epoch)
+            
+            # writer.add_scalar('train_loss', train_loss, epoch)
+            # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
+            writer.add_scalar('Learning Rate', lr, epoch)
+
         # ! Update the optimizer with scheduler
         if cfg.sched_on_epoch:
-            scheduler.step(epoch)
-        
+            if cfg.sched.lower() != 'plateau':
+                scheduler.step(epoch)
+            else:
+                scheduler.step(epoch, metric=train_loss)
+
         # ! Save model parameters to file
         if cfg.rank == 0:
             save_checkpoint(cfg, model, epoch, optimizer, scheduler,
@@ -336,10 +364,13 @@ def main(gpu, cfg):
 
     # validate
     with np.printoptions(precision=2, suppress=True):
-        logging.info(
-            f'Best ckpt @E{best_epoch},  eval loss {eval_loss:.2f}, train loss {train_loss:.2f}, best_val {best_val:.2f}')
+        if epoch % cfg.val_freq == 0:
+            logging.info(
+                f'Best ckpt @E{best_epoch},  eval loss {eval_loss:.2f}, train loss {train_loss:.2f}')
+        else:
+            logging.info(
+                f'Best ckpt @E{best_epoch},  train loss {train_loss:.2f}')
     
-
     '''
     # ! Not sure what is happening here, except for loading the model
     if cfg.world_size < 2:  # do not support multi gpu testing
@@ -381,17 +412,17 @@ def main(gpu, cfg):
     if writer is not None:
         writer.close()
     '''
-    
+
     # dist.destroy_process_group() # comment this line due to https://github.com/guochengqian/PointNeXt/issues/95
     wandb.finish(exit_code=True)
 
 
-def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer):
+def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer):
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
     model.train()  # set model to training mode
     pbar = tqdm(enumerate(train_loader), total=train_loader.__len__())
-       
+
     '''
     individual_criterion = nn.MSELoss(reduction='none')
     '''
@@ -401,7 +432,7 @@ def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler
     
     for idx, data in pbar:
         try:
-            pbar.set_description(f"Average MSE: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')}, Loss: {round(loss.item(), 4)}")
+            pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')}, Loss: {round(loss.item(), 4)}")
             pbar.refresh()
             time.sleep(0.01)
         except:
@@ -442,29 +473,24 @@ def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler
             
             logits = logits.squeeze(1)
             
-            ''' --- VISUALIZATION ---'''
-            if idx == 0:
-                ''' Visualize here '''                
-                points = data['pos'].cpu().numpy()[0, :, :]
-                targets = logits.cpu().detach().numpy()[0, :]
-                
-                path = 'C:\\Users\\Job de Vogel\\Desktop\\results'
-                vis(points, targets, name=f'eval_{epoch}', path=path, show=False, save=True)
-                                
-                y = data['y'].cpu().numpy()[0, :]
-                
-                vis(points, y, name=f'target_{idx}', path=path, show=False, save=True)
-            ''' --- END ---'''
+            '''
+            loss is used for backwards pass
+            mse_loss is used for performance comparison
+            '''
             
             loss = criterion(logits, target) if 'mask' not in cfg.criterion_args.NAME.lower() \
                 else criterion(logits, target, data['mask'])
+                
+            mse_loss = mse_criterion(logits, target)
             
-            writer.add_scalar('mse_per_train_step', loss, total_iter)
+            writer.add_scalar('train_loss', loss, total_iter)
+            writer.add_scalar('mse_loss', mse_loss, total_iter)
             
             if cfg.regression:
-                rmse = torch.sqrt(loss)
+                rmse_scaled = torch.sqrt(mse_loss)
+                rmse = rmse_scaled * (1000 - 0) / 2
                 rmse_meter.update(rmse.item())
-                writer.add_scalar('rmse_per_train_step', rmse, total_iter)
+                writer.add_scalar('RMSE per train step [kWh/m2]', rmse, total_iter)
                 '''
                 individual_losses = torch.mean(individual_criterion(logits, target), 1)
                 
@@ -491,12 +517,15 @@ def train_one_epoch(model, train_loader, criterion, optimizer, scheduler, scaler
 
             optimizer.zero_grad()
             if not cfg.sched_on_epoch:
-                scheduler.step(epoch)
+                if cfg.sched != 'plateau':
+                    scheduler.step(epoch)
+                else:
+                    scheduler.step(epoch, metric=loss)
             
             # mem = torch.cuda.max_memory_allocated() / 1024. / 1024.
             # print(f"Memory after backward is {mem}")
         
-        loss_meter.update(loss.item())
+        loss_meter.update(loss.item())      
         
     return loss_meter.avg, rmse_meter.avg, total_iter
 
@@ -561,8 +590,6 @@ def validate(model, val_loader, criterion, cfg, writer, num_votes=1, data_transf
 
     return loss_meter.avg, rmse_meter.avg
     
-
-
 @torch.no_grad()
 def validate_sphere(model, val_loader, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1):
     """
@@ -805,13 +832,129 @@ def test(model, data_list, cfg, num_votes=1):
     else:
         return None, None, None, None, None, None
 
+@torch.no_grad()
+def eval_image(model, sample, idx, name, path):
+    # Evaluate image
+    with torch.no_grad():
+        model.eval()
+        sample['x'] = get_features_by_keys(sample, cfg.feature_keys)
+        
+        for key in sample:
+            sample[key] = sample[key].cuda(non_blocking=True)
+        
+        logits = model(sample)
+    
+    values = logits.cpu().numpy()[idx, 0, :]
+    
+    for key in sample:
+        sample[key] = sample[key].cpu()
+    
+    from_sample(sample, idx, values, False, True, name, path)
+    
+    return os.path.join(path, name)
 
+def config_to_cfg(config):
+    cfg = EasyConfig()    
+    cfg.update(config.cfg)
+    
+    '''
+    Special sweep parameters
+    '''
+    for key in config.keys():
+        if key == 'cfg':
+            pass
+        elif key == 'crit':
+            cfg.criterion_args.NAME = config[key]
+        elif key == 'optim':
+            cfg.optimizer.NAME = config[key]
+        else:
+            cfg[key] = config[key]
+    
+    return cfg
+
+def sweep_run(config=None):
+    # tell wandb to get started
+    with wandb.init(mode="disabled", project="IrradianceNet", config=config, allow_val_change=True):        
+        # access all HPs through wandb.config, so logging matches execution!
+        config = wandb.config
+        
+        cfg = config_to_cfg(config)
+        
+        # multi processing.
+        if cfg['mp']:
+            port = find_free_port()
+            cfg['dist_url'] = f"tcp://localhost:{port}"
+            print('using mp spawn for distributed training')
+            mp.spawn(main, nprocs=cfg['world_size'], args=(cfg,))
+        else:
+            main(0, cfg)
+
+def sweep(cfg):
+    # Random initialization of arguments
+    sweep_config = {
+        'method': 'random'
+        }
+    
+    # Metric
+    metric = {
+        'name': 'mse_loss',
+        'goal': 'minimize'   
+        }
+
+    sweep_config['metric'] = metric
+    
+    early_terminate = {
+        'type': 'hyperband',
+        'min_iter': 10
+    }
+    
+    sweep_config['early_terminate'] = early_terminate
+    
+    # parameters_dict = {
+    #     'batch_size': {
+    #         'values': [4, 8, 16]
+    #         },
+    #     'sched': {
+    #         'values': ['cosine', 'step', 'tanh', 'plateau']
+    #         },
+    #     'optim': {
+    #         'values': ['adamw', 'adamp', 'nadam', 'adam', 'sgdp']
+    #         },
+    #     'crit': {
+    #         'values': ['MSELoss', 'HuberLoss', 'L1Loss']
+    #     }
+    # }
+    
+    parameters_dict = {
+        'batch_size': {
+            'values': [4, 8, 16]
+            },
+        'optim': {
+            'values': ['adamw', 'adamp', 'nadam', 'adam', 'sgdp']
+            }
+        }
+    
+    # ['plateau_lr', 'cosine_lr', 'tanh_lr', 'poly_lr']
+    parameters_dict.update({
+                'cfg': {'value': cfg}
+                })
+    
+    sweep_config['parameters'] = parameters_dict
+   
+    project = "IrradianceNet"
+    sweep_id = wandb.sweep(sweep_config, project=project)
+    os.environ["WANDB_DIR"] = 'C:\\Users\\Job de Vogel\\Desktop\\logs'
+    
+    wandb.agent(sweep_id, sweep_run, count=50, project=project)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Scene segmentation training/testing')
     parser.add_argument('--cfg', type=str, required=True, help='config file')
     parser.add_argument('--profile', action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()
+    
     cfg = EasyConfig()
+    
     cfg.load(args.cfg, recursive=True)
     cfg.update(opts)  # overwrite the default arguments in yml
 
@@ -826,10 +969,10 @@ if __name__ == "__main__":
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
     cfg.cfg_basename = args.cfg.split('.')[-2].split('/')[-1]  # cfg_basename, \eg pointnext-xl
     tags = [
+        'IrradianceNet',
         cfg.task_name,  # task name (the folder of name under ./cfgs
         cfg.mode,
         cfg.cfg_basename,  # cfg file name
-        f'ngpus{cfg.world_size}',
     ]
     
     opt_list = [] # for checking experiment configs from logging file
@@ -863,11 +1006,14 @@ if __name__ == "__main__":
     # wandb config
     cfg.wandb.name = cfg.run_name
 
-    # multi processing.
-    if cfg.mp:
-        port = find_free_port()
-        cfg.dist_url = f"tcp://localhost:{port}"
-        print('using mp spawn for distributed training')
-        mp.spawn(main, nprocs=cfg.world_size, args=(cfg,))
+    if cfg.wandb.sweep:
+        sweep(cfg)
     else:
-        main(0, cfg)
+        # multi processing.
+        if cfg.mp:
+            port = find_free_port()
+            cfg.dist_url = f"tcp://localhost:{port}"
+            print('using mp spawn for distributed training')
+            mp.spawn(main, nprocs=cfg.world_size, args=(cfg,))
+        else:
+            main(0, cfg)

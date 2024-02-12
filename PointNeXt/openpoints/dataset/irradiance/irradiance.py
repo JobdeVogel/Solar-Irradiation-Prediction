@@ -89,14 +89,15 @@ class IRRADIANCE(Dataset):
         
         #data_root = 'D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull'
         
-        raw_root = os.path.join(data_root, 'raw')
+        #raw_root = os.path.join(data_root, 'raw')
+        raw_root = data_root
         
         self.raw_root = raw_root
         '''data_list = sorted(os.listdir(raw_root))'''
         data_list = traverse_root(raw_root)
         
         # TODO: include
-        split_ratio = 0.8
+        split_ratio = 0.9
         
         split_index = int(len(data_list) * split_ratio)
         

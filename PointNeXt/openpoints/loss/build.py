@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from torch.nn import CrossEntropyLoss, BCEWithLogitsLoss, MSELoss, L1Loss
+from torch.nn import CrossEntropyLoss, BCEWithLogitsLoss, MSELoss, L1Loss, HuberLoss
 from openpoints.utils import registry
 
 LOSS = registry.Registry('loss')
@@ -11,6 +11,7 @@ LOSS.register_module(name='BCEWithLogitsLoss', module=BCEWithLogitsLoss)
 #! My implementation
 LOSS.register_module(name='MSELoss', module=MSELoss)
 LOSS.register_module(name='L1Loss', module=L1Loss)
+LOSS.register_module(name='HuberLoss', module=HuberLoss)
 
 @LOSS.register_module()
 class SmoothCrossEntropy(torch.nn.Module):
