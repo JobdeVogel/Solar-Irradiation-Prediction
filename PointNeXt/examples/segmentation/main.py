@@ -892,7 +892,7 @@ def sweep_run(config=None):
 def sweep(cfg):
     # Random initialization of arguments
     sweep_config = {
-        'method': 'random'
+        'method': 'grid'
         }
     
     # Metric
@@ -971,8 +971,7 @@ if __name__ == "__main__":
     tags = [
         'IrradianceNet',
         cfg.task_name,  # task name (the folder of name under ./cfgs
-        cfg.mode,
-        cfg.cfg_basename,  # cfg file name
+        cfg.mode
     ]
     
     opt_list = [] # for checking experiment configs from logging file

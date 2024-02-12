@@ -80,4 +80,4 @@ echo Generate dataset using ...
 cd ../
 
 cd pointnext
-echo Train model using python examples/segmentation/main.py --cfg cfgs/s3dis/pointnext-s.yaml
+echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
