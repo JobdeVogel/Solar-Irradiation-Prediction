@@ -1,27 +1,36 @@
 ## IrradianceNet: *Solar irradiance prediction using Deep Learning*
-Created by Job de Vogel
+This code was developed by Job de Vogel.
 
-### Introduction
-Run this code sequentially by calling main.py, arguments described in file.
+### Installation
+Gneral prerequisites:
+* Nividia GPU
 
-`python main.py -std`
+Prerequisites for dataset generation:
+* Valid installation of Rhino 7;
+* Radiance or AcceleRad (https://nljones.github.io/Accelerad/)
 
-Run this code in parallel by calling run.py.
+Prerequisites for Neural Network training:
+* Visual Studio 19 Enterprise (https://visualstudio.microsoft.com/vs/older-downloads/)
+* Cuda Driver 11.3
 
+Install IrradianceNet on Windows by running:
+`install.bat`
+
+### How to run?
+Download a 3DBAG dataset:
+`cd download`
+`python bag.py`
+
+Run the dataset generation sequentially:
+`cd dataset`
+`python main.py -std` (use -std for printing the logs to stdout)
+
+Run the dataset generation in parallel:
+`cd dataset`
 `python run.py`
 
-Change parameters in parameters.params.py
+General setting for the dataset generation can be changed in `parameters\params`
 
-Train the irradiance model using (using Python 3.8 with pytorch cuda enabled):
-
-`cd pointnet\utils`
-`python train_segmentation_irr.py`
-
-### Requirements
-* McNeel Rhino 7 installed
-* Radiance
-* Python 3.7.9
-* Python packages from requirements.txt
-
-* Highly recommended: AcceleRad for simulation GPU support
-* Optional: install libraries with Anaconda env from environments.yml
+Train a neural network for solar irradiance prediction. Make sure the correct paths are set in the IrradianceNet cfg:
+`cd pointnext`
+`python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml`

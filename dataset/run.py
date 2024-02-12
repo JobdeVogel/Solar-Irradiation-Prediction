@@ -1,5 +1,5 @@
 import multiprocessing
-from main import main
+from dataset.main import main
 from parameters.params import BAG_FILE_PATH, BAG_PATH, GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH
 import os
 from log.logger import generate_logger

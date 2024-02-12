@@ -10,7 +10,7 @@ import numpy as np
 import glob
 import pathlib
 import wandb
-from main import write_to_csv, test, generate_data_list
+from dataset.main import write_to_csv, test, generate_data_list
 from openpoints.models import build_model_from_cfg
 from openpoints.utils import get_mious, ConfusionMatrix
 from openpoints.utils import set_random_seed, load_checkpoint, setup_logger_dist, \

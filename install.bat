@@ -70,10 +70,14 @@ cd ../../../../
 
 REM Install package for dataset generation
 echo Installing dataset generation packages
+cd dataset
 call python -m pip install -r requirements.txt
 call conda install setuptools=59.5.0
 
 echo Ready to run IrradianceNet!!
 echo Download data using ...
 echo Generate dataset using ...
+cd ../
+
+cd pointnext
 echo Train model using python examples/segmentation/main.py --cfg cfgs/s3dis/pointnext-s.yaml
