@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: C:/Users/Job de Vogel/OneDrive/Documenten/TU Delft/Master Thesis/Code/IrradianceNet/data/bag #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: C:/Users/Job de Vogel/OneDrive/Documenten/TU Delft/Master Thesis/Code/IrradianceNet/dataset/data/bag #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
     test_area: 5
     voxel_size: 0.04 #For irradiance
   train:
