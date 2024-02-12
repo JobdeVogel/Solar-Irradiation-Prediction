@@ -60,6 +60,8 @@ class Wandb:
             Wandb._set_to_wandb_args(wandb_args, cfg, "config")
             Wandb._set_to_wandb_args(wandb_args, cfg, "id")
 
+            
+
             try:
                 commit_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
                 gitdiff = subprocess.check_output(["git", "diff", "--", "':!notebooks'"]).decode()
@@ -68,16 +70,20 @@ class Wandb:
                 gitdiff = ""
 
             config = wandb_args.get("config", {})
+            
+            run_path = 'D:\\Master Thesis Data\\log'
+            
             wandb_args["config"] = {
                 **config,
-                "run_path": os.getcwd(),
+                "run_path": run_path,
                 "commit": commit_sha,
                 "gitdiff": gitdiff
             }
             wandb.init(**wandb_args, sync_tensorboard=True)
-            
+        
             # ! Commented
             # print(os.path.join(os.getcwd(), cfg.cfg_path))
+            wandb.save('D:\\Master Thesis Data\\log')
 
     @staticmethod
     def add_file(file_path: str):

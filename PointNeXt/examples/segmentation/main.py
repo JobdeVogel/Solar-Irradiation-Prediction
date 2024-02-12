@@ -128,12 +128,12 @@ def main(gpu, cfg):
     # logger
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
     
-    if cfg.rank == 0:
-        #if not cfg.wandb.sweep:
-        Wandb.launch(cfg, cfg.wandb.use_wandb)
-        writer = SummaryWriter(log_dir=cfg.run_dir) if cfg.is_training else None
-    else:
-        writer = None
+    # if cfg.rank == 0:
+    #     #if not cfg.wandb.sweep:        
+    #     #Wandb.launch(cfg, cfg.wandb.use_wandb)
+    #     writer = SummaryWriter(log_dir=cfg.run_dir) if cfg.is_training else None
+    # else:
+    #     writer = None
     set_random_seed(cfg.seed + cfg.rank, deterministic=cfg.deterministic)
     torch.backends.cudnn.enabled = True
     
@@ -149,7 +149,6 @@ def main(gpu, cfg):
     # ! Commented
     # logging.info(model)
     # logging.info('Number of params: %.4f M' % (model_size / 1e6))
-
 
     if cfg.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -280,6 +279,8 @@ def main(gpu, cfg):
     total_iter = 0
     
     if cfg.wandb.use_wandb:
+        wandb.watch(model, criterion, log="all", log_freq=1)
+        
         logging.info('Logging initial images...')
         max_images = min([2, cfg.batch_size])
         for idx in range(max_images):
@@ -300,13 +301,13 @@ def main(gpu, cfg):
             train_loader.dataset.epoch = epoch - 1
         
         train_loss, train_rmse, total_iter = \
-            train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer)
+            train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
         
         # ! Log the results from the epoch step
         is_best = False
         
         if epoch % cfg.val_freq == 0:
-            eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, cfg, writer, epoch=epoch, total_iter=total_iter)
+            eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, cfg, epoch=epoch, total_iter=total_iter)
             
             if eval_loss > best_val:
                 is_best = True
@@ -332,15 +333,14 @@ def main(gpu, cfg):
         else:
             logging.info(f'Epoch {epoch} LR {lr:.6f} '
                      f'train loss {train_loss:.2f}')
+                  
+        if epoch % cfg.val_freq == 0:
+            wandb.log({'Evaluation Loss (mse)': eval_loss}, step=epoch)
+            wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse}, step=epoch)
         
-        if writer is not None:           
-            if epoch % cfg.val_freq == 0:
-                writer.add_scalar('Evaluation Loss (mse)', eval_loss, epoch)
-                writer.add_scalar('Evaluation Loss (rmse) [kWh/m2]', eval_rmse, epoch)
-            
-            # writer.add_scalar('train_loss', train_loss, epoch)
-            # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
-            writer.add_scalar('Learning Rate', lr, epoch)
+        # writer.add_scalar('train_loss', train_loss, epoch)
+        # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
+        wandb.log({'Learning Rate': lr}, step=epoch)
 
         # ! Update the optimizer with scheduler
         if cfg.sched_on_epoch:
@@ -417,7 +417,7 @@ def main(gpu, cfg):
     wandb.finish(exit_code=True)
 
 
-def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg, writer):
+def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg):
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
     model.train()  # set model to training mode
@@ -483,14 +483,14 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
                 
             mse_loss = mse_criterion(logits, target)
             
-            writer.add_scalar('train_loss', loss, total_iter)
-            writer.add_scalar('mse_loss', mse_loss, total_iter)
+            wandb.log({'train_loss': loss})
+            wandb.log({'mse_loss': mse_loss})
             
             if cfg.regression:
                 rmse_scaled = torch.sqrt(mse_loss)
                 rmse = rmse_scaled * (1000 - 0) / 2
                 rmse_meter.update(rmse.item())
-                writer.add_scalar('RMSE per train step [kWh/m2]', rmse, total_iter)
+                wandb.log({'RMSE per train step [kWh/m2]': rmse})
                 '''
                 individual_losses = torch.mean(individual_criterion(logits, target), 1)
                 
@@ -531,7 +531,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
 
 
 @torch.no_grad()
-def validate(model, val_loader, criterion, cfg, writer, num_votes=1, data_transform=None, epoch=-1, total_iter=-1):
+def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1):
     model.eval()  # set model to eval mode
     
     loss_meter = AverageMeter()
@@ -874,7 +874,7 @@ def config_to_cfg(config):
 
 def sweep_run(config=None):
     # tell wandb to get started
-    with wandb.init(mode="disabled", project="IrradianceNet", config=config, allow_val_change=True):        
+    with wandb.init(mode="online", project="IrradianceNet", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
         
@@ -943,7 +943,6 @@ def sweep(cfg):
    
     project = "IrradianceNet"
     sweep_id = wandb.sweep(sweep_config, project=project)
-    os.environ["WANDB_DIR"] = 'C:\\Users\\Job de Vogel\\Desktop\\logs'
     
     wandb.agent(sweep_id, sweep_run, count=50, project=project)
     
@@ -1004,6 +1003,9 @@ if __name__ == "__main__":
     cfg.cfg_path = cfg_path
     # wandb config
     cfg.wandb.name = cfg.run_name
+
+    if cfg.wandb.use_wandb:
+        wandb.login()
 
     if cfg.wandb.sweep:
         sweep(cfg)
