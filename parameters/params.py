@@ -33,6 +33,9 @@ Size indication:
 * BAG size 10: 600x600m
 * BAG size 9: 1200x1200m
 * BAG size 8: 2400x2400m
+
+If the size of a patch increases it is possible that the preprocessing time on
+CPU will outweigh the simulation time on GPU.
 '''
 
 SIZE = 100
