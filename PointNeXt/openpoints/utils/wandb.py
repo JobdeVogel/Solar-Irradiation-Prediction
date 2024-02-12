@@ -1,7 +1,7 @@
 import shutil
 import os
 import subprocess
-
+import sys
 
 class WandbUrls:
     def __init__(self, url):
@@ -59,7 +59,6 @@ class Wandb:
             Wandb._set_to_wandb_args(wandb_args, cfg, "notes")
             Wandb._set_to_wandb_args(wandb_args, cfg, "config")
             Wandb._set_to_wandb_args(wandb_args, cfg, "id")
-            print(wandb_args)
 
             try:
                 commit_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
@@ -76,7 +75,9 @@ class Wandb:
                 "gitdiff": gitdiff
             }
             wandb.init(**wandb_args, sync_tensorboard=True)
-            wandb.save(os.path.join(os.getcwd(), cfg.cfg_path))
+            
+            # ! Commented
+            # print(os.path.join(os.getcwd(), cfg.cfg_path))
 
     @staticmethod
     def add_file(file_path: str):
