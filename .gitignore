@@ -47,3 +47,4 @@ input_output/__pycache__/save.cpython-37.pyc
 helpers/__pycache__/mesh.cpython-37.pyc
 PointNeXt/images/
 visualize/__pycache__/
+dataset/log/logs/
