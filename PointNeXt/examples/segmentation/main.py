@@ -286,10 +286,10 @@ def main(gpu, cfg):
         for idx in range(max_images):
             if idx == 0:
                 image_path = eval_image(model, evaluation_test_array, idx, f'Epoch base test sample base', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
-                wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+                wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
 
             image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample base', 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\images')
-            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
     
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
