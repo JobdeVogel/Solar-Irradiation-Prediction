@@ -580,6 +580,8 @@ def remesh_vertical(curve, height):
     Returns:
         mesh (rg.Mesh): reduced mesh
     """
+    if curve.ClosedCurveOrientation() == rg.CurveOrientation.Clockwise:
+        curve.Reverse()
     
     extrusion = rg.Extrusion.Create(curve, height, False)
     
