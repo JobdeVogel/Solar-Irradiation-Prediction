@@ -7,6 +7,7 @@ abs_path = os.path.dirname(os.path.dirname(__file__))
 GRID_SIZE = 1.0
 OFFSET = 0.01
 NUM_AUGMENTS = 1
+RANDOM_SENSORS = True
 
 '''
 When the size of the dataset sample is increased, it is recommended
