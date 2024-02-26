@@ -39,7 +39,7 @@ from visualize.mesh import generate_colored_mesh, legend
 from visualize.pointcloud import plot
 
 from log.logger import generate_logger
-from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_GSI, VISUALIZE_MESH, MAX_AREA_ERROR
+from parameters.params import BAG_FILE_PATH, IRRADIANCE_PATH, GEOMETRY_PATH, RAW_PATH, OUTLINES_PATH, SIZE, GRID_SIZE, MIN_COVERAGE, OFFSET, NUM_AUGMENTS, MIN_AREA, WEA, SIMULATION_ARGUMENTS, MIN_GSI, VISUALIZE_MESH, MAX_AREA_ERROR, RANDOM_SENSORS
 
 from visualize import pointcloud
 
@@ -120,16 +120,6 @@ class Sample:
             self.logger.critical(e)
     
     def compute_mesh(self, rough=True):        
-        # Generate meshes
-        self.ground, self.walls, self.roofs, self.rough_ground, self.rough_walls, self.rough_roofs = meshing.generate_mesh(
-            self.patch_outline, 
-            self.building_outlines, 
-            self.courtyard_outlines, 
-            self.heights, 
-            GRID_SIZE, 
-            SIZE, 
-            rough=rough)
-        
         # Generate meshes       
         try:
             # Generate meshes
@@ -140,7 +130,8 @@ class Sample:
                 self.heights, 
                 GRID_SIZE, 
                 SIZE, 
-                rough=rough)
+                rough=rough)           
+            
         except Exception as e:
             self.logger.critical(f'Mesh computation for sample {self.idx} failed')
             self.logger.critical(e)
@@ -159,10 +150,10 @@ class Sample:
         
         return valid
     
-    def compute_sensors(self, compute_filtered=True):
+    def compute_sensors(self, compute_filtered=True):       
         try:
             # Compute the sensorpoints for this sample
-            self.sensorpoints, self.sensornormals = sensors.compute(self.ground, self.roofs, self.walls, self.heights, GRID_SIZE, OFFSET)
+            self.sensorpoints, self.sensornormals = sensors.compute(self.ground, self.roofs, self.walls, self.heights, GRID_SIZE, OFFSET, random=RANDOM_SENSORS)
             
             if compute_filtered:
                 # # Filter out the None values for invalid sensors
@@ -350,7 +341,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
     
     """
     name = idx
-        
+    
     # Initializa a sample
     sample = Sample(idx, logger, geometry_path, irradiance_path, outlines_path, raw_path)
     
@@ -466,7 +457,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     unknown_invality = 0
     
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines))[115:]:
+    for idx in range(len(patch_outlines))[:1]:
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         
@@ -479,7 +470,6 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
         patch_outline = patch_outlines[idx]
         
         try:
-            print(4/0)
             # Run the generation and simulation for one ground patch sample
             validity = task(patch_outline, deserializeed_building_outlines, all_heights, idx, logger, geometry_path=geometry_path, irradiance_path=irradiance_path, outlines_path=outlines_path, raw_path=raw_path)
         
@@ -545,7 +535,7 @@ if __name__ == '__main__':
     
     # profiler = cProfile.Profile()
     # profiler.enable()
-    
+
     # Run the sample generation
     main(filename, start_idx, logger)
     
