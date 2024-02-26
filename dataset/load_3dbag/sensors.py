@@ -1,9 +1,12 @@
 import Rhino.Geometry as rg
 import System
+import time
 import math
 import helpers
+import os
 import sys
 import numpy as np
+import open3d as o3d
 from parameters.params import _MINIMUM_ANGLE, _MINIMUM_AREA, _WALL_RAY_TOLERANCE, QUAD_ONLY
 
 from helpers.mesh import join_meshes, get_face_vertices
@@ -66,7 +69,7 @@ def offset_points(points, vectors, offset):
         points = [rg.Point3d(*point) for point in new_points]
     except:
         offset_vectors = [rg.Vector3d(vector) * offset for vector in vectors]
-        points = [point + vector for point, vector in zip(points, vectors)]
+        points = [point + vector for point, vector in zip(points, offset_vectors)]
     
     return points
 
@@ -180,7 +183,7 @@ def wall_ray_intersection(point, normal, walls, grid_size, offset, tolerance=_WA
 
     return success, point
 
-def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only=QUAD_ONLY, logger=False):
+def compute(ground, roofs, walls, building_heights, grid_size, offset, random=False, quad_only=QUAD_ONLY, logger=False):
     """Compute the sensorpoints for building meshes
 
     Args:
@@ -196,6 +199,37 @@ def compute(ground, roofs, walls, building_heights, grid_size, offset, quad_only
         sensorpoints (list[rg.Point3d]): sensorpoints
         normals (list[rg.Vector3d])): normals for the sensorpoints
     """
+    
+    if random:     
+        rhino_mesh = join_meshes([ground, *roofs, *walls])
+        area = rg.AreaMassProperties.Compute(rhino_mesh).Area
+        num_points = int(area)
+        
+        tri_mesh = rhino_mesh.Duplicate()
+        tri_mesh.Faces.ConvertQuadsToTriangles()
+        
+        mesh = tri_mesh        
+  
+        vertices = [[point.X, point.Y, point.Z] for point in mesh.Vertices]
+        faces = [[face[0], face[1], face[2]] for face in mesh.Faces]
+
+        vertices = np.array(vertices).astype(np.float32)
+        faces = np.array(faces).astype(np.int32)
+    
+        # Create Open3D triangle mesh
+        mesh = o3d.geometry.TriangleMesh()
+        mesh.vertices = o3d.utility.Vector3dVector(vertices)
+        mesh.triangles = o3d.utility.Vector3iVector(faces)
+        
+        sensors = np.asarray(mesh.sample_points_poisson_disk(init_factor=2, number_of_points=num_points).points).tolist()
+        sensorpoints = [rg.Point3d(point[0], point[1], point[2]) for point in sensors]
+        
+        faces = [rhino_mesh.ClosestMeshPoint(point, 1).FaceIndex for point in sensorpoints]
+
+        normals = [rhino_mesh.FaceNormals[face] for face in faces]
+        
+        sensorpoints = offset_points(sensorpoints, normals, offset)
+        return sensorpoints, normals
     
     # Store the sensorpoints and normals of the sensorpoints            
     sensorpoints = []
