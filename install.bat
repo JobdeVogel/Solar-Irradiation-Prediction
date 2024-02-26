@@ -4,8 +4,8 @@ echo Please make sure you have installed AcceleRad from https://nljones.github.i
 echo ------------
 
 REM Define variables
-set ENV_NAME=irradiancenet37
-set PYTHON_VERSION=3.7.1
+set ENV_NAME=irradiancenet312
+set PYTHON_VERSION=3.12
 
 REM Create conda environment with specific Python version
 echo Creating Anaconda environment...
@@ -68,16 +68,16 @@ cd ../emd
 call python setup.py install --user
 cd ../../../../
 
-REM Install package for dataset generation
-echo Installing dataset generation packages
-cd dataset
-call python -m pip install -r requirements.txt
-call conda install setuptools=59.5.0
+@REM REM Install package for dataset generation
+@REM echo Installing dataset generation packages
+@REM cd dataset
+@REM call python -m pip install -r requirements.txt
+@REM call conda install setuptools=59.5.0
 
-echo Ready to run IrradianceNet!!
-echo Download data using ...
-echo Generate dataset using ...
-cd ../
+@REM echo Ready to run IrradianceNet!!
+@REM echo Download data using ...
+@REM echo Generate dataset using ...
+@REM cd ../
 
-cd pointnext
-echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
+@REM cd pointnext
+@REM echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
