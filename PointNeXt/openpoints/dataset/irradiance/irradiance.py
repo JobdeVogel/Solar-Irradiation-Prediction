@@ -97,7 +97,7 @@ class IRRADIANCE(Dataset):
         data_list = traverse_root(raw_root)
         
         # TODO: include
-        split_ratio = 0.9
+        split_ratio = 0.95
         
         split_index = int(len(data_list) * split_ratio)
         
