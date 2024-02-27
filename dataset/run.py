@@ -1,5 +1,5 @@
 import multiprocessing
-from dataset.main import main
+from main import main
 from parameters.params import BAG_FILE_PATH, BAG_PATH, GEOMETRY_PATH, IRRADIANCE_PATH, OUTLINES_PATH, RAW_PATH
 import os
 from log.logger import generate_logger
@@ -75,18 +75,26 @@ if __name__ =='__main__':
     
     args = os.listdir(BAG_PATH)
     cpus = 2
+    resume = True
     
     # for file in args[:cpus]:
     #     task(file, None)
     
+    
+    if resume:
+        non_existing_files = []
+        
+        existing_folders = [x[0] for x in os.walk(RAW_PATH)][1:]
+        existing_folders = [path.split("\\")[-1] for path in existing_folders]
+        
+        for arg in args:
+            if arg[:-4] not in existing_folders:
+                non_existing_files.append(arg)
+            else:
+                print(f'{arg[:-4]} already generated in previous run!')
+    
     MAIN_LOGGER.info(f'Initializing pool with {cpus} cpus based on dataset {BAG_PATH}')
-    with multiprocessing.Pool(processes=cpus) as pool:
-        # Map the main function to the arguments using the pool
-        # data = pool.starmap_async(process, enumerate(args))
-        # pool.close()
-        
-        # pool.join()
-        
+    with multiprocessing.Pool(processes=cpus, maxtasksperchild=1) as pool:       
         pool.imap_unordered(process, enumerate(args))
         pool.close()
         pool.join()
