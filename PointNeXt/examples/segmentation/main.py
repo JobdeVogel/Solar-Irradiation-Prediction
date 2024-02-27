@@ -75,7 +75,7 @@ def main(gpu, cfg):
         torch.cuda.set_device(gpu)
         # model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
         logging.info(f"Model is using {cfg.world_size} gpus in DatalParallel mode!")
-        model = nn.parallel.DataParallel(model.cuda(), device_ids=[cfg.rank])
+        model = nn.parallel.DataParallel(model.cuda())
         
         # ! commented
         # logging.info('Using Distributed Data parallel ...')
