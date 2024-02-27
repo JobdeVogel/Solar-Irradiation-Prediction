@@ -3,6 +3,8 @@ import pickle
 import logging
 import numpy as np
 from tqdm import tqdm
+import random
+from datetime import datetime
 import torch
 from torch.utils.data import Dataset
 from ..data_util import crop_pc, voxelize
@@ -118,15 +120,31 @@ class IRRADIANCE(Dataset):
             self.data_list = [
                 item for item in data_list if 'Area_{}'.format(test_area) in item]
         '''
+        
+        # Make sure the shuffling is similar for training and evaluation
+        random.seed(1)
+        if self.shuffle:
+            random.shuffle(data_list)
+        
+        from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+        
         if split == 'train':
             self.data_list = [
                 item for item in data_list[:split_index+1]
             ]
+            
+            with open(f'.\data\{from_date}_train_samples.txt', 'w') as file:
+                for item in self.data_list:
+                    file.write(item + '\n')
         else:
             self.data_list = [
                 item for item in data_list[split_index+1:]
             ]
-        
+
+            with open(f'.\data\{from_date}_evaluation_samples.txt', 'w') as file:
+                for item in self.data_list:
+                    file.write(item + '\n')
+
         processed_root = os.path.join(data_root, 'processed')
         
         filename = os.path.join(
