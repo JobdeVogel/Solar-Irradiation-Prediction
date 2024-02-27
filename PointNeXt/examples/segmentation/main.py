@@ -538,25 +538,31 @@ def traverse_root(root):
 
     return res
 
-def test(cfg):
+def test(cfg, root, blank=True):
     model_path = cfg.pretrained_path
     
-    for data_path in traverse_root("D:\\Master Thesis Data\\bag"):
+    for data_path in traverse_root(root):
         data, irradiance = evaluate_file(model_path, data_path, cfg)
 
         targets = ((data['y'] + 1) / 2) * 1000
-
+        
+        if not blank:
+            targets = targets.tolist()
+        else:
+            targets = [0] * len(targets)
+        
         plot('0', 
             data['pos'][0, :, :], 
             vectors=[],
-            targets = targets.tolist(),
+            targets = targets,
             values = irradiance,
             show_normals=False, 
             vector_length=1.0,
             save=False,
             show=True,
             name='',
-            path = ''
+            path = '',
+            blank=blank
             )
     
 def config_to_cfg(config):
@@ -715,7 +721,7 @@ if __name__ == "__main__":
         wandb.login()
 
     
-    # test(cfg)
+    # test(cfg, "D:\\Master Thesis Data\\bag", blank=True)
     # sys.exit()
     
     if cfg.wandb.sweep:

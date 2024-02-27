@@ -28,14 +28,18 @@ def plot(image_name,
         save=False,
         show=True,
         name='',
-        path = ''
+        path = '',
+        blank=False
         ):    
     
     # Set the figure size
     fig = plt.figure(figsize=(12, 6))
     fig.suptitle(image_name, fontsize=16, y=0.05)
     
-    gs = GridSpec(1, 3, width_ratios=[1, 1, 0.05])
+    if not blank:
+        gs = GridSpec(1, 3, width_ratios=[1, 1, 0.05])
+    else:
+        gs = GridSpec(1, 2, width_ratios=[1, 0.05])
     
     x, y, z = points[:, :3].T
     
@@ -70,34 +74,35 @@ def plot(image_name,
     
     colors = color_map(norm(values))
     
-    ax2 = plt.subplot(gs[1], projection='3d')  # 1 row, 2 columns, second plot
-    ax2.scatter(x, y, z, s=8, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
-    ax2.set_title('Prediction [kWh/m2]', pad=20, loc='center')
-    ax2.set_xlim(-0.75, 0.75)
-    ax2.set_ylim(-0.75, 0.75)
-    ax2.set_zlim(-0.25, 1.25)
-    ax2.grid(False)
-    ax2.set_proj_type('ortho')
-    
-    ax2.xaxis.pane.fill = False
-    ax2.yaxis.pane.fill = False
-    ax2.zaxis.pane.fill = False
-    ax2.w_xaxis.line.set_visible(False)
-    ax2.w_yaxis.line.set_visible(False)
-    ax2.w_zaxis.line.set_visible(False)
-    ax2.set_axis_off()
-    
-    
-    norm = Normalize(vmin=0, vmax=1000)
-    # Create a ScalarMappable for colorbar
-    sm = ScalarMappable(cmap=color_map, norm=norm)
-    sm.set_array([])  # Dummy array for the colorbar
+    if not blank:
+        ax2 = plt.subplot(gs[1], projection='3d')  # 1 row, 2 columns, second plot
+        ax2.scatter(x, y, z, s=8, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
+        ax2.set_title('Prediction [kWh/m2]', pad=20, loc='center')
+        ax2.set_xlim(-0.75, 0.75)
+        ax2.set_ylim(-0.75, 0.75)
+        ax2.set_zlim(-0.25, 1.25)
+        ax2.grid(False)
+        ax2.set_proj_type('ortho')
 
-    ax3 = plt.subplot(gs[2])
-    plt.subplots_adjust(left=0.05, right=0.85, wspace=0.2)
-    # Add the colorbar to the far right
-    cbar = plt.colorbar(sm, cax=ax3, ax=ax3, orientation='vertical', pad=0.05)
-    cbar.set_label('Irradiance [kWh/m2]')
+        ax2.xaxis.pane.fill = False
+        ax2.yaxis.pane.fill = False
+        ax2.zaxis.pane.fill = False
+        ax2.w_xaxis.line.set_visible(False)
+        ax2.w_yaxis.line.set_visible(False)
+        ax2.w_zaxis.line.set_visible(False)
+        ax2.set_axis_off()
+    
+    if not blank:
+        norm = Normalize(vmin=0, vmax=1000)
+        # Create a ScalarMappable for colorbar
+        sm = ScalarMappable(cmap=color_map, norm=norm)
+        sm.set_array([])  # Dummy array for the colorbar
+    
+        ax3 = plt.subplot(gs[2])
+        plt.subplots_adjust(left=0.05, right=0.85, wspace=0.2)
+        # Add the colorbar to the far right
+        cbar = plt.colorbar(sm, cax=ax3, ax=ax3, orientation='vertical', pad=0.05)
+        cbar.set_label('Irradiance [kWh/m2]')
     
     plt.tight_layout()
     
