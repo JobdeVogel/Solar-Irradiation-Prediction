@@ -579,6 +579,8 @@ def config_to_cfg(config):
             cfg.criterion_args.NAME = config[key]
         elif key == 'optim':
             cfg.optimizer.NAME = config[key]
+        elif key == 'voxel_max':
+            cfg.dataset.train.voxel_max = config[key]
         else:
             cfg[key] = config[key]
     
@@ -638,11 +640,8 @@ def sweep(cfg):
     # }
     
     parameters_dict = {
-        'batch_size': {
-            'values': [4, 8, 16]
-            },
-        'optim': {
-            'values': ['adamw', 'adamp', 'nadam', 'adam', 'sgdp']
+        'voxel_max': {
+            'values': [10000, 15000, 20000, 25000]
             }
         }
     
@@ -701,6 +700,9 @@ if __name__ == "__main__":
         generate_exp_directory(cfg, tags, additional_id=os.environ.get('MASTER_PORT', None))
         cfg.wandb.tags = tags
     
+    if not os.path.exists('.\log\logs'):
+        os.makedirs('.\log\logs')
+    
     os.environ["JOB_LOG_DIR"] = cfg.log_dir
     
     cfg_path = os.path.join(cfg.run_dir, "cfg.yaml")
@@ -720,9 +722,8 @@ if __name__ == "__main__":
     if cfg.wandb.use_wandb:
         wandb.login()
 
-    
-    # test(cfg, "D:\\Master Thesis Data\\bag", blank=True)
-    # sys.exit()
+    test(cfg, "D:\\Master Thesis Data\\bag", blank=False)
+    sys.exit()
     
     if cfg.wandb.sweep:
         sweep(cfg)
