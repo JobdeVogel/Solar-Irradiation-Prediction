@@ -457,7 +457,7 @@ def main(filename, start_idx, logger, geometry_path=GEOMETRY_PATH, irradiance_pa
     unknown_invality = 0
     
     # Iterate over all patch_outlines
-    for idx in range(len(patch_outlines))[:1]:
+    for idx in range(len(patch_outlines)):
         start = time.perf_counter()
         logger.info(f'Started computing patch[{idx}].')
         

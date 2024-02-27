@@ -111,6 +111,9 @@ def download(directory, max_urls=100, x_min=272, x_max=332, y_min=488, y_max=532
                 sys.exit()
 
 directory = str(input('Path to save bag data: '))
+
+directory = r'D:\\graduation_jobdevogel\\Graduation-Building-Technology\\dataset\\data\\bag'
+
 download(directory)
 
 print(f'Downloaded all requested files!')
