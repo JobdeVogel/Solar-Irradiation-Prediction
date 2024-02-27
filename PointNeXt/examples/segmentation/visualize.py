@@ -52,7 +52,7 @@ def plot(image_name,
     colors = color_map(norm(targets))
     
     ax1 = plt.subplot(gs[0], projection='3d')
-    ax1.scatter(x, y, z, s=4, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
+    ax1.scatter(x, y, z, s=8, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
     ax1.set_title('Ground truth [kWh/m2]', pad=20, loc='center')
     ax1.set_xlim(-0.75, 0.75)
     ax1.set_ylim(-0.75, 0.75)
@@ -71,7 +71,7 @@ def plot(image_name,
     colors = color_map(norm(values))
     
     ax2 = plt.subplot(gs[1], projection='3d')  # 1 row, 2 columns, second plot
-    ax2.scatter(x, y, z, s=4, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
+    ax2.scatter(x, y, z, s=8, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
     ax2.set_title('Prediction [kWh/m2]', pad=20, loc='center')
     ax2.set_xlim(-0.75, 0.75)
     ax2.set_ylim(-0.75, 0.75)
@@ -93,7 +93,6 @@ def plot(image_name,
     sm = ScalarMappable(cmap=color_map, norm=norm)
     sm.set_array([])  # Dummy array for the colorbar
 
-
     ax3 = plt.subplot(gs[2])
     plt.subplots_adjust(left=0.05, right=0.85, wspace=0.2)
     # Add the colorbar to the far right
@@ -103,6 +102,8 @@ def plot(image_name,
     plt.tight_layout()
     
     if show:
+        matplotlib.use('TkAgg')
+        
         plt.show()
     
     if save:

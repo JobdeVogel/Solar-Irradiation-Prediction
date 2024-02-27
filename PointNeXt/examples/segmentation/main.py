@@ -6,6 +6,7 @@ if you only wana use 1 GPU, set `CUDA_VISIBLE_DEVICES` accordingly
 """
 import sys
 import time
+import datetime
 
 import __init__
 import argparse, yaml, os, logging, numpy as np, csv, wandb, glob
@@ -26,7 +27,7 @@ from openpoints.models import build_model_from_cfg
 import warnings
 import shutil
 
-from visualize import from_sample
+from visualize import from_sample, plot
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -149,10 +150,11 @@ def main(gpu, cfg):
     
     test_array = iter(val_loader)
     
-    
     evaluation_test_array_0 = next(test_array)
     evaluation_test_array_1 = next(test_array)
     evaluation_test_array_2 = next(test_array)
+    evaluation_test_array_3 = next(test_array)
+    evaluation_test_array_4 = next(test_array)
     evaluation_train_array = next(iter(train_loader))
     
     total_iter = 0
@@ -160,25 +162,35 @@ def main(gpu, cfg):
     if cfg.wandb.use_wandb:
         wandb.watch(model, criterion, log="all", log_freq=1)
         
-    image_dir = f'.\\images\\{cfg.cfg_basename}'
+    from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+    image_dir = f'.\\images\\{cfg.cfg_basename}\\{from_date}\\'
     
-    if not os.path.exists(image_dir):
+    if not os.path.exists(image_dir + '\\evaluation'):
+        os.makedirs(image_dir)
+    
+    if not os.path.exists(image_dir + '\\training'):
         os.makedirs(image_dir)
     
     logging.info('Logging initial images...')
     max_images = min([5, cfg.batch_size])
+    max_evaluation_images = 5
+    
     for idx in range(max_images):
         if idx == 0:
-            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir)
-            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir)
-            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir)
+            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
+            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
+            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
+            image_path_3 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
+            image_path_4 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
             
             if cfg.wandb.use_wandb:
                 wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
                 wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
                 wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
 
-        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir)
+        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
         
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
@@ -213,14 +225,16 @@ def main(gpu, cfg):
         max_images = min([5, cfg.batch_size])
         for idx in range(max_images):
             if idx == 0:
-                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir)
-                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir)
-                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir)
+                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir + '\\evaluation')
+                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir + '\\evaluation')
+                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir + '\\evaluation')
+                image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch {epoch} test 3 sample {idx}', image_dir + '\\evaluation')
+                image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation')
                 
                 if cfg.wandb.use_wandb:
                     wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
 
-            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir)
+            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training')
             
             if cfg.wandb.use_wandb:
                 wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
@@ -511,8 +525,40 @@ def evaluate_file(model_path, data_path, cfg):
     
     irradiance = ((irradiance + 1) / 2) * 1000
     
-    return list(irradiance) + [timing]
+    for key in data.keys():
+        data[key] = data[key].to("cpu")
+    
+    return data, list(irradiance)
 
+def traverse_root(root):
+    res = []
+    for (dir_path, _, file_names) in os.walk(root):
+        for file in file_names:
+            res.append(os.path.join(dir_path, file))
+
+    return res
+
+def test(cfg):
+    model_path = cfg.pretrained_path
+    
+    for data_path in traverse_root("D:\\Master Thesis Data\\bag"):
+        data, irradiance = evaluate_file(model_path, data_path, cfg)
+
+        targets = ((data['y'] + 1) / 2) * 1000
+
+        plot('0', 
+            data['pos'][0, :, :], 
+            vectors=[],
+            targets = targets.tolist(),
+            values = irradiance,
+            show_normals=False, 
+            vector_length=1.0,
+            save=False,
+            show=True,
+            name='',
+            path = ''
+            )
+    
 def config_to_cfg(config):
     cfg = EasyConfig()    
     cfg.update(config.cfg)
@@ -668,12 +714,10 @@ if __name__ == "__main__":
     if cfg.wandb.use_wandb:
         wandb.login()
 
-    # model_path = cfg.pretrained_path
-    # data_path = "D:\\Master Thesis Data\\bag\\7-272-448-LoD12-3D\\irradiance_sample_164_augmentation_0.npy"
-
-    # irradiance = evaluate_file(model_path, data_path, cfg)
-    # print(irradiance)
-
+    
+    # test(cfg)
+    # sys.exit()
+    
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
@@ -686,3 +730,4 @@ if __name__ == "__main__":
                 mp.spawn(main, nprocs=cfg.world_size, args=(cfg,))
             else:
                 main(0, cfg)
+               
