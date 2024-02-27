@@ -46,7 +46,7 @@ CFG_PATH = 'C:\\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thes
 
 PRETRAINED_PATH_S = r"C:\Users\\Job de Vogel\\OneDrive\\Documenten\\TU Delft\\Master Thesis\\Code\\IrradianceNet\\PointNeXt\\log\\irradiance\\IrradianceNet-irradiance-train-20240219-112609-QPEAG59dYA4CXdapcEsZXQ\\checkpoint\\pretrained.pth"
 PRETRAINED_PATH_B = ''
-PRETRAINED_PATH_L = ''
+PRETRAINED_PATH_L = r"D:\Master Thesis Data\pretrained_irradiancenet\IrradianceNet-irradiance-train-20240224-000637-97nWqNkc8ttSeaw7UHHAwT_ckpt_latest.pth"
 PRETRAINED_PATH_XL = ''
 
 class Time:
@@ -75,6 +75,7 @@ def build_model(model):
 
     try:
         load_checkpoint(network, model_path)
+        print('Finished loading checkpoint!')
     except Exception as e:
         print(e)
         print('Loading checkpoint failed...')
