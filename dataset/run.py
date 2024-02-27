@@ -74,19 +74,15 @@ if __name__ =='__main__':
         os.makedirs(RAW_PATH)
     
     args = os.listdir(BAG_PATH)
-    cpus = 2
+    cpus = 18
     resume = True
-    
-    # for file in args[:cpus]:
-    #     task(file, None)
-    
     
     if resume:
         non_existing_files = []
-        
+
         existing_folders = [x[0] for x in os.walk(RAW_PATH)][1:]
         existing_folders = [path.split("\\")[-1] for path in existing_folders]
-        
+
         for arg in args:
             if arg[:-4] not in existing_folders:
                 non_existing_files.append(arg)
