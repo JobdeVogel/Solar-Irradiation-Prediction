@@ -50,7 +50,7 @@ def main(gpu, cfg):
     #     writer = SummaryWriter(log_dir=cfg.run_dir) if cfg.is_training else None
     # else:
     #     writer = None
-    set_random_seed(cfg.seed + cfg.rank, deterministic=cfg.deterministic)
+    set_random_seed(cfg.seed, deterministic=cfg.deterministic)
     torch.backends.cudnn.enabled = True
     
     # ! Commented
@@ -74,6 +74,7 @@ def main(gpu, cfg):
     if cfg.distributed:
         torch.cuda.set_device(gpu)
         # model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
+        logging.info(f"Model is using {cfg.world_size} gpus in DatalParallel mode!")
         model = nn.parallel.DataParallel(model.cuda(), device_ids=[cfg.rank])
         
         # ! commented
@@ -674,10 +675,8 @@ if __name__ == "__main__":
 
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
-    cfg.sync_bn = cfg.world_size > 1
-    
-    if args.distributed:
-        cfg.distributed = True
+    #cfg.sync_bn = cfg.world_size > 1
+    cfg.mp = False
 
     # init log dir
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
