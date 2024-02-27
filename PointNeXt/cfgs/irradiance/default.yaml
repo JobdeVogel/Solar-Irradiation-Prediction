@@ -21,7 +21,7 @@ dataset:
 
 feature_keys: pos,normals
 num_classes: 1
-batch_size: 16
+batch_size: 8
 val_batch_size: 1
 
 dataloader:
@@ -83,4 +83,4 @@ val_freq: 5
 
 wandb:
   project: IrradianceNet
-  sweep: True
+  sweep: False
