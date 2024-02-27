@@ -676,7 +676,6 @@ if __name__ == "__main__":
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
     #cfg.sync_bn = cfg.world_size > 1
-    cfg.mp = False
 
     # init log dir
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
@@ -728,6 +727,7 @@ if __name__ == "__main__":
     # test(cfg, "D:\\Master Thesis Data\\bag", blank=False)
     # sys.exit()
     
+    cfg.mp = False
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
