@@ -6,7 +6,7 @@ if you only wana use 1 GPU, set `CUDA_VISIBLE_DEVICES` accordingly
 """
 import sys
 import time
-import datetime
+from datetime import datetime
 
 import __init__
 import argparse, yaml, os, logging, numpy as np, csv, wandb, glob
@@ -163,13 +163,13 @@ def main(gpu, cfg):
         wandb.watch(model, criterion, log="all", log_freq=1)
         
     from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
-    image_dir = f'.\\images\\{cfg.cfg_basename}\\{from_date}\\'
+    image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
     
     if not os.path.exists(image_dir + '\\evaluation'):
-        os.makedirs(image_dir)
+        os.makedirs(image_dir + '\\evaluation')
     
     if not os.path.exists(image_dir + '\\training'):
-        os.makedirs(image_dir)
+        os.makedirs(image_dir + '\\training')
     
     logging.info('Logging initial images...')
     max_images = min([5, cfg.batch_size])
@@ -180,8 +180,8 @@ def main(gpu, cfg):
             image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
             image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
             image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
-            image_path_3 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
-            image_path_4 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
+            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
+            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
             
             if cfg.wandb.use_wandb:
                 wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
@@ -453,10 +453,10 @@ def eval_image(model, sample, idx, name, path):
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         
         if data['x'].shape[0] > 1:
-            data['x'] = data['x'][0, :, :].unsqueeze(0)
-            data['pos'] = data['pos'][0, :, :].unsqueeze(0)
-            data['normals'] = data['normals'][0, :, :].unsqueeze(0)
-            data['y'] = data['y'][0].unsqueeze(0)
+            data['x'] = data['x'][idx, :, :].unsqueeze(0)
+            data['pos'] = data['pos'][idx, :, :].unsqueeze(0)
+            data['normals'] = data['normals'][idx, :, :].unsqueeze(0)
+            data['y'] = data['y'][idx].unsqueeze(0)
         
         for key in data:
             data[key] = data[key].cuda(non_blocking=True)
@@ -659,7 +659,7 @@ def sweep(cfg):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Scene segmentation training/testing')
-    parser.add_argument('--cfg', type=str, required=True, help='config file')
+    parser.add_argument('--cfg', type=str, required=False, default='cfgs/irradiance/irradiancenet-l.yaml', help='config file')
     parser.add_argument('--profile', action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()
     
@@ -722,8 +722,8 @@ if __name__ == "__main__":
     if cfg.wandb.use_wandb:
         wandb.login()
 
-    test(cfg, "D:\\Master Thesis Data\\bag", blank=False)
-    sys.exit()
+    # test(cfg, "D:\\Master Thesis Data\\bag", blank=False)
+    # sys.exit()
     
     if cfg.wandb.sweep:
         sweep(cfg)
