@@ -32,14 +32,14 @@ from visualize import from_sample, plot
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def main(gpu, cfg):
-    if cfg.distributed:
-        if cfg.mp:
-            cfg.rank = gpu
-        dist.init_process_group(backend=cfg.dist_backend,
-                                init_method=cfg.dist_url,
-                                world_size=cfg.world_size,
-                                rank=cfg.rank)
-        dist.barrier()
+    # if cfg.distributed:
+    #     if cfg.mp:
+    #         cfg.rank = gpu
+    #     dist.init_process_group(backend=cfg.dist_backend,
+    #                             init_method=cfg.dist_url,
+    #                             world_size=cfg.world_size,
+    #                             rank=cfg.rank)
+    #     dist.barrier()
 
     # logger
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
@@ -73,7 +73,8 @@ def main(gpu, cfg):
         # logging.info('Using Synchronized BatchNorm ...')
     if cfg.distributed:
         torch.cuda.set_device(gpu)
-        model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
+        # model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
+        model = nn.parallel.DataParallel(model.cuda(), device_ids=[cfg.rank])
         
         # ! commented
         # logging.info('Using Distributed Data parallel ...')
@@ -88,7 +89,7 @@ def main(gpu, cfg):
                                            cfg.dataloader,
                                            datatransforms_cfg=cfg.datatransforms,
                                            split='val',
-                                           distributed=cfg.distributed
+                                           distributed=False
                                            )
     
     # ! commented
@@ -123,7 +124,7 @@ def main(gpu, cfg):
                                              cfg.dataloader,
                                              datatransforms_cfg=cfg.datatransforms,
                                              split='train',
-                                             distributed=cfg.distributed,
+                                             distributed=False,
                                              )
 
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
@@ -198,11 +199,11 @@ def main(gpu, cfg):
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         
-        # ! Only important for distributed gpu
-        if cfg.distributed:
-            train_loader.sampler.set_epoch(epoch)
-        if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
-            train_loader.dataset.epoch = epoch - 1
+        # # ! Only important for distributed gpu
+        # if cfg.distributed:
+        #     train_loader.sampler.set_epoch(epoch)
+        # if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
+        #     train_loader.dataset.epoch = epoch - 1
         
         train_loss, train_rmse, total_iter = \
             train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
@@ -674,6 +675,9 @@ if __name__ == "__main__":
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
     cfg.sync_bn = cfg.world_size > 1
+    
+    if args.distributed:
+        cfg.distributed = True
 
     # init log dir
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
