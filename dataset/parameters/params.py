@@ -85,7 +85,7 @@ RAW_PATH = os.path.join(_DATA_PATH, 'raw')
 GEOMETRY_PATH = os.path.join(_DATA_PATH, 'geometry')
 OUTLINES_PATH = os.path.join(_DATA_PATH, 'outlines')
 HBJSON_PATH = os.path.join(_DATA_PATH, 'models')
-BAG_FILE_PATH = os.path.join(_DATA_PATH, 'bag\\8-304-528-LoD12-3D.obj') # for single simulations
+BAG_FILE_PATH = os.path.join(_DATA_PATH, 'bag\\10-322-508-LoD12-3D.obj') # for single simulations
 
 # Simulation
 WEA = os.path.join(_DATA_PATH, 'wea\\NLD_Amsterdam.062400_IWEC.epw')
