@@ -150,6 +150,10 @@ class IRRADIANCE(Dataset):
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
         
+        print('----------')
+        print(filename)
+        print('----------')
+        
         if presample and not os.path.exists(filename):
             np.random.seed(0)
             self.data = []
@@ -206,7 +210,8 @@ class IRRADIANCE(Dataset):
         else:          
             data_path = os.path.join(
                 self.raw_root, self.data_list[data_idx] + '.npy')
-                       
+                
+            print(data_path)       
             cdata = np.load(data_path).astype(np.float32)
             
             # Remove the None values (points that should not be included)
