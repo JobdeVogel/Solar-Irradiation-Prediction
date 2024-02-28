@@ -590,7 +590,7 @@ def config_to_cfg(config):
 
 def sweep_run(config=None):
     # tell wandb to get started
-    with wandb.init(mode="disabled", project="IrradianceNet", config=config, allow_val_change=True):        
+    with wandb.init(mode="online", project="IrradianceNet", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
         
@@ -732,7 +732,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="disabled", project="IrradianceNet"):
+        with wandb.init(mode="online", project="IrradianceNet"):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
