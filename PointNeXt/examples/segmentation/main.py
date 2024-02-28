@@ -177,25 +177,25 @@ def main(gpu, cfg):
     max_images = min([5, cfg.batch_size])
     max_evaluation_images = 5
     
-    for idx in range(max_images):
-        if idx == 0:
-            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
-            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
-            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
-            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
-            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
+    # for idx in range(max_images):
+    #     if idx == 0:
+    #         image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
+    #         image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
+    #         image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
+    #         image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
+    #         image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
             
-            if cfg.wandb.use_wandb:
-                wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
+    #         if cfg.wandb.use_wandb:
+    #             wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
+    #             wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
+    #             wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
+    #             wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
+    #             wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
 
-        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
+    #     image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
         
-        if cfg.wandb.use_wandb:
-            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
+    #     if cfg.wandb.use_wandb:
+    #         wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
        
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
@@ -250,12 +250,12 @@ def main(gpu, cfg):
                      f'train loss {train_loss:.2f}')
                   
         if epoch % cfg.val_freq == 0:
-            wandb.log({'Evaluation Loss (mse)': eval_loss}, step=epoch)
-            wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse}, step=epoch)
+            wandb.log({'Evaluation Loss (mse)': eval_loss})
+            wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse})
         
         # writer.add_scalar('train_loss', train_loss, epoch)
         # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
-        wandb.log({'Learning Rate': lr}, step=epoch)
+        wandb.log({'Learning Rate': lr})
 
         # ! Update the optimizer with scheduler
         if cfg.sched_on_epoch:
