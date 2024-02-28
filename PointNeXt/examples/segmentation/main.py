@@ -177,25 +177,25 @@ def main(gpu, cfg):
     max_images = min([5, cfg.batch_size])
     max_evaluation_images = 5
     
-    # for idx in range(max_images):
-    #     if idx == 0:
-    #         image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
-    #         image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
-    #         image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
-    #         image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
-    #         image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
+    for idx in range(max_images):
+        if idx == 0:
+            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
+            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
+            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
+            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
+            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
             
-    #         if cfg.wandb.use_wandb:
-    #             wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
-    #             wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
-    #             wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
-    #             wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
-    #             wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
+            if cfg.wandb.use_wandb:
+                wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
 
-    #     image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
+        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
         
-    #     if cfg.wandb.use_wandb:
-    #         wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
+        if cfg.wandb.use_wandb:
+            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
        
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
@@ -212,6 +212,7 @@ def main(gpu, cfg):
         # ! Log the results from the epoch step
         is_best = False
         
+        logging.info(f"Started evalution epoch {epoch}")
         if epoch % cfg.val_freq == 0:
             eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, cfg, epoch=epoch, total_iter=total_iter)
             

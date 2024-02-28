@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: D:/Master Thesis Data/bag #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_random_refined #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
     test_area: 5
     voxel_size: 0.04 #For irradiance
   train:
@@ -79,7 +79,7 @@ use_voting: False
 # ---------------------------------------------------------------------------- #
 log_dir: 'IrradianceNet'
 save_freq: -1 # save epoch every xxx epoch114s, -1 only save last and best. 
-val_freq: 5
+val_freq: 1
 
 wandb:
   project: IrradianceNet
