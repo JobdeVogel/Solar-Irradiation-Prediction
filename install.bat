@@ -4,8 +4,8 @@ echo Please make sure you have installed AcceleRad from https://nljones.github.i
 echo ------------
 
 REM Define variables
-set ENV_NAME=irradiancenet312
-set PYTHON_VERSION=3.12
+set ENV_NAME=IrradianceNet
+set PYTHON_VERSION=3.10
 
 REM Create conda environment with specific Python version
 echo Creating Anaconda environment...
@@ -29,13 +29,17 @@ call conda activate %ENV_NAME%
 
 REM Install packages with conda
 echo Installing packages with conda...
-call conda install numpy=1.20 numba -y
-call conda install -y pytorch=1.10.1 torchvision cudatoolkit=11.3 -c pytorch -c nvidia
-call conda install conda-forge::cxx-compiler -y
+call conda install numpy numba -y
+call conda install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+@REM call conda install conda-forge::cxx-compiler -y
+
+REM Go back to package in case compiler install fails
+call cd %CD%
+call conda activate %ENV_NAME%
 
 REM Install packages with pip
 echo Installing packages with pip...
-call python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-1.10.1+cu113.html
+@REM call python -m pip install torch-scatter -f https://data.pyg.org/whl/torch-1.10.1+cu113.html
 
 REM To pointnext folder
 cd pointnext
