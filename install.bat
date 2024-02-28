@@ -4,7 +4,7 @@ echo Please make sure you have installed AcceleRad from https://nljones.github.i
 echo ------------
 
 REM Define variables
-set ENV_NAME=IrradianceNet
+set ENV_NAME=IrradianceNet310
 set PYTHON_VERSION=3.10
 
 REM Create conda environment with specific Python version
