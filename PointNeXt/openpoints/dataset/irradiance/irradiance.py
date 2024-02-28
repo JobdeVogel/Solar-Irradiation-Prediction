@@ -17,7 +17,6 @@ def traverse_root(root):
         for file in file_names:
             # Make sure you are not using the .pkl file in the processed folder
             if '.npy' in file:
-                print(file)
                 res.append(os.path.join(dir_path, file))
 
     return res
