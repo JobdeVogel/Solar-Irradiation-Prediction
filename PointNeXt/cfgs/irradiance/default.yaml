@@ -85,3 +85,5 @@ wandb:
   project: IrradianceNet
   sweep: False
   use_wandb: False
+
+test: False

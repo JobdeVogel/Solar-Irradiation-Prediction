@@ -724,8 +724,9 @@ if __name__ == "__main__":
     if cfg.wandb.use_wandb:
         wandb.login()
 
-    # test(cfg, "D:\\Master Thesis Data\\bag", blank=False)
-    # sys.exit()
+    if cfg.test:
+        test(cfg, cfg.common.data_root, blank=False)
+        sys.exit()
     
     cfg.mp = False
     if cfg.wandb.sweep:
