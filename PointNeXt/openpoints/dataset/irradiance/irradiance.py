@@ -15,7 +15,10 @@ def traverse_root(root):
     res = []
     for (dir_path, _, file_names) in os.walk(root):
         for file in file_names:
-            res.append(os.path.join(dir_path, file))
+            # Make sure you are not using the .pkl file in the processed folder
+            if '.npy' in file:
+                print(file)
+                res.append(os.path.join(dir_path, file))
 
     return res
 
@@ -150,10 +153,6 @@ class IRRADIANCE(Dataset):
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
         
-        print('----------')
-        print(filename)
-        print('----------')
-        
         if presample and not os.path.exists(filename):
             np.random.seed(0)
             self.data = []
@@ -210,8 +209,7 @@ class IRRADIANCE(Dataset):
         else:          
             data_path = os.path.join(
                 self.raw_root, self.data_list[data_idx] + '.npy')
-                
-            print(data_path)       
+                     
             cdata = np.load(data_path).astype(np.float32)
             
             # Remove the None values (points that should not be included)
