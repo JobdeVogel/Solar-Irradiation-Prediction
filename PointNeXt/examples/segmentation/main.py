@@ -725,7 +725,7 @@ if __name__ == "__main__":
         wandb.login()
 
     if cfg.test:
-        test(cfg, cfg.common.data_root, blank=False)
+        test(cfg, cfg.dataset.common.data_root, blank=False)
         sys.exit()
     
     cfg.mp = False
