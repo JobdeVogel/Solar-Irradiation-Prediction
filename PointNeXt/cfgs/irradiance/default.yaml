@@ -84,3 +84,4 @@ val_freq: 5
 wandb:
   project: IrradianceNet
   sweep: False
+  use_wandb: False
