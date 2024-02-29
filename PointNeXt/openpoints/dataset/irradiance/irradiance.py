@@ -100,6 +100,8 @@ class IRRADIANCE(Dataset):
         '''data_list = sorted(os.listdir(raw_root))'''
         data_list = traverse_root(raw_root)
         
+        data_list = data_list[:600]
+        
         # TODO: include
         split_ratio = 0.95
         
@@ -122,8 +124,6 @@ class IRRADIANCE(Dataset):
             self.data_list = [
                 item for item in data_list if 'Area_{}'.format(test_area) in item]
         '''
-        
-        data_list = data_list[:600]
         
         # Make sure the shuffling is similar for training and evaluation
         random.seed(1)
