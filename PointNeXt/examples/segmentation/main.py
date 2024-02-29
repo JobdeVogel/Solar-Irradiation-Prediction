@@ -51,7 +51,7 @@ def main(gpu, cfg):
     # else:
     #     writer = None
     set_random_seed(cfg.seed, deterministic=cfg.deterministic)
-    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.enabled = False
     
     # ! Commented
     #logging.info(cfg)
