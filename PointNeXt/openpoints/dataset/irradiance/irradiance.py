@@ -123,6 +123,8 @@ class IRRADIANCE(Dataset):
                 item for item in data_list if 'Area_{}'.format(test_area) in item]
         '''
         
+        data_list = data_list[:600]
+        
         # Make sure the shuffling is similar for training and evaluation
         random.seed(1)
         if self.shuffle:

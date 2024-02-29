@@ -235,7 +235,11 @@ def main(gpu, cfg):
                 image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation')
                 
                 if cfg.wandb.use_wandb:
-                    wandb.log({f"Evaluation Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+                    wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')})
+                    wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')})
+                    wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')})
+                    wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')})
+                    wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')})
 
             image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training')
             
@@ -446,25 +450,24 @@ def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None
 
 @torch.no_grad()
 def eval_image(model, sample, idx, name, path):
+    model.eval() # set model to eval mode
+    
     data = {}
     for key in sample.keys():
         data[key] = torch.clone(sample[key])
     
-    # Evaluate image
-    with torch.no_grad():
-        model.eval()
-        data['x'] = get_features_by_keys(data, cfg.feature_keys)
-        
-        if data['x'].shape[0] > 1:
-            data['x'] = data['x'][idx, :, :].unsqueeze(0)
-            data['pos'] = data['pos'][idx, :, :].unsqueeze(0)
-            data['normals'] = data['normals'][idx, :, :].unsqueeze(0)
-            data['y'] = data['y'][idx].unsqueeze(0)
-        
-        for key in data:
-            data[key] = data[key].cuda(non_blocking=True)
-        
-        logits = model(data)
+    data['x'] = get_features_by_keys(data, cfg.feature_keys)
+    
+    if data['x'].shape[0] > 1:
+        data['x'] = data['x'][idx, :, :].unsqueeze(0)
+        data['pos'] = data['pos'][idx, :, :].unsqueeze(0)
+        data['normals'] = data['normals'][idx, :, :].unsqueeze(0)
+        data['y'] = data['y'][idx].unsqueeze(0)
+    
+    for key in data:
+        data[key] = data[key].cuda(non_blocking=True)
+    
+    logits = model(data)
     
     values = logits.cpu().numpy()[0, 0, :]
     
@@ -676,7 +679,7 @@ if __name__ == "__main__":
 
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
-    #cfg.sync_bn = cfg.world_size > 1
+    cfg.sync_bn = cfg.world_size > 1
 
     # init log dir
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
