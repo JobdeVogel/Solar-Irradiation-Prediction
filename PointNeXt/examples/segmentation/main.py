@@ -177,6 +177,7 @@ def main(gpu, cfg):
     max_images = min([5, cfg.batch_size])
     max_evaluation_images = 5
     
+    '''
     for idx in range(max_images):
         if idx == 0:
             image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
@@ -196,7 +197,14 @@ def main(gpu, cfg):
         
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
-       
+    '''
+    if cfg.wandb.use_wandb:
+        wandb.log({'crit': criterion}, step=0)
+        wandb.log({'model': model}, step=0)
+        wandb.log({'optim': optimizer}, step=0)
+        wandb.log({'sched': scheduler}, step=0)
+        wandb.log({'batchsize': cfg.batch_size}, step=0)
+    
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         
