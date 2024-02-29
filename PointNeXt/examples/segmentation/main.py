@@ -204,6 +204,7 @@ def main(gpu, cfg):
         wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
         wandb.log({'sched': str(cfg.sched)}, step=0)
         wandb.log({'batchsize': cfg.batch_size}, step=0)
+        wandb.log({'voxel_max': cfg.dataset.train.voxel_max}, step=0)
     
     logging.info('Started training...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
@@ -559,7 +560,7 @@ def traverse_root(root):
 
     return res
 
-def test(cfg, root, blank=True):
+def test(cfg, root, blank=False):
     model_path = cfg.pretrained_path
     
     for data_path in traverse_root(root):
@@ -745,14 +746,14 @@ if __name__ == "__main__":
         wandb.login()
 
     if cfg.test:
-        test(cfg, cfg.dataset.common.data_root, blank=True)
+        test(cfg, cfg.dataset.common.data_root, blank=False)
         sys.exit()
     
     cfg.mp = False
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="IrradianceNet"):
+        with wandb.init(mode="online", project="IrradianceNet_random"):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
