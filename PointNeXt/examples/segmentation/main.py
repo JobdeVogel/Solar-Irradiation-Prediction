@@ -409,6 +409,8 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
 
 @torch.no_grad()
 def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1):
+    torch.backends.cudnn.enabled = False
+    
     model.eval()  # set model to eval mode
     
     loss_meter = AverageMeter()
@@ -446,6 +448,8 @@ def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None
             rmse = torch.sqrt(loss)
             rmse_meter.update(rmse.item())
 
+    torch.backends.cudnn.enabled = True
+    
     return loss_meter.avg, rmse_meter.avg
 
 @torch.no_grad()
