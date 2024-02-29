@@ -198,11 +198,12 @@ def main(gpu, cfg):
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
     '''
+    
     if cfg.wandb.use_wandb:
-        wandb.log({'crit': criterion}, step=0)
-        wandb.log({'model': model}, step=0)
-        wandb.log({'optim': optimizer}, step=0)
-        wandb.log({'sched': scheduler}, step=0)
+        wandb.log({'crit': str(cfg.criterion_args.NAME)}, step=0)
+        wandb.log({'model': str(cfg.cfg_basename)}, step=0)
+        wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
+        wandb.log({'sched': str(cfg.sched)}, step=0)
         wandb.log({'batchsize': cfg.batch_size}, step=0)
     
     logging.info('Started training...')
