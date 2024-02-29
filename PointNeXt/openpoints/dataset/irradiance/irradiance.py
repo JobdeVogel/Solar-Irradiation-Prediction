@@ -100,7 +100,7 @@ class IRRADIANCE(Dataset):
         '''data_list = sorted(os.listdir(raw_root))'''
         data_list = traverse_root(raw_root)
         
-        data_list = data_list[:600]
+        data_list = data_list
         
         # TODO: include
         split_ratio = 0.95
