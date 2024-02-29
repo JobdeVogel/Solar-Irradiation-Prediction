@@ -148,7 +148,7 @@ def main(gpu, cfg):
     else:
         scaler = None
 
-    best_val, best_epoch = 0., 0
+    best_val, best_epoch = float('inf'), 0
     
     test_array = iter(val_loader)
     
@@ -225,6 +225,7 @@ def main(gpu, cfg):
             eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, cfg, epoch=epoch, total_iter=total_iter)
             
             if eval_loss < best_val:
+                logging.info("Found new best model!")
                 is_best = True
                 best_val = eval_loss
         
@@ -280,7 +281,8 @@ def main(gpu, cfg):
         if cfg.rank == 0:
             save_checkpoint(cfg, model, epoch, optimizer, scheduler,
                             additioanl_dict={'best_val': best_val},
-                            is_best=is_best
+                            is_best=is_best,
+                            post_fix=f'ckpt_epoch_{epoch}'
                             )
             is_best = False
         
@@ -561,6 +563,7 @@ def test(cfg, root, blank=True):
     model_path = cfg.pretrained_path
     
     for data_path in traverse_root(root):
+        
         data, irradiance = evaluate_file(model_path, data_path, cfg)
 
         targets = ((data['y'] + 1) / 2) * 1000
@@ -742,7 +745,7 @@ if __name__ == "__main__":
         wandb.login()
 
     if cfg.test:
-        test(cfg, cfg.dataset.common.data_root, blank=False)
+        test(cfg, cfg.dataset.common.data_root, blank=True)
         sys.exit()
     
     cfg.mp = False
