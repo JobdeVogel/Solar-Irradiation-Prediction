@@ -177,7 +177,7 @@ def main(gpu, cfg):
     max_images = min([5, cfg.batch_size])
     max_evaluation_images = 5
     
-    '''
+
     for idx in range(max_images):
         if idx == 0:
             image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
@@ -197,7 +197,6 @@ def main(gpu, cfg):
         
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
-    '''
     
     if cfg.wandb.use_wandb:
         wandb.log({'crit': str(cfg.criterion_args.NAME)}, step=0)
@@ -284,6 +283,11 @@ def main(gpu, cfg):
                             is_best=is_best
                             )
             is_best = False
+        
+        if epoch == cfg.max_epoch:
+            logging.info('Early finish!')
+            wandb.finish(exit_code=True)
+            sys.exit()
         
     # do not save file to wandb to save wandb space
     # if writer is not None:

@@ -98,7 +98,7 @@ class IRRADIANCE(Dataset):
         
         self.raw_root = raw_root
         '''data_list = sorted(os.listdir(raw_root))'''
-        data_list = traverse_root(raw_root)[:600]
+        data_list = traverse_root(raw_root)
         
         data_list = data_list
         
