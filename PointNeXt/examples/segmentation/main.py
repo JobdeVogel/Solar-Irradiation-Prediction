@@ -753,7 +753,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="IrradianceNet_random"):
+        with wandb.init(mode="online", project="IrradianceNet_regular"):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
