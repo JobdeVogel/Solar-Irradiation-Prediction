@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_random_refined #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_regular_refined #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
     test_area: 5
     voxel_size: 0.04 #For irradiance
   train:
@@ -10,10 +10,16 @@ dataset:
     voxel_max: 10000
     loop: 1 # here, the training has been looped 30 times. therefore, the training epochs do not need much.
     presample: False
+    compute_hist: True
+    bins: 5
+    show: False
   val:
     split: val
     voxel_max: null
-    presample: True 
+    presample: True
+    compute_hist: True
+    bins: 5
+    show: False
   test:
     split: test
     voxel_max: null
@@ -51,7 +57,7 @@ cls_weighed_loss: False
 
 criterion_args:
   NAME: MSELoss # ! CrossEntropy
-  # label_smoothing: 0.2 # ! Only used in specific criterions
+  
 
 # ! Added
 regression: True

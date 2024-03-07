@@ -27,7 +27,7 @@ from openpoints.models import build_model_from_cfg
 import warnings
 import shutil
 
-from visualize import from_sample, plot
+from visualize import from_sample, plot, binned_cm
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -85,13 +85,42 @@ def main(gpu, cfg):
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
 
     # build dataset
-    val_loader = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
+    val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                            cfg.dataset,
                                            cfg.dataloader,
                                            datatransforms_cfg=cfg.datatransforms,
                                            split='val',
                                            distributed=False
                                            )
+    
+    # import matplotlib
+    # import matplotlib.pyplot as plt
+    # matplotlib.use('TkAgg')
+    # tensors = []
+    
+    # data = iter(val_loader)
+    # for _ in range(len(data)):
+    #     tensors.append(next(data)['y'].squeeze(0))
+    
+    # tensor = torch.cat(tensors)
+    # tensor = ((tensor + 1) / 2) * 1000
+    
+    # bins = 8
+    # # Creating histogram
+    # histogram = torch.histc(tensor, bins=bins)
+    
+    # # Calculate bin edges
+    # bin_edges = torch.linspace(tensor.min(), tensor.max(), bins+1)
+    # names = [str(int(bin_edges[i].item())) + '-' + str(int(bin_edges[i+1].item())) for i in range(len(bin_edges[:-1]))]
+
+    # # Plotting the histogram
+    # plt.bar(names, histogram)
+    # plt.xlabel('Solar Irradiance [kWh/m2]')
+    # plt.ylabel('Point frequency')
+    # plt.title('Solar irradiance distribution over points')
+    
+    # plt.show()
+    # sys.exit()
     
     # ! commented
     # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
@@ -120,16 +149,16 @@ def main(gpu, cfg):
         for p in model_module.encoder.blocks.parameters():
             p.requires_grad = False
     
-    train_loader = build_dataloader_from_cfg(cfg.batch_size,
+    train_loader, train_histogram = build_dataloader_from_cfg(cfg.batch_size,
                                              cfg.dataset,
                                              cfg.dataloader,
                                              datatransforms_cfg=cfg.datatransforms,
                                              split='train',
                                              distributed=False,
                                              )
-
+    
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
-
+    
     if not cfg.regression:
         cfg.criterion_args.weight = None
         if cfg.get('cls_weighed_loss', False):
@@ -138,10 +167,17 @@ def main(gpu, cfg):
             else:
                 logging.info('`num_per_class` attribute is not founded in dataset')
 
+    if cfg.criterion_args.NAME.lower() == 'reductionloss':
+        cfg.criterion_args.histogram = train_histogram
+        
+        if train_histogram == None:
+            print("Reduction loss requires a valid train histogram, which is only available when dataset preprocessing is enabled.")
+            raise RuntimeError
+        
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
-
-    mse_criterion = torch.nn.MSELoss().cuda()
     
+    mse_criterion = torch.nn.MSELoss().cuda()
+    sys.exit()
     # ===> start training
     if cfg.use_amp:
         scaler = torch.cuda.amp.GradScaler()
@@ -177,7 +213,6 @@ def main(gpu, cfg):
     max_images = min([5, cfg.batch_size])
     max_evaluation_images = 5
     
-
     for idx in range(max_images):
         if idx == 0:
             image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
@@ -223,7 +258,7 @@ def main(gpu, cfg):
         
         logging.info(f"Started evalution epoch {epoch}")
         if epoch % cfg.val_freq == 0:
-            eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, cfg, epoch=epoch, total_iter=total_iter)
+            eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, mse_criterion, cfg, epoch=epoch, total_iter=total_iter, image_dir=image_dir)
             
             if eval_loss < best_val:
                 logging.info("Found new best model!")
@@ -290,7 +325,7 @@ def main(gpu, cfg):
         if epoch == cfg.max_epoch:
             logging.info('Early finish!')
             wandb.finish(exit_code=True)
-            sys.exit()
+            return
         
     # do not save file to wandb to save wandb space
     # if writer is not None:
@@ -314,6 +349,7 @@ def main(gpu, cfg):
 def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg):
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
+     
     model.train()  # set model to training mode
     pbar = tqdm(enumerate(train_loader), total=train_loader.__len__())
 
@@ -323,10 +359,11 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
     
     num_iter = 0
     loss = torch.Tensor([0.0])
+    mse_loss = torch.Tensor([0.0])
     
     for idx, data in pbar:
         try:
-            pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')}, Loss: {round(loss.item(), 4)}")
+            pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')}, Loss: {round(loss.item(), 4)}, MSE: {round(mse_loss.item(), 4)}")
             pbar.refresh()
             time.sleep(0.01)
         except:
@@ -341,7 +378,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
         num_iter += 1
         
         target = data['y'].squeeze(-1)
-        
+
         """ debug
         from openpoints.dataset import vis_points
         vis_points(data['pos'].cpu().numpy()[0], labels=data['y'].cpu().numpy()[0])
@@ -372,9 +409,13 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             mse_loss is used for performance comparison
             '''
             
-            loss = criterion(logits, target) if 'mask' not in cfg.criterion_args.NAME.lower() \
-                else criterion(logits, target, data['mask'])
-                
+            if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
+                loss = criterion(logits, target, bins=data['bins'])
+            elif 'mask' in cfg.criterion_args.NAME.lower():
+                loss = criterion(logits, target, data['mask'])
+            else:
+                loss = criterion(logits, target)
+                    
             mse_loss = mse_criterion(logits, target)
             
             wandb.log({'train_loss': loss})
@@ -382,7 +423,8 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             
             if cfg.regression:
                 rmse_scaled = torch.sqrt(mse_loss)
-                rmse = rmse_scaled * (1000 - 0) / 2
+                
+                rmse = ((rmse_scaled + 1) / 2) * 1000
                 rmse_meter.update(rmse.item())
                 wandb.log({'RMSE per train step [kWh/m2]': rmse})
                 '''
@@ -420,16 +462,20 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             # print(f"Memory after backward is {mem}")
         
         loss_meter.update(loss.item())      
-        
+    
     return loss_meter.avg, rmse_meter.avg, total_iter
 
+def cm(targets, predictions):
+    pass
+
 @torch.no_grad()
-def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1):   
+def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1, image_dir=''):   
     model.eval()  # set model to eval mode
     
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
-    logits = []
+    all_targets = torch.tensor([]).cuda(non_blocking=True)
+    all_logits = torch.tensor([]).cuda(non_blocking=True)
     
     pbar = tqdm(enumerate(val_loader), total=val_loader.__len__(), desc='Val')
     for idx, data in pbar:
@@ -449,18 +495,31 @@ def validate(model, val_loader, criterion, cfg, num_votes=1, data_transform=None
         
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         data['epoch'] = epoch
-        data['iter'] = total_iter 
+        data['iter'] = total_iter
         
         logits = model(data)
         
-        loss = criterion(logits, target) if 'mask' not in cfg.criterion_args.NAME.lower() \
-                else criterion(logits, target, data['mask'])
-            
+        if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
+            loss = criterion(logits, target, bins=data['bins'])
+        elif 'mask' in cfg.criterion_args.NAME.lower():
+            loss = criterion(logits, target, data['mask'])
+        else:
+            loss = criterion(logits, target)
+        
         loss_meter.update(loss.item())
         
+        mse_loss = mse_criterion(logits, target)
+        
         if cfg.regression:
-            rmse = torch.sqrt(loss)
+            rmse = torch.sqrt(mse_loss)
             rmse_meter.update(rmse.item())
+    
+        all_targets = torch.cat((all_targets, target.view(-1) * ((target.view(-1) + 1) / 2) * 1000))
+        all_logits = torch.cat((all_logits, logits.view(-1) * ((logits.view(-1) + 1) / 2) * 1000))
+    
+    name = f'Confusion matrix validation epoch {epoch}'
+    image_dir += '\\cm'
+    binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
     
     return loss_meter.avg, rmse_meter.avg
 
@@ -562,19 +621,21 @@ def traverse_root(root):
 
 def test(cfg, root, blank=False):
     model_path = cfg.pretrained_path
-    
+
     for data_path in traverse_root(root):
         
         data, irradiance = evaluate_file(model_path, data_path, cfg)
 
         targets = ((data['y'] + 1) / 2) * 1000
+
+        binned_cm(torch.tensor(targets), torch.tensor(irradiance), 0, 1000, 10, show=True)
         
         if not blank:
             targets = targets.tolist()
         else:
             targets = [0] * len(targets)
         
-        plot('0', 
+        plot('Example sample for irradiance prediction', 
             data['pos'][0, :, :], 
             vectors=[],
             targets = targets,
@@ -599,14 +660,31 @@ def config_to_cfg(config):
         if key == 'cfg':
             pass
         elif key == 'crit':
-            cfg.criterion_args.NAME = config[key]
+            cfg.criterion_args.NAME = config[key]   
+            
+            if config[key].lower() == 'weightedmse':
+                cfg.criterion_args.bins = 5
+                cfg.criterion_args.min = -1
+                cfg.criterion_args.max = 1
+                cfg.criterion_args.weights = [1,1,1,1,0.25]
+            
+            if config[key].lower() == 'deltaloss':
+                cfg.criterion_args.delta = 0.6
+                cfg.criterion_args.power = 2
+            
+            if config[key].lower() == 'reductionloss':
+                cfg.criterion_args.bins = 5
+                cfg.criterion_args.min = -1
+                cfg.criterion_args.max = 1
+                cfg.criterion_args.reduction = 1
+            
         elif key == 'optim':
             cfg.optimizer.NAME = config[key]
         elif key == 'voxel_max':
             cfg.dataset.train.voxel_max = config[key]
         else:
             cfg[key] = config[key]
-    
+        
     return cfg
 
 def sweep_run(config=None):
@@ -639,34 +717,15 @@ def sweep(cfg):
         }
 
     sweep_config['metric'] = metric
-    
-    early_terminate = {
-        'type': 'hyperband',
-        'min_iter': 10
-    }
-    
-    sweep_config['early_terminate'] = early_terminate
-    
-    # parameters_dict = {
-    #     'batch_size': {
-    #         'values': [4, 8, 16]
-    #         },
-    #     'sched': {
-    #         'values': ['cosine', 'step', 'tanh', 'plateau']
-    #         },
-    #     'optim': {
-    #         'values': ['adamw', 'adamp', 'nadam', 'adam', 'sgdp']
-    #         },
-    #     'crit': {
-    #         'values': ['MSELoss', 'HuberLoss', 'L1Loss']
-    #     }
-    # }
-    
+        
     parameters_dict = {
         'voxel_max': {
-            'values': [10000, 15000, 20000, 25000]
-            }
-        }
+            'values': [10000, 20000]
+            },
+        'crit': {
+            'values': ['WeightedMSE', 'DeltaLoss', 'ReductionLoss', 'MSELoss']
+        }    
+    }
     
     # ['plateau_lr', 'cosine_lr', 'tanh_lr', 'poly_lr']
     parameters_dict.update({
@@ -684,12 +743,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser('Scene segmentation training/testing')
     parser.add_argument('--cfg', type=str, required=False, default='cfgs/irradiance/irradiancenet-l.yaml', help='config file')
     parser.add_argument('--profile', action='store_true', default=False, help='set to True to profile speed')
-    args, opts = parser.parse_known_args()
+    parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
+    args, opts = parser.parse_known_args()       
     
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
     cfg.update(opts)  # overwrite the default arguments in yml
+
+    if args.sweep:
+        cfg.wandb.sweep = True
 
     if cfg.seed is None:
         cfg.seed = np.random.randint(1, 10000)
@@ -746,14 +809,14 @@ if __name__ == "__main__":
         wandb.login()
 
     if cfg.test:
-        test(cfg, cfg.dataset.common.data_root, blank=False)
+        test(cfg, cfg.dataset.common.data_root, blank=True)
         sys.exit()
     
     cfg.mp = False
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="IrradianceNet_regular"):
+        with wandb.init(mode="online", project="IrradianceNet_loss_sweep"):
             # multi processing
             if cfg.mp:
                 port = find_free_port()

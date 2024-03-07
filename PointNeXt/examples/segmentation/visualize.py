@@ -1,10 +1,15 @@
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, LogNorm
 import numpy as np
 from matplotlib.cm import ScalarMappable
 from matplotlib.gridspec import GridSpec
+from sklearn.metrics import confusion_matrix
+import seaborn as sn
+import pandas as pd
+import numpy as np
+import torch
 import os
 import sys
 
@@ -132,3 +137,51 @@ def from_sample(sample, idx, values, show, save, name, path):
         name=name,
         path = path
         )
+
+def binned_cm(target, 
+            prediction, 
+            min, 
+            max, 
+            bins, 
+            name='',
+            path = '',
+            show=False, 
+            save=True
+            ):
+    bin_edges = torch.linspace(min, max, steps=bins+1)
+
+    names = [str(int(bin_edges[i].item())) + '-' + str(int(bin_edges[i+1].item())) for i in range(len(bin_edges[:-1]))]
+
+    # Index calculation target
+    diff = target.unsqueeze(1) - bin_edges.unsqueeze(0)
+    cumsum = torch.cumsum(diff >= 0, dim=1)
+    target_idxs = torch.argmax(cumsum, dim=1)
+
+    # Index calculation data
+    diff = prediction.unsqueeze(1) - bin_edges.unsqueeze(0)
+    cumsum = torch.cumsum(diff >= 0, dim=1)
+    prediction_idxs = torch.argmax(cumsum, dim=1)
+
+    cf_matrix = confusion_matrix(target_idxs, prediction_idxs, labels=range(0, bins))
+    
+    df_cm = pd.DataFrame(cf_matrix, columns=np.unique(names), index = np.unique(names))
+
+    df_cm.index.name = 'Actual Irradiance [kWh/m2]'
+    df_cm.columns.name = 'Predicted Irradiance [kWh/m2]'
+
+    f, ax = plt.subplots(figsize=(18, 18))
+
+    cmap = sn.color_palette("flare", as_cmap=True)
+    sn.heatmap(df_cm, cbar=True, annot=True, cmap=cmap, square=True, fmt='.0f',
+                annot_kws={'size': 10}, norm=LogNorm(), vmin=None, vmax=None, linewidths=1, linecolor='black')
+    plt.title(name)
+    
+    if show:
+        matplotlib.use('TkAgg')
+        plt.show()
+        matplotlib.use('Agg')
+    
+    if save:
+       save_img(plt, name, path)
+    
+    return cf_matrix, bin_edges, names

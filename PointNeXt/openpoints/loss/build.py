@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss, BCEWithLogitsLoss, MSELoss, L1Loss, HuberLoss
 from openpoints.utils import registry
+import matplotlib.pyplot as plt
+import time
 
 LOSS = registry.Registry('loss')
 LOSS.register_module(name='CrossEntropy', module=CrossEntropyLoss)
@@ -12,6 +14,163 @@ LOSS.register_module(name='BCEWithLogitsLoss', module=BCEWithLogitsLoss)
 LOSS.register_module(name='MSELoss', module=MSELoss)
 LOSS.register_module(name='L1Loss', module=L1Loss)
 LOSS.register_module(name='HuberLoss', module=HuberLoss)
+
+@LOSS.register_module()
+class ReductionLoss(torch.nn.Module):
+    def __init__(self,
+                 histogram=None,
+                 bins=5,
+                 min=0,
+                 max=1,
+                 reduction=1,
+                 _show=False
+                 ):
+        super(ReductionLoss, self).__init__()
+        self.bins = bins
+        self.reduction = reduction
+        self._show = _show
+        """
+        ReductionLoss is based on MSE. However, before computing the MSE, predictions
+        and targets are converted to classed based on the number of bins. The bins with
+        the largest sizes are reduced to equalize the sizes of all bins. The number of
+        reduced bins is based in the reduction value.        
+        """
+        
+        # Compute a histogram of reference target values
+        self.histogram = histogram
+        
+        if self._show:
+            # Plotting the histogram
+            plt.bar(torch.arange(bins), self.histogram)
+            plt.xlabel('Bins')
+            plt.ylabel('Frequency')
+            plt.title('Histogram of Random Data')
+            plt.show()
+        
+        # Sort the histogram based on the sizes
+        sorted_bins = torch.argsort(self.histogram)
+        
+        # Extract the bins that should be reduced
+        self.reduction_bins = sorted_bins[-reduction:].cuda()
+        
+        print(f'Reduction criterion will reduce bin class(es) {self.reduction_bins.tolist()} before computing MSE.')
+        
+        self.bin_edges = torch.linspace(min, max, steps=bins+1)
+    
+    def forward(self, pred, target, bins=None):
+        if len(pred.shape) > 1:
+            pred = pred.view(-1)
+            target = target.view(-1)
+            
+        if bins == None:
+            # Index calculation target
+            diff = target.unsqueeze(1) - self.bin_edges.unsqueeze(0)
+            cumsum = torch.cumsum(diff >= 0, dim=1)
+            target_idxs = torch.argmax(cumsum, dim=1)
+        else:
+            # ? Is it okay to squeeze the batches? This way random points will be picked from all samples before computing mse
+            
+            
+            target_idxs = bins.view(-1)
+        
+        sample_hist = torch.histc(target, bins=self.bins).long()
+        
+        # Sort the histogram based on the sizes
+        sorted_bins = torch.argsort(sample_hist)
+        
+        # Compute the maximum bin size
+        max_bin = sorted_bins[-self.reduction - 1]
+        max_bin_size = self.histogram[max_bin]
+        
+        # Extract the bins' predictions and classes that should not be reduced
+        mask = ~torch.isin(target_idxs, self.reduction_bins)
+        temp_pred = pred[mask]
+        temp_target = target[mask]
+        
+        # Iterate over the bins that will be reduced
+        for bin in self.reduction_bins:
+            # Get the indices of values that belong to this target bin
+            bin_mask = target_idxs == bin
+            bin_predictions = pred[bin_mask]
+            bin_targets = target[bin_mask]
+            
+            # Randomly generate indices based on the maximum bin size            
+            indices = torch.randperm(len(bin_predictions))[:max_bin_size]
+            
+            # Extract the bin predictions and targets based on the indices
+            bin_predictions = bin_predictions[indices]
+            bin_targets = bin_targets[indices]
+            
+            # Concatenate with the values from bins that were not reduced
+            temp_pred = torch.cat((temp_pred, bin_predictions))
+            temp_target = torch.cat((temp_target, bin_targets))
+        
+        # Compute the mse
+        mse = ((temp_target - temp_pred) ** 2).mean()
+        
+        return mse
+
+@LOSS.register_module()     
+class DeltaLoss(torch.nn.Module):
+    def __init__(self,
+                 delta=0.6,
+                 power=2,
+                 ):
+        super(DeltaLoss, self).__init__()
+        self.delta = delta
+        self.power = power
+        """
+        DeltaLoss computes the l1 loss for all point for which the target value
+        is higher or equal to a delta value. For points with target values lower
+        than delta, the mse is computed. Finally the losses are averaged.
+        """
+
+    def forward(self, pred, target):
+        l1_loss = torch.abs(target - pred) * (target >= self.delta).float()
+        
+        mse_loss = ((target - pred) ** self.power) * (target < self.delta).float()
+        
+        return torch.cat((l1_loss, mse_loss)).mean()
+        
+@LOSS.register_module()
+class WeightedMSE(torch.nn.Module):
+    def __init__(self, 
+                 bins=5,
+                 min=0,
+                 max=1,
+                 weights=[1,1,1,1,1],
+                 mode='mean'
+                 ):
+        super(WeightedMSE, self).__init__()
+        self.bins = 5
+        self.bin_edges = torch.linspace(min, max, steps=bins+1).cuda()
+        self.classes = torch.tensor(range(0, bins)).cuda()
+        self.weights = torch.tensor(weights).cuda()
+        self.mode = mode
+        """
+        Compute the weighted MSE loss.
+        """
+    
+    def forward(self, pred, target, bins=None):
+        if len(pred.shape) > 1:
+            pred = pred.view(-1)
+            target = target.view(-1)
+    
+        if bins == None:
+            # Index calculation target
+            diff = target.unsqueeze(1) - self.bin_edges.unsqueeze(0)
+            cumsum = torch.cumsum(diff >= 0, dim=1)
+            target_idxs = torch.argmax(cumsum, dim=1)
+        else:
+            target_idxs = bins.view(-1)
+        
+        # Get the weight for each target value
+        weights = self.weights[target_idxs]
+        
+        if self.mode == 'sum':
+            return (weights * (pred - target) ** 2).sum() / weights.sum()
+        elif self.mode == 'mean':
+            return (weights * (pred - target) ** 2).mean()        
 
 @LOSS.register_module()
 class SmoothCrossEntropy(torch.nn.Module):

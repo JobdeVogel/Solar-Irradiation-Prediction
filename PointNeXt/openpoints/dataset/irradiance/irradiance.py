@@ -10,6 +10,8 @@ from torch.utils.data import Dataset
 from ..data_util import crop_pc, voxelize
 from ..build import DATASETS
 import sys
+import matplotlib.pyplot as plt
+import matplotlib
 
 def traverse_root(root):
     res = []
@@ -79,9 +81,12 @@ class IRRADIANCE(Dataset):
                  split: str = 'train',
                  transform=None,
                  loop: int = 1,
-                 presample: bool = False,
+                 presample: bool = True,
                  variable: bool = False,
-                 shuffle: bool = True
+                 shuffle: bool = True,
+                 bins=20,
+                 compute_hist=False,
+                 show=False
                  ):
 
         super().__init__()
@@ -90,6 +95,10 @@ class IRRADIANCE(Dataset):
         self.presample = presample
         self.variable = variable
         self.shuffle = shuffle
+        self.bins=bins
+        self.hist=None
+        self.compute_hist=compute_hist
+        self.show_hist=show
         
         #data_root = 'D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull'
         
@@ -154,9 +163,12 @@ class IRRADIANCE(Dataset):
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
         
+        self.bin_edges = torch.linspace(0, 1000, steps=self.bins+1).unsqueeze(0)
+        
         if presample and not os.path.exists(filename):
             np.random.seed(0)
             self.data = []
+        
             for item in tqdm(self.data_list, desc=f'Loading irradiance dataset {split} split'):
                 data_path = os.path.join(raw_root, item + '.npy')
                 cdata = np.load(data_path).astype(np.float32)
@@ -171,6 +183,7 @@ class IRRADIANCE(Dataset):
                 '''cdata[:, :3] -= np.min(cdata[:, :3], 0)'''
                 if voxel_size:
                     coord, feat, label = cdata[:,0:3], cdata[:, 3:-1], cdata[:, -1]
+                    
                     uniq_idx = voxelize(coord, voxel_size)
 
                     label = np.expand_dims(label, 1)
@@ -178,26 +191,84 @@ class IRRADIANCE(Dataset):
                     coord, feat, label = coord[uniq_idx], feat[uniq_idx], label[uniq_idx]
                     cdata = np.hstack((coord, feat, label))
                 
+                labels = cdata[:, -1]
+                self.compute_bins(torch.tensor(labels))
+            
+                cdata = np.hstack((cdata, self.bin_idxs))
+                
                 self.data.append(cdata)
-
+                
             npoints = np.array([len(data) for data in self.data])
             logging.info('split: %s, median npoints %.1f, avg num points %.1f, std %.1f' % (
                 self.split, np.median(npoints), np.average(npoints), np.std(npoints)))
             os.makedirs(processed_root, exist_ok=True)
             
             with open(filename, 'wb') as f:
+                logging.info(f"Saving file {filename}...")
                 pickle.dump(self.data, f)
                 print(f"{filename} saved successfully")
+            
         elif presample:
+            logging.info(f"Loading file {filename}...")
             with open(filename, 'rb') as f:
                 self.data = pickle.load(f)
                 print(f"{filename} load successfully")
         
+        if presample:
+            logging.info("Generating histogram...")
+            if self.compute_hist:   
+                labels = np.concatenate([np.split(sample, [3, 6, 7], axis=1)[2] for sample in self.data])
+
+                if self.hist == None:
+                    self.hist = torch.histc(torch.tensor(labels), bins=self.bins).long()
+                else:
+                    self.hist += torch.histc(torch.tensor(labels), bins=self.bins).long()
+
+                print(f"Histogram: {self.hist.tolist()}")
+            
+                if self.show_hist:
+                    edges = self.bin_edges.view(-1)
+                    names = [str(int(edges[i].item())) + '-' + str(int(edges[i+1].item())) for i in range(len(edges[:-1]))]
+                    matplotlib.use('TkAgg')
+                    
+                    # Plotting the histogram
+                    plt.bar(names, self.hist)
+                    plt.xlabel('Irradiance [kWh/m2]')
+                    plt.ylabel('Frequency of irradiance bin')
+                    plt.title('Histogram of Irradiance Data')
+                    plt.show()
+                    
+                    matplotlib.use('Agg')
+        else:
+            for sample in self.data_list:
+                data_path = os.path.join(
+                    self.raw_root, sample + '.npy')
+                
+                cdata = np.load(data_path).astype(np.float32)
+                
+                # Remove the None values (points that should not be included)
+                nan_mask = np.isnan(cdata).any(axis=1)
+                cdata = cdata[~nan_mask]
+                
+                labels = cdata[:, -1]
+                
+                if self.hist == None:
+                    self.hist = torch.histc(torch.tensor(labels), bins=self.bins).long()
+                else:
+                    self.hist += torch.histc(torch.tensor(labels), bins=self.bins).long()
+
         self.data_idx = np.arange(len(self.data_list))
         assert len(self.data_idx) > 0
         
         # ! commented
         # logging.info(f"\nTotally {len(self.data_idx)} samples in {split} set")
+
+    def compute_bins(self, values):
+        diff = values.unsqueeze(1) - self.bin_edges
+        cumsum = torch.cumsum(diff >= 0, dim=1)
+        bin_idxs = torch.argmax(cumsum, dim=1)
+        
+        self.bin_idxs = np.expand_dims(bin_idxs.numpy(), 1)
 
     def __getitem__(self, idx):
         data_idx = self.data_idx[idx % len(self.data_idx)]
@@ -206,7 +277,14 @@ class IRRADIANCE(Dataset):
         # else there is self.data
         
         if self.presample:
-            coord, feat, label = np.split(self.data[data_idx], [3, 6], axis=1)          
+            coord, feat, label, bins = np.split(self.data[data_idx], [3, 6, 7], axis=1)  
+            feat = np.hstack((feat, bins))
+            
+            coord, feat, label = crop_pc(
+                coord, feat, label, self.split, self.voxel_size, self.voxel_max,
+                downsample=not self.presample, variable=self.variable, shuffle=self.shuffle)
+            
+            feat, bins = np.split(feat, [3], axis=1)    
         else:          
             data_path = os.path.join(
                 self.raw_root, self.data_list[data_idx] + '.npy')
@@ -216,14 +294,24 @@ class IRRADIANCE(Dataset):
             # Remove the None values (points that should not be included)
             nan_mask = np.isnan(cdata).any(axis=1)
             cdata = cdata[~nan_mask]
-                        
+            
+            labels = cdata[:, -1]
+            self.compute_bins(torch.tensor(labels))
+                
+            cdata = np.hstack((cdata, self.bin_idxs))
+            
             '''cdata[:, :3] -= np.min(cdata[:, :3], 0)'''
-            coord, feat, label = cdata[:,0:3], cdata[:, 3:-1], cdata[:, -1]          
+            coord, feat, label, bins = np.split(cdata, [3, 6, 7], axis=1)         
+            feat = np.hstack((feat, bins))
+            
+            # TODO: Upsample or downsample here
             
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
                 downsample=not self.presample, variable=self.variable, shuffle=self.shuffle)
-                        
+            
+            feat, bins = np.split(feat, [3], axis=1)    
+                
             '''# TODO: do we need to -np.min in cropped data?'''
 
         '''label = label.squeeze(-1).astype(np.long)'''
@@ -259,6 +347,8 @@ class IRRADIANCE(Dataset):
 
         if 'normals' not in data.keys():
             data['normals'] =  torch.from_numpy(feat.astype(np.float32))
+        
+        data['bins'] =  torch.from_numpy(np.squeeze(bins)).long()
         
         # ! Consider adding height
         
