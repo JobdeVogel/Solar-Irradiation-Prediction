@@ -9,10 +9,11 @@ dataset:
     split: train
     voxel_max: 10000
     loop: 1 # here, the training has been looped 30 times. therefore, the training epochs do not need much.
-    presample: False
+    presample: True
     compute_hist: True
     bins: 5
     show: False
+    _overwrite_dset_size: 0
   val:
     split: val
     voxel_max: null
@@ -20,6 +21,7 @@ dataset:
     compute_hist: True
     bins: 5
     show: False
+    _overwrite_dset_size: 0
   test:
     split: test
     voxel_max: null
