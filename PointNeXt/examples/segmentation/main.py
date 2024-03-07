@@ -177,7 +177,7 @@ def main(gpu, cfg):
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
     
     mse_criterion = torch.nn.MSELoss().cuda()
-    sys.exit()
+
     # ===> start training
     if cfg.use_amp:
         scaler = torch.cuda.amp.GradScaler()
@@ -518,7 +518,11 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         all_logits = torch.cat((all_logits, logits.view(-1) * ((logits.view(-1) + 1) / 2) * 1000))
     
     name = f'Confusion matrix validation epoch {epoch}'
-    image_dir += '\\cm'
+    image_dir += 'cm'
+    
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+    
     binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
     
     return loss_meter.avg, rmse_meter.avg

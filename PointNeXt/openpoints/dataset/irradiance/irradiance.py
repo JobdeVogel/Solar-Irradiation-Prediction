@@ -86,7 +86,8 @@ class IRRADIANCE(Dataset):
                  shuffle: bool = True,
                  bins=20,
                  compute_hist=False,
-                 show=False
+                 show=False,
+                 _overwrite_dset_size=0
                  ):
 
         super().__init__()
@@ -99,6 +100,7 @@ class IRRADIANCE(Dataset):
         self.hist=None
         self.compute_hist=compute_hist
         self.show_hist=show
+        self._overwrite_dset_size=_overwrite_dset_size
         
         #data_root = 'D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull'
         
@@ -109,7 +111,8 @@ class IRRADIANCE(Dataset):
         '''data_list = sorted(os.listdir(raw_root))'''
         data_list = traverse_root(raw_root)
         
-        data_list = data_list
+        if self._overwrite_dset_size > 0:
+            data_list = data_list[:_overwrite_dset_size]
         
         # TODO: include
         split_ratio = 0.95
@@ -216,7 +219,10 @@ class IRRADIANCE(Dataset):
         
         if presample:
             logging.info("Generating histogram...")
-            if self.compute_hist:   
+            if self.compute_hist:
+                if _overwrite_dset_size > 0:
+                    self.data = self.data[:_overwrite_dset_size]
+                   
                 labels = np.concatenate([np.split(sample, [3, 6, 7], axis=1)[2] for sample in self.data])
 
                 if self.hist == None:

@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import os
 import sys
+import logging
 
 import numpy as np
 
@@ -182,6 +183,7 @@ def binned_cm(target,
         matplotlib.use('Agg')
     
     if save:
-       save_img(plt, name, path)
+        logging.info(f"Saving confusion matrix in {path}")
+        save_img(plt, name, path)
     
     return cf_matrix, bin_edges, names
