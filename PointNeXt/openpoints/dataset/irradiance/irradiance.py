@@ -173,33 +173,37 @@ class IRRADIANCE(Dataset):
             self.data = []
         
             for item in tqdm(self.data_list, desc=f'Loading irradiance dataset {split} split'):
-                data_path = os.path.join(raw_root, item + '.npy')
-                cdata = np.load(data_path).astype(np.float32)
-                
-                '''
-                Sample is extracted, most likely needs to be preprocessed here
-                '''
-                # Remove the None values (points that should not be included)
-                nan_mask = np.isnan(cdata).any(axis=1)
-                cdata = cdata[~nan_mask]
-                
-                '''cdata[:, :3] -= np.min(cdata[:, :3], 0)'''
-                if voxel_size:
-                    coord, feat, label = cdata[:,0:3], cdata[:, 3:-1], cdata[:, -1]
-                    
-                    uniq_idx = voxelize(coord, voxel_size)
+                try:
+                    data_path = os.path.join(raw_root, item + '.npy')
 
-                    label = np.expand_dims(label, 1)
+                    cdata = np.load(data_path).astype(np.float32)
 
-                    coord, feat, label = coord[uniq_idx], feat[uniq_idx], label[uniq_idx]
-                    cdata = np.hstack((coord, feat, label))
-                
-                labels = cdata[:, -1]
-                self.compute_bins(torch.tensor(labels))
-            
-                cdata = np.hstack((cdata, self.bin_idxs))
-                
-                self.data.append(cdata)
+                    '''
+                    Sample is extracted, most likely needs to be preprocessed here
+                    '''
+                    # Remove the None values (points that should not be included)
+                    nan_mask = np.isnan(cdata).any(axis=1)
+                    cdata = cdata[~nan_mask]
+
+                    '''cdata[:, :3] -= np.min(cdata[:, :3], 0)'''
+                    if voxel_size:
+                        coord, feat, label = cdata[:,0:3], cdata[:, 3:-1], cdata[:, -1]
+
+                        uniq_idx = voxelize(coord, voxel_size)
+
+                        label = np.expand_dims(label, 1)
+
+                        coord, feat, label = coord[uniq_idx], feat[uniq_idx], label[uniq_idx]
+                        cdata = np.hstack((coord, feat, label))
+
+                    labels = cdata[:, -1]
+                    self.compute_bins(torch.tensor(labels))
+
+                    cdata = np.hstack((cdata, self.bin_idxs))
+
+                    self.data.append(cdata)
+                except:
+                    logging.warning(f"Failed to preprocess file {data_path}!")
                 
             npoints = np.array([len(data) for data in self.data])
             logging.info('split: %s, median npoints %.1f, avg num points %.1f, std %.1f' % (
