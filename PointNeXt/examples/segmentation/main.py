@@ -693,7 +693,7 @@ def config_to_cfg(config):
 
 def sweep_run(config=None):
     # tell wandb to get started
-    with wandb.init(mode="online", project="IrradianceNet", config=config, allow_val_change=True):        
+    with wandb.init(mode="online", project="IrradianceNet_loss_sweep", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
         
@@ -738,7 +738,7 @@ def sweep(cfg):
     
     sweep_config['parameters'] = parameters_dict
    
-    project = "IrradianceNet"
+    project = "IrradianceNet_loss_sweep"
     sweep_id = wandb.sweep(sweep_config, project=project)
     
     wandb.agent(sweep_id, sweep_run, count=50, project=project)
