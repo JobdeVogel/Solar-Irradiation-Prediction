@@ -523,7 +523,8 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
     
-    binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
+    _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
+    wandb.log({f"Confusion matrix": wandb.Image(image_path + '.png')})
     
     return loss_meter.avg, rmse_meter.avg
 

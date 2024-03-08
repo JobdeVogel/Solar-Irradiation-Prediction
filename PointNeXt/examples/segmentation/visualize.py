@@ -23,6 +23,8 @@ def save_img(plt, name, path):
     path = os.path.join(path, name)
     
     plt.savefig(path, dpi=300)
+    
+    return path
 
 def plot(image_name, 
         points, 
@@ -184,6 +186,6 @@ def binned_cm(target,
     
     if save:
         logging.info(f"Saving confusion matrix in {path}")
-        save_img(plt, name, path)
+        image_path = save_img(plt, name, path)
     
-    return cf_matrix, bin_edges, names
+    return cf_matrix, bin_edges, names, image_path
