@@ -218,18 +218,21 @@ class IRRADIANCE(Dataset):
                 self.data = pickle.load(f)
                 print(f"{filename} load successfully")
         
+        histograms = torch.zeros((len(self.data_list) * self.loop, self.bins)).long()
+        
         if presample:
             logging.info("Generating histogram...")
             if self.compute_hist:
                 if _overwrite_dset_size > 0:
                     self.data = self.data[:_overwrite_dset_size]
-                   
-                labels = np.concatenate([np.split(sample, [3, 6, 7], axis=1)[2] for sample in self.data])
 
-                if self.hist == None:
-                    self.hist = torch.histc(torch.tensor(labels), bins=self.bins).long()
-                else:
-                    self.hist += torch.histc(torch.tensor(labels), bins=self.bins).long()
+                for i, sample in enumerate(self.data):
+                    targets = torch.tensor(np.split(sample, [3, 6, 7], axis=1)[2])
+                    hist = torch.histc(targets, bins=self.bins).long()
+                    
+                    histograms[i, :] = hist
+
+                self.hist = histograms.sum(axis=0)
 
                 print(f"Histogram: {self.hist.tolist()}")
             
