@@ -241,7 +241,7 @@ def main(gpu, cfg):
         wandb.log({'batchsize': cfg.batch_size}, step=0)
         wandb.log({'voxel_max': cfg.dataset.train.voxel_max}, step=0)
     
-    logging.info('Started training...')
+    logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         
         # # ! Only important for distributed gpu
