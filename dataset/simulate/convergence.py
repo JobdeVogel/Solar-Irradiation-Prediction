@@ -195,7 +195,7 @@ def plot(input_file, output_file, params):
     
     set_values, set_types = split_string_floats(params)
     
-    num_of_vis_params = 5
+    num_of_vis_params = 3
     
     annotations = []
     for types, values in zip(set_types, set_values):
@@ -355,14 +355,14 @@ def plot(input_file, output_file, params):
     
 
 if __name__=='__main__':
-    name, folder = 'convergence_test', 'C://Users//Job de Vogel//Desktop'
+    name, folder = 'model', 'T:\\jdevogel\\dataset\\simulate'
 
     print('Loading hbjson')
     model = load_hbjson(name, folder)
     print('Finished loading')
 
-    input_file = r"C:\\Users\\Job de Vogel\\Desktop\\Other\\results.csv"
-    output_file = r"C:\\Users\\Job de Vogel\\Desktop\\Other\\results_flipped.csv"
+    input_file = r"T:\\jdevogel\\dataset\\simulate\\results.csv"
+    output_file = r"T:\\jdevogel\\dataset\\simulate\\results_flipped.csv"
     
     from parameters import arguments
     
