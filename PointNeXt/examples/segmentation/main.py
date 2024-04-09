@@ -222,11 +222,11 @@ def main(gpu, cfg):
             image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
             
             if cfg.wandb.use_wandb:
-                wandb.log({f"Evaluation Irradiance Predictions 0 {idx}": wandb.Image(image_path_0 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 1 {idx}": wandb.Image(image_path_1 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 2 {idx}": wandb.Image(image_path_2 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 3 {idx}": wandb.Image(image_path_3 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 4 {idx}": wandb.Image(image_path_4 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')}, step=0)
+                wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')}, step=0)
 
         image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
         
@@ -322,11 +322,14 @@ def main(gpu, cfg):
                             )
             is_best = False
         
-        if epoch == cfg.max_epoch:
-            logging.info('Early finish!')
-            wandb.finish(exit_code=True)
-            return
-        
+        # if epoch == cfg.max_epoch:
+        #     logging.info('Early finish!')
+        #     wandb.finish(exit_code=True)
+        #     return
+    
+    # Test the model using the test dataset
+    test(cfg, model, cfg.dataset.test.data_root, pretrained=True)
+    
     # do not save file to wandb to save wandb space
     # if writer is not None:
     #     Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
@@ -418,15 +421,15 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
                     
             mse_loss = mse_criterion(logits, target)
             
-            wandb.log({'train_loss': loss})
-            wandb.log({'mse_loss': mse_loss})
+            wandb.log({'Train Loss (non-MSE)': loss})
+            wandb.log({'Train Loss MSE': mse_loss})
             
             if cfg.regression:
                 rmse_scaled = torch.sqrt(mse_loss)
                 
                 rmse = ((rmse_scaled + 1) / 2) * 1000
                 rmse_meter.update(rmse.item())
-                wandb.log({'RMSE per train step [kWh/m2]': rmse})
+                wandb.log({'Train Loss RMSE [kWh/m2]': rmse})
                 '''
                 individual_losses = torch.mean(individual_criterion(logits, target), 1)
                 
@@ -524,9 +527,75 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         os.makedirs(image_dir)
     
     _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
-    wandb.log({f"Confusion matrix": wandb.Image(image_path + '.png')})
+    wandb.log({f"Validation Confusion matrix": wandb.Image(image_path + '.png')})
     
     return loss_meter.avg, rmse_meter.avg
+
+@torch.no_grad()
+def test(cfg, model, root, pretrained=True):
+    if pretrained:
+        model_path = cfg.pretrained_path
+    
+        model = build_model_from_cfg(cfg.model)
+        load_checkpoint(model, model_path)
+    
+    model.eval()
+    model.cuda()
+    
+    mse_criterion = torch.nn.MSELoss().cuda()
+    loss_meter = AverageMeter()
+    
+    files = traverse_root(root)[:100]
+    
+    all_targets = torch.Tensor()
+    all_logits = torch.Tensor()
+    
+    pbar = tqdm(enumerate(files), total=len(files), desc='Test')
+    for idx, test_sample in pbar:
+        data = np.load(test_sample).astype(np.float32)
+        
+        # Remove the None values (points that should not be included)
+        nan_mask = np.isnan(data).any(axis=1)
+        data = data[~nan_mask]
+                
+        # Build sample in format
+        pos, normals, targets = data[:,0:3], data[:, 3:-1], data[:, -1] 
+        data = {'pos': pos, 'normals': normals, 'x': normals, 'y': targets}
+        
+        # Transform the data
+        data_transform = build_transforms_from_cfg('val', cfg.datatransforms)
+        data = data_transform(data)
+        
+        # Make negative 0 positive
+        data['normals'] += 0.
+
+        data['normals'] = data['normals'].unsqueeze(0)
+        data['pos'] = data['pos'].unsqueeze(0)
+
+        data['x'] = get_features_by_keys(data, cfg.feature_keys)
+
+        for key in data.keys():
+            data[key] = data[key].to("cuda")
+
+        logits = model(data)[0, 0, :]
+        
+        targets = data['y']
+        all_targets = torch.cat((all_targets, targets.cpu()))
+        all_logits = torch.cat((all_logits, logits.cpu()))
+        
+        loss = mse_criterion(logits, targets)
+        loss_meter.update(loss.item())
+    
+    all_targets = ((all_targets + 1) / 2) * 1000
+    all_logits = ((all_logits + 1) / 2) * 1000
+    
+    _, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
+    if cfg.wandb.use_wandb:
+        wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
+    
+    print(f"Test Loss MSE: {loss_meter.avg}")
+    if cfg.wandb.use_wandb:
+        wandb.log({"Test Loss MSE": loss_meter.avg})
 
 @torch.no_grad()
 def eval_image(model, sample, idx, name, path):
@@ -623,36 +692,6 @@ def traverse_root(root):
             res.append(os.path.join(dir_path, file))
 
     return res
-
-def test(cfg, root, blank=False):
-    model_path = cfg.pretrained_path
-
-    for data_path in traverse_root(root):
-        
-        data, irradiance = evaluate_file(model_path, data_path, cfg)
-
-        targets = ((data['y'] + 1) / 2) * 1000
-
-        binned_cm(torch.tensor(targets), torch.tensor(irradiance), 0, 1000, 10, show=True)
-        
-        if not blank:
-            targets = targets.tolist()
-        else:
-            targets = [0] * len(targets)
-        
-        plot('Example sample for irradiance prediction', 
-            data['pos'][0, :, :], 
-            vectors=[],
-            targets = targets,
-            values = irradiance,
-            show_normals=False, 
-            vector_length=1.0,
-            save=False,
-            show=True,
-            name='',
-            path = '',
-            blank=blank
-            )
     
 def config_to_cfg(config):
     cfg = EasyConfig()    
@@ -694,7 +733,7 @@ def config_to_cfg(config):
 
 def sweep_run(config=None):
     # tell wandb to get started
-    with wandb.init(mode="online", project="IrradianceNet_loss_sweep", config=config, allow_val_change=True):        
+    with wandb.init(mode="disabled", project="IrradianceNet_loss_sweep", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
         
@@ -814,14 +853,14 @@ if __name__ == "__main__":
         wandb.login()
 
     if cfg.test:
-        test(cfg, cfg.dataset.common.data_root, blank=True)
+        test(cfg, None, cfg.dataset.test.data_root, pretrained=True)
         sys.exit()
     
     cfg.mp = False
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="IrradianceNet_loss_sweep"):
+        with wandb.init(mode="disabled", project="IrradianceNet_loss_sweep"):
             # multi processing
             if cfg.mp:
                 port = find_free_port()

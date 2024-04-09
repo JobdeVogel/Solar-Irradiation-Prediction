@@ -100,14 +100,19 @@ def plot(idx,
     plt.tight_layout()
     
     if show:
-        plt.show(block=False)
-        plt.pause(5)
-        plt.close()
+        plt.show()
     
     if save:
        save_img(plt, name, path) 
 
 def from_file(path):
     array = np.load(path)
+    print(array.shape)
 
     plot(0, array, vectors=[], targets=array[:, 6]. T, show_normals=False)
+    
+if __name__ == '__main__':
+    matplotlib.use('TkAgg')
+    
+    path = "D:\\Master Thesis Data\\IrradianceNet\dset300_s\\10-286-590-LoD12-3D\\irradiance_sample_0_augmentation_0.npy"
+    from_file(path)

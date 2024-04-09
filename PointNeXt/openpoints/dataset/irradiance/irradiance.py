@@ -221,8 +221,8 @@ class IRRADIANCE(Dataset):
         histograms = torch.zeros((len(self.data_list) * self.loop, self.bins)).long()
         
         if presample:
-            logging.info("Generating histogram...")
             if self.compute_hist:
+                logging.info("Generating histogram...")
                 if _overwrite_dset_size > 0:
                     self.data = self.data[:_overwrite_dset_size]
 
