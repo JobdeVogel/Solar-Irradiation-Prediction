@@ -19,8 +19,11 @@ class BaseSeg(nn.Module):
                  decoder_args=None,
                  cls_args=None,
                  **kwargs):
-        super().__init__()
+        super().__init__()       
+        
         self.encoder = build_model_from_cfg(encoder_args)
+        
+        # This is None
         if decoder_args is not None:
             decoder_args_merged_with_encoder = copy.deepcopy(encoder_args)
             decoder_args_merged_with_encoder.update(decoder_args)
@@ -41,13 +44,15 @@ class BaseSeg(nn.Module):
             self.head = build_model_from_cfg(cls_args)
         else:
             self.head = None
-
+        
     def forward(self, data):
         p, f = self.encoder.forward_seg_feat(data)
+        
         if self.decoder is not None:
             f = self.decoder(p, f).squeeze(-1)
         if self.head is not None:
             f = self.head(f)
+        
         return f
 
 

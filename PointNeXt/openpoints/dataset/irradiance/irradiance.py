@@ -79,6 +79,7 @@ class IRRADIANCE(Dataset):
                  voxel_size: float = 0.04,
                  voxel_max=None,
                  split: str = 'train',
+                 split_ratio = 0.8,
                  transform=None,
                  loop: int = 1,
                  presample: bool = True,
@@ -114,16 +115,14 @@ class IRRADIANCE(Dataset):
         if self._overwrite_dset_size > 0:
             data_list = data_list[:_overwrite_dset_size]
         
-        # TODO: include
-        split_ratio = 0.95
-        
+        # TODO: include        
         split_index = int(len(data_list) * split_ratio)
-        
+               
         if len(data_list) == 0:
-            print(f'WARNING: number of available samples in {self.root} is 0, it is not possible to generate a dataset')
+            print(f'WARNING: number of available samples in {self.raw_root} is 0, it is not possible to generate a dataset')
             sys.exit()
         elif len(data_list) == 1:
-            print(f'WARNING: number of available samples in {self.root} is 1, only a train dataset can be generated, test will be skipped')
+            print(f'WARNING: number of available samples in {self.raw_root} is 1, only a train dataset can be generated, test will be skipped')
         
         data_list = [item[:-4] for item in data_list]
         '''data_list = [item[:-4] for item in data_list if 'Area_' in item]'''

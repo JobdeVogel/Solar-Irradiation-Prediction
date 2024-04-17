@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from ..build import MODELS
 import numpy as np
+import sys
 
 
 class STN3d(nn.Module):
@@ -159,23 +160,27 @@ class PointNetEncoder(nn.Module):
         x = x.view(-1, 1024)
         return x
 
-    def forward_seg_feat(self, pos, x=None):
+    def forward_seg_feat(self, pos, x=None):             
         if hasattr(pos, 'keys'):
-            x = pos.get('x', None)
+            x = pos.get('x', None)            
         if x is None:
             x = pos.transpose(1, 2).contiguous()
-
+        
         B, D, N = x.size()
         if self.stn is not None:
             trans = self.stn(x)
             x = x.transpose(2, 1)
+            
             if D > 3:
                 feature = x[:, :, 3:]
                 x = x[:, :, :3]
+
             x = torch.bmm(x, trans)
             if D > 3:
                 x = torch.cat([x, feature], dim=2)
+                
             x = x.transpose(2, 1)
+
         x = F.relu(self.bn0_1(self.conv0_1(x)))
         x = F.relu(self.bn0_2(self.conv0_2(x)))
 
@@ -185,14 +190,15 @@ class PointNetEncoder(nn.Module):
             x = torch.bmm(x, trans_feat)
             x = x.transpose(2, 1)
         else:
-            trans_feat = None
-
+            trans_feat = None       
+        
         pointfeat = x
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024, 1).repeat(1, 1, N)
+                
         return pos, torch.cat([pointfeat, x], 1)
     
     def forward(self, x, features=None):

@@ -47,6 +47,7 @@ def build_dataloader_from_cfg(batch_size,
                               dataloader_cfg=None,
                               datatransforms_cfg=None,
                               split='train',
+                              split_ratio=0.8,
                               distributed=True,
                               dataset=None
                               ):

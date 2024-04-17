@@ -58,7 +58,7 @@ def main(gpu, cfg):
 
     if cfg.model.get('in_channels', None) is None:
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
-
+    
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
     model_size = cal_model_parm_nums(model)
     
@@ -80,10 +80,11 @@ def main(gpu, cfg):
         # ! commented
         # logging.info('Using Distributed Data parallel ...')
 
+    
     # optimizer & scheduler
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
-
+    
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                            cfg.dataset,
@@ -92,7 +93,6 @@ def main(gpu, cfg):
                                            split='val',
                                            distributed=False
                                            )
-    
     # import matplotlib
     # import matplotlib.pyplot as plt
     # matplotlib.use('TkAgg')
@@ -122,6 +122,7 @@ def main(gpu, cfg):
     # plt.show()
     # sys.exit()
     
+    
     # ! commented
     # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
     num_classes = val_loader.dataset.num_classes if hasattr(val_loader.dataset, 'num_classes') else None
@@ -148,7 +149,7 @@ def main(gpu, cfg):
     if 'freeze_blocks' in cfg.mode:
         for p in model_module.encoder.blocks.parameters():
             p.requires_grad = False
-    
+
     train_loader, train_histogram = build_dataloader_from_cfg(cfg.batch_size,
                                              cfg.dataset,
                                              cfg.dataloader,
@@ -198,7 +199,7 @@ def main(gpu, cfg):
     total_iter = 0
     
     if cfg.wandb.use_wandb:
-        wandb.watch(model, criterion, log="all", log_freq=1)
+        wandb.watch(model, criterion, log="parameters", log_freq=1000)
         
     from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
     image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
@@ -228,7 +229,7 @@ def main(gpu, cfg):
                 wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')}, step=0)
                 wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')}, step=0)
 
-        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch base train sample {idx}', image_dir + '\\training')
+        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch 0 train sample {idx}', image_dir + '\\training')
         
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
@@ -243,7 +244,7 @@ def main(gpu, cfg):
     
     logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
-        
+        print(wandb.step)
         # # ! Only important for distributed gpu
         # if cfg.distributed:
         #     train_loader.sampler.set_epoch(epoch)
