@@ -41,17 +41,17 @@ def main(gpu, cfg):
     #                             rank=cfg.rank)
     #     dist.barrier()
 
-    if cfg.criterion_args.NAME == 'weightedmse':
+    if cfg.criterion_args.NAME.lower() == 'weightedmse':
         cfg.criterion_args.bins = 5
         cfg.criterion_args.min = -1
         cfg.criterion_args.max = 1
         cfg.criterion_args.weights = [1,1,1,1,0.25]
     
-    if cfg.criterion_args.NAME == 'deltaloss':
+    if cfg.criterion_args.NAME.lower() == 'deltaloss':
         cfg.criterion_args.delta = 0.6
         cfg.criterion_args.power = 2
     
-    if cfg.criterion_args.NAME == 'reductionloss':
+    if cfg.criterion_args.NAME.lower() == 'reductionloss':
         cfg.criterion_args.bins = 5
         cfg.criterion_args.min = -1
         cfg.criterion_args.max = 1
