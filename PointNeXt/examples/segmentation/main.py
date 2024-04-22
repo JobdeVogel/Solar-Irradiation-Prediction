@@ -112,6 +112,7 @@ def main(gpu, cfg):
                                            split='val',
                                            distributed=False
                                            )
+    
     # import matplotlib
     # import matplotlib.pyplot as plt
     # matplotlib.use('TkAgg')
@@ -206,6 +207,7 @@ def main(gpu, cfg):
 
     best_val, best_epoch = float('inf'), 0
     
+    set_random_seed(cfg.seed)
     test_array = iter(val_loader)
     
     evaluation_test_array_0 = next(test_array)
@@ -259,7 +261,7 @@ def main(gpu, cfg):
         wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
         wandb.log({'sched': str(cfg.sched)}, step=0)
         wandb.log({'batchsize': cfg.batch_size}, step=0)
-        wandb.log({'voxel_max': cfg.dataset.train.voxel_max}, step=0)
+
     
     logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
@@ -809,6 +811,9 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
     
+    
+    
+        
     name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
