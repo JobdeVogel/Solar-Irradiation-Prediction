@@ -14,7 +14,7 @@ seed: 12345
 # Training cfgs
 # ---------------------------------------------------------------------------- #
 epoch: 0Ik
-epochs: 100 
+epochs: 25
 
 ignore_index: null
 val_fn: validate
