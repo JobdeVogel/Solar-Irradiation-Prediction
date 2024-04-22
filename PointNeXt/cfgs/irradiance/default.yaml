@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: T:\jdevogel\data\dset100_xl_regular #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
     test_area: 5
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
