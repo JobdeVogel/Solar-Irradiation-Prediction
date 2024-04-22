@@ -55,7 +55,7 @@ datatransforms:
 val_fn: validate
 ignore_index: null
 epochs: 25
-max_epoch: 3
+max_epoch: 26
 
 cls_weighed_loss: False
 
