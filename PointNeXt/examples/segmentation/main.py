@@ -809,8 +809,7 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
     
-    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
-    
+    name = sys.argv[2].split("/")[2] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
