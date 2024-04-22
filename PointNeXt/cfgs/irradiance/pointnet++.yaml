@@ -1,27 +1,30 @@
-# Model Information
 # GFLOPs  GMACs   Params.(M)
-#  3.64    1.79    0.792
-# Throughput (ins./s): 226.73038739659074 
-
+#  7.19    3.53    0.965
+# throughput: 186 
 model:
   NAME: BaseSeg
   encoder_args:
-    NAME: PointNextEncoder
-    blocks: [1, 4, 7, 4, 4] 
-    strides: [1, 4, 4, 4, 4]
-    sa_layers: 1
-    sa_use_res: False 
-    width: 64
+    NAME: PointNet2Encoder
     in_channels: 6
-    expansion: 4
+    width: null
+    strides: [4, 4, 4, 4]
+    layers: 3
+    use_res: False
+    mlps: [[[32, 32, 64]],  # stage 1: 96
+        [[64, 64, 128]], # stage 2: 256
+        [[128, 128, 256]], # stage 3: 512
+        [[256, 256, 512]]] # stage 4: 1024
     radius: 0.1
-    nsample: 32
+    num_samples: 32
+    sampler: fps
     aggr_args:
+      NAME: 'convpool'
       feature_type: 'dp_fj'
+      anisotropic: False
       reduction: 'max'
     group_args:
       NAME: 'ballquery'
-      normalize_dp: True
+      use_xyz: True
     conv_args:
       order: conv-norm-act
     act_args:
@@ -29,16 +32,13 @@ model:
     norm_args:
       norm: 'bn'
   decoder_args:
-    NAME: PointNextDecoder
+    NAME: PointNet2Decoder
+    fp_mlps: [[128, 128, 128], [256, 128], [256, 256], [256, 256]]
   cls_args:
     NAME: SegHead
     num_classes: 1
     in_channels: null
-    norm_args:
-      norm: 'bn'
 
-
-# do not conduct rotation in small model.
 datatransforms:
   train: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize] 
   val: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize] 

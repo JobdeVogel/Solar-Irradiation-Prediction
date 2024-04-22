@@ -37,8 +37,6 @@ model:
     norm_args:
       norm: 'bn'
 
-batch_size: 96
-
 # do not conduct rotation in small model.
 datatransforms:
   train: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize] 

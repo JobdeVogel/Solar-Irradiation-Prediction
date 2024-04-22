@@ -2,10 +2,10 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_random_refined #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
     test_area: 5
     voxel_size: 0.04 #For irradiance
-    split_ratio: 0.7
+    split_ratio: 0.88889
   train:
     split: train
     voxel_max: 10000
@@ -14,7 +14,7 @@ dataset:
     compute_hist: False
     bins: 5
     show: False
-    _overwrite_dset_size: 2500
+    _overwrite_dset_size: 0
   val:
     split: val
     voxel_max: null
@@ -22,12 +22,12 @@ dataset:
     compute_hist: False
     bins: 5
     show: False
-    _overwrite_dset_size: 2500
+    _overwrite_dset_size: 0
   test:
     split: test
     voxel_max: null
     presample: False
-    data_root: D:\Master Thesis Data\IrradianceNet\test_dset100_xl_random_refined
+    data_root: T:\jdevogel\data\test_dset100_xl_regular
 
 feature_keys: pos,normals
 num_classes: 1
@@ -55,7 +55,7 @@ datatransforms:
 val_fn: validate
 ignore_index: null
 epochs: 25
-max_epoch: null
+max_epoch: 3
 
 cls_weighed_loss: False
 

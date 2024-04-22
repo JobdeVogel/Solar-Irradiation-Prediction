@@ -41,6 +41,23 @@ def main(gpu, cfg):
     #                             rank=cfg.rank)
     #     dist.barrier()
 
+    if cfg.criterion_args.NAME == 'weightedmse':
+        cfg.criterion_args.bins = 5
+        cfg.criterion_args.min = -1
+        cfg.criterion_args.max = 1
+        cfg.criterion_args.weights = [1,1,1,1,0.25]
+    
+    if cfg.criterion_args.NAME == 'deltaloss':
+        cfg.criterion_args.delta = 0.6
+        cfg.criterion_args.power = 2
+    
+    if cfg.criterion_args.NAME == 'reductionloss':
+        cfg.criterion_args.bins = 5
+        cfg.criterion_args.min = -1
+        cfg.criterion_args.max = 1
+        cfg.criterion_args.reduction = 1
+
+
     # logger
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
     
@@ -62,9 +79,11 @@ def main(gpu, cfg):
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
     model_size = cal_model_parm_nums(model)
     
-    # ! Commented
-    # logging.info(model)
-    # logging.info('Number of params: %.4f M' % (model_size / 1e6))
+    logging.info(model)
+    logging.info('Number of params: %.4f M' % (model_size / 1e6))
+    
+    logging.info(f'Cfg parameters:')
+    logging.info(cfg)
 
     if cfg.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -244,7 +263,6 @@ def main(gpu, cfg):
     
     logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
-        print(wandb.step)
         # # ! Only important for distributed gpu
         # if cfg.distributed:
         #     train_loader.sampler.set_epoch(epoch)
@@ -323,10 +341,10 @@ def main(gpu, cfg):
                             )
             is_best = False
         
-        # if epoch == cfg.max_epoch:
-        #     logging.info('Early finish!')
-        #     wandb.finish(exit_code=True)
-        #     return
+        if epoch == cfg.max_epoch:
+            logging.info('Early finish!')
+            wandb.finish(exit_code=True)
+            return
     
     # Test the model using the test dataset
     test(cfg, model, cfg.dataset.test.data_root, pretrained=True)
@@ -791,10 +809,15 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
     
+    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
     cfg.update(opts)  # overwrite the default arguments in yml
+
+
+    
 
     if args.sweep:
         cfg.wandb.sweep = True
@@ -861,7 +884,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="disabled", project="IrradianceNet_loss_sweep"):
+        with wandb.init(mode="disabled", project="Thesis", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
