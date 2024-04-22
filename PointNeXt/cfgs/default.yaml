@@ -8,7 +8,7 @@ launcher: 'mp'
 local_rank: 0
 
 use_gpu: False
-seed: null 
+seed: 12345
 
 # ---------------------------------------------------------------------------- #
 # Training cfgs
