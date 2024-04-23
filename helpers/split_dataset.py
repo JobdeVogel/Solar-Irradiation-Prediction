@@ -4,6 +4,8 @@ import shutil
 import random
 import tqdm
 
+random.seed(12345)
+
 def traverse_root(root):
     res = []
     for (dir_path, _, file_names) in os.walk(root):
