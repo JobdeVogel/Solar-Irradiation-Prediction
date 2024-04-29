@@ -941,10 +941,6 @@ if __name__ == "__main__":
 
     if cfg.wandb.use_wandb:
         wandb.login()
-
-    if cfg.test:
-        test(cfg, None, cfg.dataset.test.data_root, pretrained=True)
-        sys.exit()
     
     cfg.mp = False
     if cfg.wandb.sweep:
