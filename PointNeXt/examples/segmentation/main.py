@@ -79,11 +79,11 @@ def main(gpu, cfg):
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
     model_size = cal_model_parm_nums(model)
     
-    logging.info(model)
-    logging.info('Number of params: %.4f M' % (model_size / 1e6))
-    
     logging.info(f'Cfg parameters:')
     logging.info(cfg)
+    
+    logging.info(model)
+    logging.info('Number of params: %.4f M' % (model_size / 1e6))
 
     if cfg.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -111,7 +111,7 @@ def main(gpu, cfg):
                                            datatransforms_cfg=cfg.datatransforms,
                                            split='val',
                                            distributed=False
-                                           )
+                                           )      
     
     # import matplotlib
     # import matplotlib.pyplot as plt
@@ -180,6 +180,8 @@ def main(gpu, cfg):
     
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
     
+    
+    
     if not cfg.regression:
         cfg.criterion_args.weight = None
         if cfg.get('cls_weighed_loss', False):
@@ -198,172 +200,170 @@ def main(gpu, cfg):
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
     
     mse_criterion = torch.nn.MSELoss().cuda()
-
-    # ===> start training
-    if cfg.use_amp:
-        scaler = torch.cuda.amp.GradScaler()
-    else:
-        scaler = None
-
-    best_val, best_epoch = float('inf'), 0
     
-    set_random_seed(cfg.seed)
-    test_array = iter(val_loader)
+    if not cfg.test:
+        # ===> start training
+        if cfg.use_amp:
+            scaler = torch.cuda.amp.GradScaler()
+        else:
+            scaler = None
     
-    evaluation_test_array_0 = next(test_array)
-    evaluation_test_array_1 = next(test_array)
-    evaluation_test_array_2 = next(test_array)
-    evaluation_test_array_3 = next(test_array)
-    evaluation_test_array_4 = next(test_array)
-    evaluation_train_array = next(iter(train_loader))
+        best_val, best_epoch = float('inf'), 0
     
-    total_iter = 0
-    
-    if cfg.wandb.use_wandb:
-        wandb.watch(model, criterion, log="parameters", log_freq=1000)
+        test_array = iter(val_loader)
         
-    from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
-    image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
-    
-    if not os.path.exists(image_dir + '\\evaluation'):
-        os.makedirs(image_dir + '\\evaluation')
-    
-    if not os.path.exists(image_dir + '\\training'):
-        os.makedirs(image_dir + '\\training')
-    
-    logging.info('Logging initial images...')
-    max_images = min([5, cfg.batch_size])
-    max_evaluation_images = 5
-    
-    for idx in range(max_images):
-        if idx == 0:
-            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
-            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
-            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
-            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
-            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
-            
-            if cfg.wandb.use_wandb:
-                wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')}, step=0)
-                wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')}, step=0)
-
-        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch 0 train sample {idx}', image_dir + '\\training')
+        evaluation_test_array_0 = next(test_array)
+        evaluation_test_array_1 = next(test_array)
+        evaluation_test_array_2 = next(test_array)
+        evaluation_test_array_3 = next(test_array)
+        evaluation_test_array_4 = next(test_array)
+        evaluation_train_array = next(iter(train_loader))
+        
+        total_iter = 0
         
         if cfg.wandb.use_wandb:
-            wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
-    
-    if cfg.wandb.use_wandb:
-        wandb.log({'crit': str(cfg.criterion_args.NAME)}, step=0)
-        wandb.log({'model': str(cfg.cfg_basename)}, step=0)
-        wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
-        wandb.log({'sched': str(cfg.sched)}, step=0)
-        wandb.log({'batchsize': cfg.batch_size}, step=0)
-
-    
-    logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
-    for epoch in range(cfg.start_epoch, cfg.epochs + 1):
-        # # ! Only important for distributed gpu
-        # if cfg.distributed:
-        #     train_loader.sampler.set_epoch(epoch)
-        # if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
-        #     train_loader.dataset.epoch = epoch - 1
-        
-        train_loss, train_rmse, total_iter = \
-            train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
-        
-        # ! Log the results from the epoch step
-        is_best = False
-        
-        logging.info(f"Started evalution epoch {epoch}")
-        if epoch % cfg.val_freq == 0:
-            eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, mse_criterion, cfg, epoch=epoch, total_iter=total_iter, image_dir=image_dir)
+            wandb.watch(model, criterion, log="parameters", log_freq=1000)
             
-            if eval_loss < best_val:
-                logging.info("Found new best model!")
-                is_best = True
-                best_val = eval_loss
+        from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+        image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
         
-        # ! Log to the writer
-        lr = optimizer.param_groups[0]['lr']
+        if not os.path.exists(image_dir + '\\evaluation'):
+            os.makedirs(image_dir + '\\evaluation')
         
-        logging.info(f'Logging images for epoch {epoch}')
+        if not os.path.exists(image_dir + '\\training'):
+            os.makedirs(image_dir + '\\training')
         
+        logging.info('Logging initial images...')
         max_images = min([5, cfg.batch_size])
+        max_evaluation_images = 5
+        
         for idx in range(max_images):
             if idx == 0:
-                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir + '\\evaluation')
-                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir + '\\evaluation')
-                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir + '\\evaluation')
-                image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch {epoch} test 3 sample {idx}', image_dir + '\\evaluation')
-                image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation')
+                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
+                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
+                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
+                image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
+                image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
                 
                 if cfg.wandb.use_wandb:
-                    wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')})
-                    wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')})
-                    wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')})
-                    wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')})
-                    wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')})
-
-            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training')
+                    wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')}, step=0)
+                    wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')}, step=0)
+                    wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')}, step=0)
+                    wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')}, step=0)
+                    wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')}, step=0)
+    
+            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch 0 train sample {idx}', image_dir + '\\training')
             
             if cfg.wandb.use_wandb:
-                wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
+                wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
     
-        if epoch % cfg.val_freq == 0:
-            logging.info(f'Epoch {epoch} LR {lr:.6f} '
-                     f'train loss {train_loss:.2f}, eval loss {eval_loss:.2f}')
-        else:
-            logging.info(f'Epoch {epoch} LR {lr:.6f} '
-                     f'train loss {train_loss:.2f}')
-                  
-        if epoch % cfg.val_freq == 0:
-            wandb.log({'Evaluation Loss (mse)': eval_loss})
-            wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse})
+        if cfg.wandb.use_wandb:
+            wandb.log({'crit': str(cfg.criterion_args.NAME)}, step=0)
+            wandb.log({'model': str(cfg.cfg_basename)}, step=0)
+            wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
+            wandb.log({'sched': str(cfg.sched)}, step=0)
+            wandb.log({'batchsize': cfg.batch_size}, step=0)
+    
         
-        # writer.add_scalar('train_loss', train_loss, epoch)
-        # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
-        wandb.log({'Learning Rate': lr})
-
-        # ! Update the optimizer with scheduler
-        if cfg.sched_on_epoch:
-            if cfg.sched.lower() != 'plateau':
-                scheduler.step(epoch)
-            else:
-                scheduler.step(epoch, metric=train_loss)
-
-        # ! Save model parameters to file
-        if cfg.rank == 0:
-            save_checkpoint(cfg, model, epoch, optimizer, scheduler,
-                            additioanl_dict={'best_val': best_val},
-                            is_best=is_best,
-                            post_fix=f'ckpt_epoch_{epoch}'
-                            )
+        logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
+        for epoch in range(cfg.start_epoch, cfg.epochs + 1):
+            # # ! Only important for distributed gpu
+            # if cfg.distributed:
+            #     train_loader.sampler.set_epoch(epoch)
+            # if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
+            #     train_loader.dataset.epoch = epoch - 1
+            
+            train_loss, train_rmse, total_iter = \
+                train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
+            
+            # ! Log the results from the epoch step
             is_best = False
+            
+            logging.info(f"Started evalution epoch {epoch}")
+            if epoch % cfg.val_freq == 0:
+                eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, mse_criterion, cfg, epoch=epoch, total_iter=total_iter, image_dir=image_dir)
+                
+                if eval_loss < best_val:
+                    logging.info("Found new best model!")
+                    is_best = True
+                    best_val = eval_loss
+            
+            # ! Log to the writer
+            lr = optimizer.param_groups[0]['lr']
+            
+            logging.info(f'Logging images for epoch {epoch}')
+            
+            max_images = min([5, cfg.batch_size])
+            for idx in range(max_images):
+                if idx == 0:
+                    image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir + '\\evaluation')
+                    image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir + '\\evaluation')
+                    image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir + '\\evaluation')
+                    image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch {epoch} test 3 sample {idx}', image_dir + '\\evaluation')
+                    image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation')
+                    
+                    if cfg.wandb.use_wandb:
+                        wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')})
+                        wandb.log({f"Evaluation Irradiance Predictions 1": wandb.Image(image_path_1 + '.png')})
+                        wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')})
+                        wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')})
+                        wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')})
+    
+                image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training')
+                
+                if cfg.wandb.use_wandb:
+                    wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
         
-        if epoch == cfg.max_epoch:
-            logging.info('Early finish!')
-            wandb.finish(exit_code=True)
-            return
+            if epoch % cfg.val_freq == 0:
+                logging.info(f'Epoch {epoch} LR {lr:.6f} '
+                         f'train loss {train_loss:.2f}, eval loss {eval_loss:.2f}')
+            else:
+                logging.info(f'Epoch {epoch} LR {lr:.6f} '
+                         f'train loss {train_loss:.2f}')
+                      
+            if epoch % cfg.val_freq == 0:
+                wandb.log({'Evaluation Loss (mse)': eval_loss})
+                wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse})
+            
+            # writer.add_scalar('train_loss', train_loss, epoch)
+            # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
+            wandb.log({'Learning Rate': lr})
+    
+            # ! Update the optimizer with scheduler
+            if cfg.sched_on_epoch:
+                if cfg.sched.lower() != 'plateau':
+                    scheduler.step(epoch)
+                else:
+                    scheduler.step(epoch, metric=train_loss)
+    
+            # ! Save model parameters to file
+            if cfg.rank == 0:
+                save_checkpoint(cfg, model, epoch, optimizer, scheduler,
+                                additioanl_dict={'best_val': best_val},
+                                is_best=is_best,
+                                post_fix=f'ckpt_epoch_{epoch}'
+                                )
+                is_best = False
+            
+            if epoch == cfg.max_epoch:
+                logging.info('Early finish!')
+                wandb.finish(exit_code=True)
+                break
     
     # Test the model using the test dataset
-    test(cfg, model, cfg.dataset.test.data_root, pretrained=True)
+    test(cfg, model, cfg.dataset.test.data_root, pretrained=False)
     
     # do not save file to wandb to save wandb space
-    # if writer is not None:
-    #     Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
+    # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
     # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.logname}_ckpt_latest.pth'))
 
-    # validate
-    with np.printoptions(precision=2, suppress=True):
-        if epoch % cfg.val_freq == 0:
-            logging.info(
-                f'Best ckpt @E{best_epoch},  eval loss {eval_loss:.2f}, train loss {train_loss:.2f}')
-        else:
-            logging.info(
-                f'Best ckpt @E{best_epoch},  train loss {train_loss:.2f}')
+    # # validate
+    # with np.printoptions(precision=2, suppress=True):
+    #     if epoch % cfg.val_freq == 0:
+    #         logging.info(
+    #             f'Best ckpt @E{best_epoch},  eval loss {eval_loss:.2f}, train loss {train_loss:.2f}')
+    #     else:
+    #         logging.info(
     
     # ! Removed testing with sphere_validation
 
@@ -566,7 +566,7 @@ def test(cfg, model, root, pretrained=True):
     mse_criterion = torch.nn.MSELoss().cuda()
     loss_meter = AverageMeter()
     
-    files = traverse_root(root)[:100]
+    files = traverse_root(root)
     
     all_targets = torch.Tensor()
     all_logits = torch.Tensor()
@@ -609,14 +609,82 @@ def test(cfg, model, root, pretrained=True):
     
     all_targets = ((all_targets + 1) / 2) * 1000
     all_logits = ((all_logits + 1) / 2) * 1000
+
+
     
-    _, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
+    confusion_matrix, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
+    accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
+    
+    
     if cfg.wandb.use_wandb:
         wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
     print(f"Test Loss MSE: {loss_meter.avg}")
     if cfg.wandb.use_wandb:
-        wandb.log({"Test Loss MSE": loss_meter.avg})
+        # wandb.log({"Test Loss MSE": loss_meter.avg})
+        wandb.log({"Precision": precision})
+        wandb.log({"Accuracy": accuracy})
+        wandb.log({"Recall": recall})
+        wandb.log({"F1-score": f1_score})
+        wandb.log({"Micro-averaged Accuracy": micro_avg_accuracy})
+        wandb.log({"Micro-averaged Precision": micro_avg_precision})
+        wandb.log({"Micro-averaged Recall": micro_avg_recall})
+        wandb.log({"Micro-averaged F1-score": micro_avg_f1_score})
+        wandb.log({"Macro-averaged Accuracy": macro_avg_accuracy})
+        wandb.log({"Macro-averaged Precision": macro_avg_precision})
+        wandb.log({"Macro-averaged Recall:": macro_avg_recall})
+        wandb.log({"Macro-averaged F1-score:": macro_avg_f1_score})
+
+
+def compute_metrics(confusion_matrix):
+    # Total number of classes
+    num_classes = confusion_matrix.shape[0]
+    
+    # Initialize arrays to store metrics
+    accuracy = np.zeros(num_classes)
+    precision = np.zeros(num_classes)
+    recall = np.zeros(num_classes)
+    f1_score = np.zeros(num_classes)
+    
+    for i in range(num_classes):
+        # True positives
+        TP = confusion_matrix[i, i]
+        
+        # False positives
+        FP = np.sum(confusion_matrix[:, i]) - TP
+        
+        # False negatives
+        FN = np.sum(confusion_matrix[i, :]) - TP
+        
+        # True negatives
+        TN = np.sum(confusion_matrix) - TP - FP - FN
+        
+        # Accuracy
+        accuracy[i] = (TP + TN) / np.sum(confusion_matrix)
+        
+        # Precision
+        precision[i] = TP / (TP + FP) if TP + FP != 0 else 0
+        
+        # Recall
+        recall[i] = TP / (TP + FN) if TP + FN != 0 else 0
+        
+        # F1-score
+        f1_score[i] = 2 * precision[i] * recall[i] / (precision[i] + recall[i]) if precision[i] + recall[i] != 0 else 0
+    
+    # Compute micro-averaged metrics
+    micro_avg_accuracy = np.sum(np.diag(confusion_matrix)) / np.sum(confusion_matrix)
+    micro_avg_precision = np.sum(np.diag(confusion_matrix)) / np.sum(confusion_matrix)
+    micro_avg_recall = np.sum(np.diag(confusion_matrix)) / np.sum(confusion_matrix)
+    micro_avg_f1_score = 2 * micro_avg_precision * micro_avg_recall / (micro_avg_precision + micro_avg_recall) if micro_avg_precision + micro_avg_recall != 0 else 0
+    
+    # Compute macro-averaged metrics
+    macro_avg_accuracy = np.mean(accuracy)
+    macro_avg_precision = np.mean(precision)
+    macro_avg_recall = np.mean(recall)
+    macro_avg_f1_score = np.mean(f1_score)
+    
+    return accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score
+
 
 @torch.no_grad()
 def eval_image(model, sample, idx, name, path):
@@ -810,18 +878,12 @@ if __name__ == "__main__":
     parser.add_argument('--profile', action='store_true', default=False, help='set to True to profile speed')
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
-    
-    
-    
         
-    name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
     cfg.update(opts)  # overwrite the default arguments in yml
-
-
-    
 
     if args.sweep:
         cfg.wandb.sweep = True
@@ -888,7 +950,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="Thesis", name=name):
+        with wandb.init(id='a2lh599i', mode="online", project="Thesis", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
