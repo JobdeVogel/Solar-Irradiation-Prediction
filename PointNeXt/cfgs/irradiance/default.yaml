@@ -96,5 +96,6 @@ wandb:
   project: IrradianceNet
   sweep: False
   use_wandb: True
+  id: None
 
 test: False
