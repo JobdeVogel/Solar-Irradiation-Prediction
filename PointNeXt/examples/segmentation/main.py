@@ -351,7 +351,7 @@ def main(gpu, cfg):
                 break
     
     # Test the model using the test dataset
-    test(cfg, model, cfg.dataset.test.data_root, pretrained=False)
+    test(cfg, model, cfg.dataset.test.data_root, pretrained=True)
     
     # do not save file to wandb to save wandb space
     # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
