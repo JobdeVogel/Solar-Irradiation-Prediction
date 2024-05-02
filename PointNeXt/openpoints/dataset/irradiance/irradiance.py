@@ -151,7 +151,7 @@ class IRRADIANCE(Dataset):
             with open(f'.\data\{from_date}_train_samples.txt', 'w') as file:
                 for item in self.data_list:
                     file.write(item + '\n')
-        else:
+        elif split == 'val':
             self.data_list = [
                 item for item in data_list[split_index+1:]
             ]
@@ -159,6 +159,8 @@ class IRRADIANCE(Dataset):
             with open(f'.\data\{from_date}_evaluation_samples.txt', 'w') as file:
                 for item in self.data_list:
                     file.write(item + '\n')
+        elif split == 'test':
+            self.data_list = data_list
 
         processed_root = os.path.join(data_root, 'processed')
         
