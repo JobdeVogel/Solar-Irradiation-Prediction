@@ -594,15 +594,19 @@ def test(cfg, model, root):
 
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
 
-        logits = model(data)[0, 0, :]    
-        
-        targets = data['y']
-        all_targets = torch.cat((all_targets, targets))
-        all_logits = torch.cat((all_logits, logits))
-        
-        loss = mse_criterion(logits, targets)
-        
-        loss_meter.update(loss.item())
+        try:
+            logits = model(data)[0, 0, :]    
+
+            targets = data['y']
+            all_targets = torch.cat((all_targets, targets))
+            all_logits = torch.cat((all_logits, logits))
+
+            loss = mse_criterion(logits, targets)
+
+            loss_meter.update(loss.item())
+        except:
+            print(data)
+            
     
     all_targets = ((all_targets + 1) / 2) * 1000
     all_logits = ((all_logits + 1) / 2) * 1000
@@ -886,7 +890,7 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
         
-    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
