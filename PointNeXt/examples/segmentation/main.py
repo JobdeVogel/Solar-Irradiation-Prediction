@@ -356,7 +356,7 @@ def main(gpu, cfg):
             break
     
     # Test the model using the test dataset
-    test(cfg, model, test_loader)
+    test(cfg, model, test_loader, image_dir=image_dir)
     
     wandb.finish(exit_code=True)
     
@@ -509,7 +509,7 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     
     pbar = tqdm(enumerate(val_loader), total=val_loader.__len__(), desc='Val')
     for idx, data in pbar:
-        pbar.set_description(f"MSE: {format(round(loss.item(), 4), '.4f')}, RMSE: {format(round(rmse.item(), 4), '.4f')} [kWh/m2]")
+        pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
         
         keys = data.keys() if callable(data.keys) else data.keys
@@ -558,11 +558,10 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     return loss_meter.avg, rmse_meter.avg
 
 @torch.no_grad()
-def test(cfg, model, test_loader):    
+def test(cfg, model, test_loader, image_dir=''):    
     model.eval()
     
     mse_criterion = torch.nn.MSELoss().cuda()
-    data_transform = build_transforms_from_cfg('val', cfg.datatransforms)   
     
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
@@ -576,7 +575,7 @@ def test(cfg, model, test_loader):
     pbar = tqdm(enumerate(test_loader), total=test_loader.__len__(), desc='Test')
     
     for idx, data in pbar:
-        pbar.set_description(f"Test MSE: {format(round(loss.item(), 4), '.4f')}, Test RMSE: {format(round(rmse.item(), 4), '.4f')} [kWh/m2]")
+        pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
         
         '''
@@ -632,7 +631,15 @@ def test(cfg, model, test_loader):
     print(f"Test Loss MSE: {loss_meter.avg}")
     print(f"Test Loss RMSE: {loss_meter.avg} [kWh/m2]")
     
-    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, show=True)
+    name = f'Confusion matrix test'
+    image_dir += 'cm'
+    
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+    
+    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
+    wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
+    
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
     
     if cfg.wandb.use_wandb:
@@ -910,7 +917,7 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
         
-    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
@@ -977,7 +984,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="disabled", project="Thesis_2", name=name):
+        with wandb.init(mode="online", project="Thesis_2", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
