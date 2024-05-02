@@ -616,6 +616,8 @@ def test(cfg, model, root):
     all_targets.cpu()
     all_logits.cpu()
     
+    print(f"Test Loss MSE: {loss_meter.avg}")
+    
     confusion_matrix, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
     
@@ -623,7 +625,7 @@ def test(cfg, model, root):
     if cfg.wandb.use_wandb:
         wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
-    print(f"Test Loss MSE: {loss_meter.avg}")
+    
     if cfg.wandb.use_wandb:
         wandb.log({"Test Loss MSE": loss_meter.avg})
         wandb.log({"Precision": precision})
