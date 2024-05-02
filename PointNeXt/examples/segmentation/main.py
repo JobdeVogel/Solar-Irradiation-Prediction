@@ -613,7 +613,8 @@ def test(cfg, model, root):
     all_targets = ((all_targets + 1) / 2) * 1000
     all_logits = ((all_logits + 1) / 2) * 1000
 
-
+    all_targets.cpu()
+    all_logits.cpu()
     
     confusion_matrix, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
