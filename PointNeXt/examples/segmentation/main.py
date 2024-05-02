@@ -342,11 +342,12 @@ def main(gpu, cfg):
         
         if epoch == cfg.max_epoch:
             logging.info('Early finish!')
-            wandb.finish(exit_code=True)
             break
     
     # Test the model using the test dataset
     test(cfg, model, cfg.dataset.test.data_root)
+    
+    wandb.finish(exit_code=True)
     
     # do not save file to wandb to save wandb space
     # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
