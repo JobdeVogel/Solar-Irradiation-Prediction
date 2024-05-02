@@ -112,10 +112,6 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-    print('-----')
-    print('after training:')
-    print(cfg.dataset)
-    print('-----')
 
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
@@ -124,19 +120,7 @@ def main(gpu, cfg):
                                             datatransforms_cfg=cfg.datatransforms,
                                             split='val',
                                             distributed=False
-                                            )          
-    test_iter = iter(test_loader)
-    val_iter = iter(val_loader)
-    
-    print(next(test_iter))
-    print(next(test_iter))
-    print('\n')
-    print(next(val_iter))
-    print(next(val_iter))
-    print('\n')
-    print(len(test_loader))
-    print(len(val_loader))
-    sys.exit()
+                                            )
     
     # ! commented
     # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
@@ -372,7 +356,7 @@ def main(gpu, cfg):
             break
     
     # Test the model using the test dataset
-    test(cfg, model, cfg.dataset.test.data_root)
+    test(cfg, model, test_loader)
     
     wandb.finish(exit_code=True)
     
@@ -571,7 +555,7 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     return loss_meter.avg, rmse_meter.avg
 
 @torch.no_grad()
-def test(cfg, model, root):    
+def test(cfg, model, test_loader):    
     model.eval()
     
     mse_criterion = torch.nn.MSELoss().cuda()
@@ -580,48 +564,27 @@ def test(cfg, model, root):
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
     
-    files = traverse_root(root)
-    
     all_targets = torch.Tensor().cuda(non_blocking=True)
     all_logits = torch.Tensor().cuda(non_blocking=True)
     
     loss = torch.Tensor([0.0])
     rmse = torch.Tensor([0.0])
     
-    pbar = tqdm(enumerate(files), total=len(files), desc='Test')
+    pbar = tqdm(enumerate(test_loader), total=test_loader.__len__(), desc='Test')
     
-    for idx, test_sample in pbar:
+    for idx, data in pbar:
         pbar.set_description(f"Test MSE: {format(round(loss.item(), 4), '.4f')}, Test RMSE: {format(round(rmse.item(), 4), '.4f')} [kWh/m2]")
         pbar.refresh()
         
-        data = np.load(test_sample).astype(np.float32)
-        
-        # Remove the None values (points that should not be included)
-        nan_mask = np.isnan(data).any(axis=1)
-        data = data[~nan_mask]
-                
-        # Build sample in format
-        pos, normals, targets = data[:,0:3], data[:, 3:-1], data[:, -1] 
-        data = {'pos': pos, 'normals': normals, 'x': normals, 'y': targets}
-        
-        # Transform the data
-        data = data_transform(data)
-        
-        # Make negative 0 positive
-        data['normals'] += 0.
-
-        data['normals'] = data['normals'].unsqueeze(0)
-        data['pos'] = data['pos'].unsqueeze(0)
-
         keys = data.keys() if callable(data.keys) else data.keys
         
         for key in keys:
             data[key] = data[key].cuda(non_blocking=True)
-
+            
+        targets = data['y'].squeeze(-1)
+        
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
-
-        logits = model(data)[0, 0, :]    
-        targets = data['y']
+        logits = model(data)   
         
         all_targets = torch.cat((all_targets, targets))
         all_logits = torch.cat((all_logits, logits))
