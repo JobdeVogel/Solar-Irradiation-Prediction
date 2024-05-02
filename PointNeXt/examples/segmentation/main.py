@@ -604,7 +604,8 @@ def test(cfg, model, root):
             loss = mse_criterion(logits, targets)
 
             loss_meter.update(loss.item())
-        except:
+        except Exception as e:
+            print(e)
             print(data)
             
     
