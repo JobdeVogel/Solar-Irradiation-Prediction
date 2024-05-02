@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: T:\jdevogel\data\dset100_xl_regular #D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull
+    data_root: T:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular
     test_area: 5
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
@@ -27,7 +27,7 @@ dataset:
     split: test
     voxel_max: null
     presample: False
-    data_root: T:\jdevogel\data\test_dset100_xl_regular
+    data_root: T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
 
 feature_keys: pos,normals
 num_classes: 1
@@ -97,5 +97,3 @@ wandb:
   sweep: False
   use_wandb: True
   id: None
-
-test: False
