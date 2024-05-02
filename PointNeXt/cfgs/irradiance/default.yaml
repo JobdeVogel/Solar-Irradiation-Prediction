@@ -26,13 +26,14 @@ dataset:
   test:
     split: test
     voxel_max: null
-    presample: False
+    presample: True
     data_root: T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
 
 feature_keys: pos,normals
 num_classes: 1
 batch_size: 8
 val_batch_size: 1
+test_batch_size: 1
 
 dataloader:
   num_workers: 0
