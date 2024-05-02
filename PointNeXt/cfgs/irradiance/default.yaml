@@ -48,6 +48,7 @@ datatransforms:
     angle: [0, 0, 1]
     jitter_sigma: 0.005
     jitter_clip: 0.02
+    norm_min: -1 # Minimum value of normalization range for irradiance values (either 0 or -1)
 
 # ---------------------------------------------------------------------------- #
 # Training cfgs

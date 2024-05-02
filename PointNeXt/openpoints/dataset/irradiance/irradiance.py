@@ -167,12 +167,13 @@ class IRRADIANCE(Dataset):
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
         
-        self.bin_edges = torch.linspace(0, 1000, steps=self.bins+1).unsqueeze(0)
+        self.bin_edges = torch.linspace(0, 1000, steps=self.bins+1).unsqueeze(0)        
         
         if presample and not os.path.exists(filename):
             np.random.seed(0)
             self.data = []
-        
+
+            print(f"Preampling {len(self.data_list)} samples from {raw_root}")
             for item in tqdm(self.data_list, desc=f'Loading irradiance dataset {split} split'):
                 data_path = os.path.join(raw_root, item + '.npy')
 

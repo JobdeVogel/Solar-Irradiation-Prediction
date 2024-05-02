@@ -104,7 +104,15 @@ def main(gpu, cfg):
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
    
-    
+    # build dataset
+    test_loader, test_histogram = build_dataloader_from_cfg(cfg.get('test_batch_size', cfg.batch_size),
+                                            cfg.dataset,
+                                            cfg.dataloader,
+                                            datatransforms_cfg=cfg.datatransforms,
+                                            split='test',
+                                            distributed=False
+                                            )
+   
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                             cfg.dataset,
@@ -113,7 +121,11 @@ def main(gpu, cfg):
                                             split='val',
                                             distributed=False
                                             )      
-
+    
+    print(next(iter(test_loader)))
+    print(next(iter(val_loader)))
+    sys.exit()
+    
     # ! commented
     # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
     num_classes = val_loader.dataset.num_classes if hasattr(val_loader.dataset, 'num_classes') else None
@@ -890,7 +902,7 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
         
-    name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
@@ -957,7 +969,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="Thesis_2", name=name):
+        with wandb.init(mode="disabled", project="Thesis_2", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()

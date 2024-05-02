@@ -47,7 +47,6 @@ def build_dataloader_from_cfg(batch_size,
                               dataloader_cfg=None,
                               datatransforms_cfg=None,
                               split='train',
-                              split_ratio=0.8,
                               distributed=True,
                               dataset=None
                               ):
@@ -72,6 +71,10 @@ def build_dataloader_from_cfg(batch_size,
         if split_cfg.get('split', None) is None:    # add 'split' in dataset_split_cfg
             split_cfg.split = split
         split_cfg.transform = data_transform
+        
+        if split == 'test':
+            common_root = dataset_cfg.common.data_root
+            dataset_cfg.common.data_root = dataset_cfg.test.data_root
         
         dataset = build_dataset_from_cfg(dataset_cfg.common, split_cfg)
         histogram = dataset.hist
@@ -102,5 +105,8 @@ def build_dataloader_from_cfg(batch_size,
                                                  shuffle=shuffle,
                                                  collate_fn=collate_fn,
                                                  pin_memory=True)
+
+    if split == 'test':
+        dataset_cfg.common.data_root = common_root
 
     return dataloader, histogram
