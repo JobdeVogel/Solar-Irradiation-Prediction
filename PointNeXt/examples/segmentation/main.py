@@ -128,7 +128,7 @@ def main(gpu, cfg):
     cfg.cmap = np.array(val_loader.dataset.cmap) if hasattr(val_loader.dataset, 'cmap') else None
     validate_fn = validate
     
-    
+    """
     # import matplotlib
     # import matplotlib.pyplot as plt
     # matplotlib.use('TkAgg')
@@ -157,6 +157,7 @@ def main(gpu, cfg):
     
     # plt.show()
     # sys.exit()
+    """
     
     # optionally resume from a checkpoint
     model_module = model.module if hasattr(model, 'module') else model
@@ -379,15 +380,12 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
     
     num_iter = 0
     loss = torch.Tensor([0.0])
+    rmse = torch.Tensor([0.0])
     mse_loss = torch.Tensor([0.0])
     
     for idx, data in pbar:
-        try:
-            pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')}, Loss: {round(loss.item(), 4)}, MSE: {round(mse_loss.item(), 4)}")
-            pbar.refresh()
-            time.sleep(0.01)
-        except:
-            pass
+        pbar.set_description(f"Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, MSE: {round(mse_loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
+        pbar.refresh()
         
         keys = data.keys() if callable(data.keys) else data.keys
         
@@ -442,10 +440,9 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             wandb.log({'Train Loss MSE': mse_loss})
             
             if cfg.regression:
-                rmse_scaled = torch.sqrt(mse_loss)
-                
-                rmse = ((rmse_scaled + 1) / 2) * 1000
+                rmse = torch.sqrt(mse_criterion(((logits + 1) / 2) * 1000, ((target + 1) / 2) * 1000))
                 rmse_meter.update(rmse.item())
+                
                 wandb.log({'Train Loss RMSE [kWh/m2]': rmse})
                 '''
                 individual_losses = torch.mean(individual_criterion(logits, target), 1)
@@ -499,12 +496,8 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     
     pbar = tqdm(enumerate(val_loader), total=val_loader.__len__(), desc='Val')
     for idx, data in pbar:
-        try:
-            pbar.set_description(f"MSE: {format(round(loss, 4), '.4f')}, RMSE: {format(round(rmse, 4), '.4f')}, npoints: {str(logits.shape[1]).zfill(5)}")
-            pbar.refresh()
-            time.sleep(0.01)
-        except:
-            pass
+        pbar.set_description(f"MSE: {format(round(loss.item(), 4), '.4f')}, RMSE: {format(round(rmse.item(), 4), '.4f')}")
+        pbar.refresh()
         
         keys = data.keys() if callable(data.keys) else data.keys
         
@@ -556,6 +549,7 @@ def test(cfg, model, root):
     data_transform = build_transforms_from_cfg('val', cfg.datatransforms)   
     
     loss_meter = AverageMeter()
+    rmse_meter = AverageMeter()
     
     files = traverse_root(root)
     
@@ -563,11 +557,13 @@ def test(cfg, model, root):
     all_logits = torch.Tensor().cuda(non_blocking=True)
     
     loss = torch.Tensor([0.0])
+    rmse = torch.Tensor([0.0])
     
     pbar = tqdm(enumerate(files), total=len(files), desc='Test')
     
     for idx, test_sample in pbar:
-        pbar.set_description(f"MSE: {loss}")
+        pbar.set_description(f"Test MSE: {format(round(loss.item(), 4), '.4f')}, Test RMSE: {format(round(rmse.item(), 4), '.4f')} [kWh/m2]")
+        pbar.refresh()
         
         data = np.load(test_sample).astype(np.float32)
         
@@ -595,39 +591,33 @@ def test(cfg, model, root):
 
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
 
-        try:
-            logits = model(data)[0, 0, :]    
+        logits = model(data)[0, 0, :]    
+        targets = data['y']
+        
+        all_targets = torch.cat((all_targets, targets))
+        all_logits = torch.cat((all_logits, logits))
 
-            targets = data['y']
-            all_targets = torch.cat((all_targets, targets))
-            all_logits = torch.cat((all_logits, logits))
+        loss = mse_criterion(logits, targets)
+        rmse = torch.sqrt(mse_criterion(((logits + 1) / 2) * 1000, ((targets + 1) / 2) * 1000))
 
-            loss = mse_criterion(logits, targets)
-
-            loss_meter.update(loss.item())
-        except Exception as e:
-            print(e)
-            print(data)
+        loss_meter.update(loss.item())
+        rmse_meter.update(rmse.item())
             
-    
     all_targets = ((all_targets + 1) / 2) * 1000
     all_logits = ((all_logits + 1) / 2) * 1000
-
-    all_targets.cpu()
-    all_logits.cpu()
-    
+   
     print(f"Test Loss MSE: {loss_meter.avg}")
+    print(f"Test Loss RMSE: {loss_meter.avg}")
     
-    confusion_matrix, _, _, image_path = binned_cm(all_targets, all_logits, 0, 1000, 10, show=True)
+    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, show=True)
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
-    
     
     if cfg.wandb.use_wandb:
         wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
-    
     if cfg.wandb.use_wandb:
         wandb.log({"Test Loss MSE": loss_meter.avg})
+        wandb.log({"Test Loss RMSE": rmse_meter.avg})
         wandb.log({"Precision": precision})
         wandb.log({"Accuracy": accuracy})
         wandb.log({"Recall": recall})
@@ -638,19 +628,21 @@ def test(cfg, model, root):
         wandb.log({"Micro-averaged F1-score": micro_avg_f1_score})
         wandb.log({"Macro-averaged Accuracy": macro_avg_accuracy})
         wandb.log({"Macro-averaged Precision": macro_avg_precision})
-        wandb.log({"Macro-averaged Recall:": macro_avg_recall})
+        wandb.log({"Macro-averaged Recall": macro_avg_recall})
         wandb.log({"Macro-averaged F1-score:": macro_avg_f1_score})
         
     print(f"Precision: {precision}")
     print(f"Accuracy: {accuracy}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-    print(f"Precision: {precision}")
-
+    print(f"Recall: {recall}")
+    print(f"F1-score: {f1_score}")
+    print(f"Micro-averaged Accuracy: {micro_avg_accuracy}")
+    print(f"Micro-averaged Precision: {micro_avg_precision}")
+    print(f"Micro-averaged Recall: {micro_avg_recall}")
+    print(f"Micro-averaged F1-score: {micro_avg_f1_score}")
+    print(f"Macro-averaged Accuracy: {macro_avg_accuracy}")
+    print(f"Macro-averaged Precision: {macro_avg_precision}")
+    print(f"Macro-averaged Recall: {macro_avg_recall}")
+    print(f"Macro-averaged F1-score: {macro_avg_f1_score}")
 
 def compute_metrics(confusion_matrix):
     # Total number of classes
