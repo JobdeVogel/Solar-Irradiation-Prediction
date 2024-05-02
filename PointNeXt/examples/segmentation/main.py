@@ -489,6 +489,9 @@ def cm(targets, predictions):
 def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1, image_dir=''):   
     model.eval()  # set model to eval mode
     
+    loss = torch.Tensor([0.0])
+    rmse = torch.Tensor([0.0])
+    
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
     all_targets = torch.tensor([]).cuda(non_blocking=True)
@@ -607,7 +610,7 @@ def test(cfg, model, root):
     all_logits = ((all_logits + 1) / 2) * 1000
    
     print(f"Test Loss MSE: {loss_meter.avg}")
-    print(f"Test Loss RMSE: {loss_meter.avg}")
+    print(f"Test Loss RMSE: {loss_meter.avg} [kWh/m2]")
     
     confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, show=True)
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
@@ -617,7 +620,7 @@ def test(cfg, model, root):
     
     if cfg.wandb.use_wandb:
         wandb.log({"Test Loss MSE": loss_meter.avg})
-        wandb.log({"Test Loss RMSE": rmse_meter.avg})
+        wandb.log({"Test Loss RMSE [kWh/m2]": rmse_meter.avg})
         wandb.log({"Precision": precision})
         wandb.log({"Accuracy": accuracy})
         wandb.log({"Recall": recall})
