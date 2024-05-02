@@ -104,7 +104,7 @@ def main(gpu, cfg):
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
    
-    # build dataset
+    # build dataset    
     test_loader, test_histogram = build_dataloader_from_cfg(cfg.get('test_batch_size', cfg.batch_size),
                                             cfg.dataset,
                                             cfg.dataloader,
@@ -112,7 +112,11 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-   
+    print('-----')
+    print('after training:')
+    print(cfg.dataset)
+    print('-----')
+
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                             cfg.dataset,
@@ -120,8 +124,7 @@ def main(gpu, cfg):
                                             datatransforms_cfg=cfg.datatransforms,
                                             split='val',
                                             distributed=False
-                                            )      
-    
+                                            )          
     print(next(iter(test_loader)))
     print(next(iter(val_loader)))
     sys.exit()
