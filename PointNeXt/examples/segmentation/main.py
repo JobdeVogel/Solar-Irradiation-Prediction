@@ -125,8 +125,17 @@ def main(gpu, cfg):
                                             split='val',
                                             distributed=False
                                             )          
-    print(next(iter(test_loader)))
-    print(next(iter(val_loader)))
+    test_iter = iter(test_loader)
+    val_iter = iter(val_loader)
+    
+    print(next(test_iter))
+    print(next(test_iter))
+    print('\n')
+    print(next(val_iter))
+    print(next(val_iter))
+    print('\n')
+    print(len(test_loader))
+    print(len(val_loader))
     sys.exit()
     
     # ! commented
@@ -144,6 +153,8 @@ def main(gpu, cfg):
     validate_fn = validate
     
     """
+    HISTOGRAM
+    
     # import matplotlib
     # import matplotlib.pyplot as plt
     # matplotlib.use('TkAgg')
