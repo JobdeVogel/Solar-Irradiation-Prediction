@@ -984,7 +984,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="Thesis_2", name=name):
+        with wandb.init(mode="online", project="Thesis_main", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
