@@ -176,7 +176,7 @@ def binned_cm(target,
 
     cmap = sn.color_palette("flare", as_cmap=True)
     sn.heatmap(df_cm, cbar=True, annot=True, cmap=cmap, square=True, fmt='.0f',
-                annot_kws={'size': 10}, norm=LogNorm(), vmin=None, vmax=None, linewidths=1, linecolor='black')
+                annot_kws={'size': 10}, norm=LogNorm(), vmin=0, vmax=10e7, linewidths=1, linecolor='black')
     plt.title(name)
     
     if show:
