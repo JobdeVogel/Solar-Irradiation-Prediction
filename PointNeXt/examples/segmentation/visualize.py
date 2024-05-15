@@ -66,9 +66,9 @@ def plot(image_name,
     ax1 = plt.subplot(gs[0], projection='3d')
     ax1.scatter(x, y, z, s=4, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
     ax1.set_title('Ground truth [kWh/m2]', pad=20, loc='center')
-    ax1.set_xlim(-0.75, 0.75)
-    ax1.set_ylim(-0.75, 0.75)
-    ax1.set_zlim(-0.25, 1.25)
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(0, 1)
+    ax1.set_zlim(0, 1)
     ax1.grid(False)
     ax1.set_proj_type('ortho')
     
@@ -86,9 +86,9 @@ def plot(image_name,
         ax2 = plt.subplot(gs[1], projection='3d')  # 1 row, 2 columns, second plot
         ax2.scatter(x, y, z, s=4, linewidths=0, c=colors, cmap=color_map, edgecolors='k')
         ax2.set_title('Prediction [kWh/m2]', pad=20, loc='center')
-        ax2.set_xlim(-0.75, 0.75)
-        ax2.set_ylim(-0.75, 0.75)
-        ax2.set_zlim(-0.25, 1.25)
+        ax2.set_xlim(0, 1)
+        ax2.set_ylim(0, 1)
+        ax2.set_zlim(0, 1)
         ax2.grid(False)
         ax2.set_proj_type('ortho')
 

@@ -2,17 +2,17 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: T:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular
+    data_root: T:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #T:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular
     test_area: 5
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
+    bins: 20
   train:
     split: train
     voxel_max: 10000
     loop: 1 # here, the training has been looped 30 times. therefore, the training epochs do not need much.
     presample: True
     compute_hist: False
-    bins: 5
     show: False
     _overwrite_dset_size: 0
   val:
@@ -20,14 +20,13 @@ dataset:
     voxel_max: null
     presample: True
     compute_hist: False
-    bins: 5
     show: False
     _overwrite_dset_size: 0
   test:
     split: test
     voxel_max: null
     presample: True
-    data_root: T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
+    data_root: T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis  #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular #T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
 
 feature_keys: pos,normals
 num_classes: 1
@@ -49,7 +48,9 @@ datatransforms:
     angle: [0, 0, 1]
     jitter_sigma: 0.005
     jitter_clip: 0.02
-    norm_min: -1 # Minimum value of normalization range for irradiance values (either 0 or -1)
+    centering: False
+    normalize: True
+    norm_min: 0 # Minimum value of normalization range for data values (either 0 or -1 or  null)
 
 # ---------------------------------------------------------------------------- #
 # Training cfgs

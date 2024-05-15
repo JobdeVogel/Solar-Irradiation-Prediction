@@ -251,11 +251,11 @@ def main(gpu, cfg):
     
     for idx in range(max_images):
         if idx == 0:
-            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation')
-            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation')
-            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation')
-            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation')
-            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation')
+            image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch base test 0 sample {idx}', image_dir + '\\evaluation', cfg)
+            image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch base test 1 sample {idx}', image_dir + '\\evaluation', cfg)
+            image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch base test 2 sample {idx}', image_dir + '\\evaluation', cfg)
+            image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch base test 3 sample {idx}', image_dir + '\\evaluation', cfg)
+            image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch base test 4 sample {idx}', image_dir + '\\evaluation', cfg)
             
             if cfg.wandb.use_wandb:
                 wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')}, step=0)
@@ -263,7 +263,7 @@ def main(gpu, cfg):
                 wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')}, step=0)
                 wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')}, step=0)
                 wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')}, step=0)
-        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch 0 train sample {idx}', image_dir + '\\training')
+        image_path = eval_image(model, evaluation_train_array, idx, f'Epoch 0 train sample {idx}', image_dir + '\\training', cfg)
         
         if cfg.wandb.use_wandb:
             wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')}, step=0)
@@ -281,7 +281,6 @@ def main(gpu, cfg):
         #     train_loader.sampler.set_epoch(epoch)
         # if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
         #     train_loader.dataset.epoch = epoch - 1
-        
         train_loss, train_rmse, total_iter = \
             train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
         
@@ -296,7 +295,7 @@ def main(gpu, cfg):
                 logging.info("Found new best model!")
                 is_best = True
                 best_val = eval_loss
-        
+            
         # ! Log to the writer
         lr = optimizer.param_groups[0]['lr']
         
@@ -305,11 +304,11 @@ def main(gpu, cfg):
         max_images = min([5, cfg.batch_size])
         for idx in range(max_images):
             if idx == 0:
-                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir + '\\evaluation')
-                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir + '\\evaluation')
-                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir + '\\evaluation')
-                image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch {epoch} test 3 sample {idx}', image_dir + '\\evaluation')
-                image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation')
+                image_path_0 = eval_image(model, evaluation_test_array_0, idx, f'Epoch {epoch} test 0 sample {idx}', image_dir + '\\evaluation', cfg)
+                image_path_1 = eval_image(model, evaluation_test_array_1, idx, f'Epoch {epoch} test 1 sample {idx}', image_dir + '\\evaluation', cfg)
+                image_path_2 = eval_image(model, evaluation_test_array_2, idx, f'Epoch {epoch} test 2 sample {idx}', image_dir + '\\evaluation', cfg)
+                image_path_3 = eval_image(model, evaluation_test_array_3, idx, f'Epoch {epoch} test 3 sample {idx}', image_dir + '\\evaluation', cfg)
+                image_path_4 = eval_image(model, evaluation_test_array_4, idx, f'Epoch {epoch} test 4 sample {idx}', image_dir + '\\evaluation', cfg)
                 
                 if cfg.wandb.use_wandb:
                     wandb.log({f"Evaluation Irradiance Predictions 0": wandb.Image(image_path_0 + '.png')})
@@ -317,7 +316,7 @@ def main(gpu, cfg):
                     wandb.log({f"Evaluation Irradiance Predictions 2": wandb.Image(image_path_2 + '.png')})
                     wandb.log({f"Evaluation Irradiance Predictions 3": wandb.Image(image_path_3 + '.png')})
                     wandb.log({f"Evaluation Irradiance Predictions 4": wandb.Image(image_path_4 + '.png')})
-            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training')
+            image_path = eval_image(model, evaluation_train_array, idx, f'Epoch {epoch} train sample {idx}', image_dir + '\\training', cfg)
             
             if cfg.wandb.use_wandb:
                 wandb.log({f"Train Irradiance Predictions {idx}": wandb.Image(image_path + '.png')})
@@ -376,6 +375,23 @@ def main(gpu, cfg):
 
     # dist.destroy_process_group() # comment this line due to https://github.com/guochengqian/PointNeXt/issues/95
     wandb.finish(exit_code=True)
+
+def standardize(logits, targets, cfg):
+    dmin = cfg.datatransforms.kwargs.norm_min
+    dmax = 1
+    
+    if dmin == None: dmin = -1
+    
+    # Standardize logits
+    logits = (logits - dmin) / (dmax - dmin)
+    targets = (targets - dmin) / (dmax - dmin)
+
+    # Return in range [0, 1]
+    return logits, targets
+    
+    
+    
+    #data['pos'][:, 0:2] = (data['pos'][:, 0:2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1]
 
 def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg):
     loss_meter = AverageMeter()
@@ -436,7 +452,10 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             loss is used for backwards pass
             mse_loss is used for performance comparison
             '''
-            
+
+            # Standardize the logits and targets to [0, 1]
+            logits, target = standardize(logits, target, cfg)           
+                       
             if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
                 loss = criterion(logits, target, bins=data['bins'])
             elif 'mask' in cfg.criterion_args.NAME.lower():
@@ -449,8 +468,9 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             wandb.log({'Train Loss (non-MSE)': loss})
             wandb.log({'Train Loss MSE': mse_loss})
             
+            # Compute RMSE with real units
             if cfg.regression:
-                rmse = torch.sqrt(mse_criterion(((logits + 1) / 2) * 1000, ((target + 1) / 2) * 1000))
+                rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
                 rmse_meter.update(rmse.item())
                 
                 wandb.log({'Train Loss RMSE [kWh/m2]': rmse})
@@ -492,9 +512,6 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
     
     return loss_meter.avg, rmse_meter.avg, total_iter
 
-def cm(targets, predictions):
-    pass
-
 @torch.no_grad()
 def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data_transform=None, epoch=-1, total_iter=-1, image_dir=''):   
     model.eval()  # set model to eval mode
@@ -525,6 +542,8 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         
         logits = model(data)
         
+        logits, target = standardize(logits, target, cfg)
+        
         if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
             loss = criterion(logits, target, bins=data['bins'])
         elif 'mask' in cfg.criterion_args.NAME.lower():
@@ -534,17 +553,15 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         
         loss_meter.update(loss.item())
         
-        mse_loss = mse_criterion(logits, target)
-        
         if cfg.regression:
-            rmse = torch.sqrt(mse_criterion(((logits + 1) / 2) * 1000, ((target + 1) / 2) * 1000))
+            rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
             rmse_meter.update(rmse.item())
     
         all_targets = torch.cat((all_targets, target.view(-1)))
         all_logits = torch.cat((all_logits, logits.view(-1)))
     
-    all_targets = ((all_targets + 1) / 2) * 1000
-    all_logits = ((all_logits + 1) / 2) * 1000
+    all_targets = all_targets * 1000
+    all_logits = all_logits * 1000
     
     name = f'Confusion matrix validation epoch {epoch}'
     image_dir += 'cm'
@@ -552,7 +569,8 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
     
-    _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
+    bins = cfg.dataset.common.bins
+    _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
     wandb.log({f"Validation Confusion matrix": wandb.Image(image_path + '.png')})
     
     return loss_meter.avg, rmse_meter.avg
@@ -577,35 +595,7 @@ def test(cfg, model, test_loader, image_dir=''):
     for idx, data in pbar:
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
-        
-        '''
-        data = np.load(test_sample).astype(np.float32)
-        
-        # Remove the None values (points that should not be included)
-        nan_mask = np.isnan(data).any(axis=1)
-        data = data[~nan_mask]
-                
-        # Build sample in format
-        pos, normals, targets = data[:,0:3], data[:, 3:-1], data[:, -1] 
-        data = {'pos': pos, 'normals': normals, 'x': normals, 'y': targets}
-        
-        # Transform the data
-        data = data_transform(data)
-        
-        # Make negative 0 positive
-        data['normals'] += 0.
-
-        data['normals'] = data['normals'].unsqueeze(0)
-        data['pos'] = data['pos'].unsqueeze(0)
-
-        keys = data.keys() if callable(data.keys) else data.keys
-        
-        for key in keys:
-            data[key] = data[key].cuda(non_blocking=True)
-
-        data['x'] = get_features_by_keys(data, cfg.feature_keys)
-        '''
-        
+               
         keys = data.keys() if callable(data.keys) else data.keys
         
         for key in keys:
@@ -616,8 +606,10 @@ def test(cfg, model, test_loader, image_dir=''):
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         logits = model(data)   
 
+        logits, targets = standardize(logits, targets, cfg)
+
         loss = mse_criterion(logits, targets)
-        rmse = torch.sqrt(mse_criterion(((logits + 1) / 2) * 1000, ((targets + 1) / 2) * 1000))
+        rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
 
         loss_meter.update(loss.item())
         rmse_meter.update(rmse.item())
@@ -625,8 +617,8 @@ def test(cfg, model, test_loader, image_dir=''):
         all_targets = torch.cat((all_targets, targets.view(-1)))
         all_logits = torch.cat((all_logits, logits.view(-1)))
             
-    all_targets = ((all_targets + 1) / 2) * 1000
-    all_logits = ((all_logits + 1) / 2) * 1000
+    all_targets = all_targets * 1000
+    all_logits = all_logits * 1000
    
     print(f"Test Loss MSE: {loss_meter.avg}")
     print(f"Test Loss RMSE: {loss_meter.avg} [kWh/m2]")
@@ -637,7 +629,8 @@ def test(cfg, model, test_loader, image_dir=''):
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
     
-    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, 10, name=name, path=image_dir, show=False, save=True)
+    bins = cfg.dataset.common.bins
+    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
     wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
@@ -725,7 +718,7 @@ def compute_metrics(confusion_matrix):
 
 
 @torch.no_grad()
-def eval_image(model, sample, idx, name, path):
+def eval_image(model, sample, idx, name, path, cfg):
     model.eval() # set model to eval mode
     
     data = {}
@@ -749,11 +742,14 @@ def eval_image(model, sample, idx, name, path):
     
     for key in data:
         data[key] = data[key].cpu()
-        
+    
+    logits, data['y'] = standardize(logits, data['y'], cfg)
+    
     from_sample(data, 0, values, False, True, name, path)
     
     return os.path.join(path, name)
 
+"""
 @torch.no_grad()
 def evaluate_file(model_path, data_path, cfg):
     '''
@@ -811,6 +807,7 @@ def evaluate_file(model_path, data_path, cfg):
         data[key] = data[key].to("cpu")
     
     return data, list(irradiance)
+"""
 
 def traverse_root(root):
     res = []

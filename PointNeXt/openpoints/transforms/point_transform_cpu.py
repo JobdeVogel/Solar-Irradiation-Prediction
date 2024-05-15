@@ -336,11 +336,12 @@ class IrradianceClipNormalize(object):
     def __init__(self, 
                  clamp_min=0, 
                  clamp_max=1000,
+                 norm_min=None,
                  **kwargs):
         
         self.clamp_min = clamp_min
         self.clamp_max = clamp_max
-        self.norm_min = kwargs.get('norm_min', -1)
+        self.norm_min = norm_min
     
     def __call__(self, data):
         data['y'] = np.clip(data['y'], self.clamp_min, self.clamp_max)
@@ -348,12 +349,11 @@ class IrradianceClipNormalize(object):
         data['y'] -= self.clamp_min
         data['y'] /= (self.clamp_max - self.clamp_min)
 
-        if self.norm_min == -1:
-            data['y'] = (data['y'] * 2) - 1
-        elif self.norm_min != 0:
-            raise NotImplementedError
+        if self.norm_min != None:
+            # ! Is this correct?
+            data['y'] =  data['y'] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range    
         else:
-            pass
+            data['y'] = (data['y'] * 2) - 1
         
         return data
             

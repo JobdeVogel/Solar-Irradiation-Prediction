@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import collections
 from .transforms_factory import DataTransforms
+import sys
 #
 # import scipy
 # import scipy.ndimage
@@ -38,13 +39,19 @@ class PointCloudCenterAndNormalize(object):
                  normalize=True,
                  gravity_dim=2,
                  append_xyz=False,
+                 norm_min=None,
+                 dmin=0,
+                 dmax=100,
                  **kwargs):
         self.centering = centering
         self.normalize = normalize
         self.gravity_dim = gravity_dim
         self.append_xyz = append_xyz
+        self.norm_min = norm_min
+        self.dmin = dmin
+        self.dmax = dmax
 
-    def __call__(self, data):
+    def __call__(self, data):       
         if hasattr(data, 'keys'):
             if 'heights' in data.keys():
                 if self.append_xyz:
@@ -52,19 +59,33 @@ class PointCloudCenterAndNormalize(object):
                 else:
                     height = data['pos'][:, self.gravity_dim:self.gravity_dim + 1]
                     data['heights'] = height - torch.min(height)
-
+            
             if self.centering:
                 data['pos'] = data['pos'] - torch.mean(data['pos'], axis=0, keepdims=True)
 
             if self.normalize:
-                m = torch.max(torch.sqrt(torch.sum(data['pos'] ** 2, axis=-1, keepdims=True)), axis=0, keepdims=True)[0]
-                data['pos'] = data['pos'] / m
+                if self.norm_min != None:                                        
+                    data['pos'][:, 0:2] = (data['pos'][:, 0:2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1] 
+                    data['pos'][:, 0:2] = data['pos'][:, 0:2] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range
+                    
+                    data['pos'][:, 2] = (data['pos'][:, 2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1]
+                    data['pos'][:, 2] = data['pos'][:, 2] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range
+                else:
+                    m = torch.max(torch.sqrt(torch.sum(data['pos'] ** 2, axis=-1, keepdims=True)), axis=0, keepdims=True)[0]
+                    data['pos'] = data['pos'] / m
         else:
             if self.centering:
                 data = data - torch.mean(data, axis=-1, keepdims=True)
             if self.normalize:
-                m = torch.max(torch.sqrt(torch.sum(data ** 2, axis=-1, keepdims=True)), axis=0, keepdims=True)[0]
-                data = data / m
+                if self.norm_min != None:                                        
+                    data['pos'][:, 0:2] = (data['pos'][:, 0:2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1]
+                    data['pos'][:, 0:2] = data['pos'][:, 0:2] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range
+                    
+                    data['pos'][:, 2] = (data['pos'][:, 2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1]
+                    data['pos'][:, 2] = data['pos'][:, 2] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range
+                else:
+                    m = torch.max(torch.sqrt(torch.sum(data['pos'] ** 2, axis=-1, keepdims=True)), axis=0, keepdims=True)[0]
+                    data['pos'] = data['pos'] / m
         return data
 
 

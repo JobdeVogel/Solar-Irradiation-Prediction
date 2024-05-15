@@ -85,7 +85,7 @@ class IRRADIANCE(Dataset):
                  presample: bool = True,
                  variable: bool = False,
                  shuffle: bool = True,
-                 bins=20,
+                 bins=10,
                  compute_hist=False,
                  show=False,
                  _overwrite_dset_size=0
@@ -125,7 +125,7 @@ class IRRADIANCE(Dataset):
             print(f'WARNING: number of available samples in {self.raw_root} is 1, only a train dataset can be generated, test will be skipped')
         
         data_list = [item[:-4] for item in data_list]
-        '''data_list = [item[:-4] for item in data_list if 'Area_' in item]'''
+        '''data_list = [item[:-4] for item in data_list if 'Area_' in item] '''
         
         '''        
         if split == 'train':
@@ -165,7 +165,7 @@ class IRRADIANCE(Dataset):
         processed_root = os.path.join(data_root, 'processed')
         
         filename = os.path.join(
-            processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}.pkl')
+            processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}_{str(self.bins)}.pkl')
         
         self.bin_edges = torch.linspace(0, 1000, steps=self.bins+1).unsqueeze(0)        
         
