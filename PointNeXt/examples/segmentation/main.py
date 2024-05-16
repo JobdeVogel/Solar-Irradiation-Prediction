@@ -45,7 +45,7 @@ def main(gpu, cfg):
         cfg.criterion_args.bins = cfg.dataset.common.bins
         cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
         cfg.criterion_args.max = 1
-        cfg.criterion_args.weights = [1,1,1,1,0.25]
+        cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]
     
     if cfg.criterion_args.NAME.lower() == 'deltaloss':
         cfg.criterion_args.delta = 0.6
@@ -842,7 +842,7 @@ def config_to_cfg(config):
                 cfg.criterion_args.bins = cfg.dataset.common.bins
                 cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
                 cfg.criterion_args.max = 1
-                cfg.criterion_args.weights = [1,1,1,1,0.25]
+                cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]
             
             if config[key].lower() == 'deltaloss':
                 cfg.criterion_args.delta = 0.6
