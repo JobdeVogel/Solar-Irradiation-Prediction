@@ -43,7 +43,7 @@ def main(gpu, cfg):
 
     if cfg.criterion_args.NAME.lower() == 'weightedmse':
         cfg.criterion_args.bins = cfg.dataset.common.bins
-        cfg.criterion_args.min = -1
+        cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
         cfg.criterion_args.max = 1
         cfg.criterion_args.weights = [1,1,1,1,0.25]
     
@@ -53,7 +53,7 @@ def main(gpu, cfg):
     
     if cfg.criterion_args.NAME.lower() == 'reductionloss':
         cfg.criterion_args.bins = cfg.dataset.common.bins
-        cfg.criterion_args.min = -1
+        cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
         cfg.criterion_args.max = 1
         cfg.criterion_args.reduction = 1
 
@@ -839,8 +839,8 @@ def config_to_cfg(config):
             cfg.criterion_args.NAME = config[key]   
             
             if config[key].lower() == 'weightedmse':
-                cfg.criterion_args.bins = 5
-                cfg.criterion_args.min = -1
+                cfg.criterion_args.bins = cfg.dataset.common.bins
+                cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
                 cfg.criterion_args.max = 1
                 cfg.criterion_args.weights = [1,1,1,1,0.25]
             
@@ -849,8 +849,8 @@ def config_to_cfg(config):
                 cfg.criterion_args.power = 2
             
             if config[key].lower() == 'reductionloss':
-                cfg.criterion_args.bins = 5
-                cfg.criterion_args.min = -1
+                cfg.criterion_args.bins = cfg.dataset.common.bins
+                cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
                 cfg.criterion_args.max = 1
                 cfg.criterion_args.reduction = 1
             
