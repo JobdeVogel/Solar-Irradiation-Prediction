@@ -42,7 +42,7 @@ def main(gpu, cfg):
     #     dist.barrier()
 
     if cfg.criterion_args.NAME.lower() == 'weightedmse':
-        cfg.criterion_args.bins = 5
+        cfg.criterion_args.bins = cfg.dataset.common.bins
         cfg.criterion_args.min = -1
         cfg.criterion_args.max = 1
         cfg.criterion_args.weights = [1,1,1,1,0.25]
@@ -52,7 +52,7 @@ def main(gpu, cfg):
         cfg.criterion_args.power = 2
     
     if cfg.criterion_args.NAME.lower() == 'reductionloss':
-        cfg.criterion_args.bins = 5
+        cfg.criterion_args.bins = cfg.dataset.common.bins
         cfg.criterion_args.min = -1
         cfg.criterion_args.max = 1
         cfg.criterion_args.reduction = 1
@@ -112,6 +112,14 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
+
+    # # Save the model in the exchangeable ONNX format        
+    # input_names = ['points', 'meta']
+    # output_names = ["output", "trans"]
+        
+    # torch.onnx.disable_log()
+    # torch.onnx.export(model, next(iter(test_loader)), './onnx/model.onnx')
+    # sys.exit()
 
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
