@@ -12,14 +12,14 @@ dataset:
     voxel_max: 10000
     loop: 1 # here, the training has been looped 30 times. therefore, the training epochs do not need much.
     presample: True
-    compute_hist: False
+    compute_hist: True
     show: False
     _overwrite_dset_size: 0
   val:
     split: val
     voxel_max: null
     presample: True
-    compute_hist: False
+    compute_hist: True
     show: False
     _overwrite_dset_size: 0
   test:
