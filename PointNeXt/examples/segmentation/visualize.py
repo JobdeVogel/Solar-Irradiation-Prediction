@@ -40,6 +40,11 @@ def plot(image_name,
         blank=False
         ):    
     
+    points = (points-np.min(points))/(np.max(points)-np.min(points))
+     
+    # points -= points.min(1, keepdim=True)[0]
+    # points /= points.max(1, keepdim=True)[0]
+    
     # Set the figure size
     fig = plt.figure(figsize=(12, 6))
     fig.suptitle(image_name, fontsize=16, y=0.05)
