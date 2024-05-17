@@ -48,7 +48,7 @@ def main(gpu, cfg):
         cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]
     
     if cfg.criterion_args.NAME.lower() == 'deltaloss':
-        cfg.criterion_args.delta = 0.6
+        cfg.criterion_args.delta = 0.8
         cfg.criterion_args.power = 2
     
     if cfg.criterion_args.NAME.lower() == 'reductionloss':
@@ -82,7 +82,7 @@ def main(gpu, cfg):
     logging.info(f'Cfg parameters:')
     logging.info(cfg)
     
-    logging.info(model)
+    # logging.info(model)
     logging.info('Number of params: %.4f M' % (model_size / 1e6))
 
     if cfg.sync_bn:
@@ -112,7 +112,7 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-
+    
     # # Save the model in the exchangeable ONNX format        
     # input_names = ['points', 'meta']
     # output_names = ["output", "trans"]
@@ -460,10 +460,11 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             loss is used for backwards pass
             mse_loss is used for performance comparison
             '''
+            print(logits)
 
             # Standardize the logits and targets to [0, 1]
             logits, target = standardize(logits, target, cfg)           
-                       
+                 
             if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
                 loss = criterion(logits, target, bins=data['bins'])
             elif 'mask' in cfg.criterion_args.NAME.lower():
@@ -845,7 +846,7 @@ def config_to_cfg(config):
                 cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]
             
             if config[key].lower() == 'deltaloss':
-                cfg.criterion_args.delta = 0.6
+                cfg.criterion_args.delta = 0.8
                 cfg.criterion_args.power = 2
             
             if config[key].lower() == 'reductionloss':
@@ -865,7 +866,7 @@ def config_to_cfg(config):
 
 def sweep_run(config=None):
     # tell wandb to get started
-    with wandb.init(mode="online", project="IrradianceNet_loss_sweep", config=config, allow_val_change=True):        
+    with wandb.init(mode="disabled", project="IrradianceNet_loss_sweep", config=config, allow_val_change=True):        
         # access all HPs through wandb.config, so logging matches execution!
         config = wandb.config
         
