@@ -198,7 +198,7 @@ def main(gpu, cfg):
                                                 split='train',
                                                 distributed=False,
                                                 )
-    
+      
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
 
 
@@ -460,7 +460,6 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             loss is used for backwards pass
             mse_loss is used for performance comparison
             '''
-            print(logits)
 
             # Standardize the logits and targets to [0, 1]
             logits, target = standardize(logits, target, cfg)           
