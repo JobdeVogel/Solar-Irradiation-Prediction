@@ -385,7 +385,7 @@ def main(gpu, cfg):
     wandb.finish(exit_code=True)
 
 def standardize(logits, targets, cfg):
-    dmin = cfg.datatransforms.kwargs.norm_min
+    dmin = cfg.datatransforms.kwargs.irradiance_min
     dmax = 1
     
     if dmin == None: dmin = -1
