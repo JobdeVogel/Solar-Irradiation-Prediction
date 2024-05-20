@@ -337,23 +337,28 @@ class IrradianceClipNormalize(object):
                  clamp_min=0, 
                  clamp_max=1000,
                  norm_min=None,
+                 irradiance_min=0,
                  **kwargs):
         
         self.clamp_min = clamp_min
         self.clamp_max = clamp_max
         self.norm_min = norm_min
+        self.irradiance_min = irradiance_min
     
     def __call__(self, data):
         data['y'] = np.clip(data['y'], self.clamp_min, self.clamp_max)
         
         data['y'] -= self.clamp_min
         data['y'] /= (self.clamp_max - self.clamp_min)
+        
+        data['y'] =  data['y'] * (1 - self.irradiance_min) + self.irradiance_min  # Scale to the desired range  
+        
 
-        if self.norm_min != None:
-            # ! Is this correct?
-            data['y'] =  data['y'] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range    
-        else:
-            data['y'] = (data['y'] * 2) - 1
+        # if self.norm_min != None:
+        #     # ! Is this correct?
+        #     data['y'] =  data['y'] * (1 - self.norm_min) + self.norm_min  # Scale to the desired range    
+        # else:
+        #     data['y'] = (data['y'] * 2) - 1
         
         return data
             

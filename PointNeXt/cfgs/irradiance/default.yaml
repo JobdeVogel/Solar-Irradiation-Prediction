@@ -51,6 +51,7 @@ datatransforms:
     centering: False
     normalize: True
     norm_min: 0 # Minimum value of normalization range for data values (either 0 or -1 or  null)
+    irradiance_min: 0
 
 # ---------------------------------------------------------------------------- #
 # Training cfgs
