@@ -48,16 +48,16 @@ def statistics(sample):
     print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
     
     print('u:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 0])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 0])) + '\n')
+    print('min :' + str(torch.min(sample['normals'][:, :, 0])))
+    print('max: ' + str(torch.max(sample['normals'][:, :, 0])) + '\n')
     
     print('v:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 1])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 1])) + '\n')
+    print('min :' + str(torch.min(sample['normals'][:, :, 1])))
+    print('max: ' + str(torch.max(sample['normals'][:, :, 1])) + '\n')
     
     print('w:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 2])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
+    print('min :' + str(torch.min(sample['normals'][:, :, 2])))
+    print('max: ' + str(torch.max(sample['normals'][:, :, 2])) + '\n')
     
     print('targets:')
     print('min: ' + str(torch.min(sample['y'])))
@@ -156,7 +156,6 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-        
     # # Save the model in the exchangeable ONNX format        
     # input_names = ['points', 'meta']
     # output_names = ["output", "trans"]
@@ -265,7 +264,6 @@ def main(gpu, cfg):
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
     
     mse_criterion = torch.nn.MSELoss().cuda()
-    
     
     # ===> start training
     if cfg.use_amp:
@@ -456,7 +454,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
     rmse = torch.Tensor([0.0])
     mse_loss = torch.Tensor([0.0])
     
-    for idx, data in pbar:
+    for idx, data in pbar:        
         pbar.set_description(f"TRAINING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, MSE: {round(mse_loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
         
@@ -492,7 +490,9 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
         with torch.cuda.amp.autocast(enabled=cfg.use_amp):
             # ! Cast all the data to the model
             logits = model(data)
-            
+            # print(f'max logits: {round(torch.max(logits).item(), 3)} max targets: {round(torch.max(target).item(),3)}')
+            # print(f'min logits {round(torch.min(logits).item(), 3)} min targets: {round(torch.min(target).item(), 3)}')
+        
             logits = logits.squeeze(1)
                        
             '''
@@ -574,6 +574,9 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     
     pbar = tqdm(enumerate(val_loader), total=val_loader.__len__(), desc='Val')
     for idx, data in pbar:
+        # if idx == 25:
+        #     break
+        
         pbar.set_description(f"VALIDATION --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
         
@@ -641,6 +644,8 @@ def test(cfg, model, test_loader, image_dir=''):
     pbar = tqdm(enumerate(test_loader), total=test_loader.__len__(), desc='Test')
     
     for idx, data in pbar:
+        # if idx == 25:
+        #     break
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
                
@@ -653,7 +658,6 @@ def test(cfg, model, test_loader, image_dir=''):
         
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         logits = model(data)   
-
         logits, targets = standardize(logits, targets, cfg)
 
         loss = mse_criterion(logits, targets)
@@ -785,15 +789,14 @@ def eval_image(model, sample, idx, name, path, cfg):
         data[key] = data[key].cuda(non_blocking=True)
     
     logits = model(data)
+    logits, data['y'] = standardize(logits, data['y'], cfg)
     
     values = logits.cpu().numpy()[0, 0, :]
     
     for key in data:
         data[key] = data[key].cpu()
     
-    logits, data['y'] = standardize(logits, data['y'], cfg)
-    
-    from_sample(data, 0, values, False, True, name, path)
+    from_sample(data, 0, values, True, True, name, path)
     
     return os.path.join(path, name)
 
