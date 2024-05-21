@@ -796,7 +796,7 @@ def eval_image(model, sample, idx, name, path, cfg):
     for key in data:
         data[key] = data[key].cpu()
     
-    from_sample(data, 0, values, True, True, name, path)
+    from_sample(data, 0, values, False, True, name, path)
     
     return os.path.join(path, name)
 
