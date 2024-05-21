@@ -163,6 +163,7 @@ class IRRADIANCE(Dataset):
             self.data_list = data_list
 
         processed_root = os.path.join(data_root, 'processed')
+        # processed_root = 'D:\Master Thesis Data\IrradianceNet'
         
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}_{str(self.bins)}.pkl')
@@ -284,10 +285,10 @@ class IRRADIANCE(Dataset):
 
     def __getitem__(self, idx):
         data_idx = self.data_idx[idx % len(self.data_idx)]
+        file = self.data_list[idx]
         
         # If I have turned presample off, then there is no self.data
-        # else there is self.data
-        
+        # else there is self.data        
         if self.presample:
             try:
                 coord, feat, label, bins = np.split(self.data[data_idx], [3, 6, 7], axis=1)  
@@ -297,9 +298,10 @@ class IRRADIANCE(Dataset):
             
             feat = np.hstack((feat, bins))
             
+            # Scale from [-50, 50] to [0, 100]
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
-                downsample=not self.presample, variable=self.variable, shuffle=self.shuffle)
+                downsample=False, variable=self.variable, shuffle=self.shuffle)
             
             feat, bins = np.split(feat, [3], axis=1)    
         else:          
@@ -327,10 +329,9 @@ class IRRADIANCE(Dataset):
             feat = np.hstack((feat, bins))
             
             # TODO: Upsample or downsample here
-            
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
-                downsample=not self.presample, variable=self.variable, shuffle=self.shuffle)
+                downsample=False, variable=self.variable, shuffle=self.shuffle)
             
             feat, bins = np.split(feat, [3], axis=1)    
                 
@@ -361,7 +362,6 @@ class IRRADIANCE(Dataset):
             * REMOVE: ChromaticDropGPU: Remove colors?
             * REMOVE: ChromaticNormalize: Seems to be related to color
         '''
-
         # pre-process. 
         # Currently  pointstotensor, normalize and centering included
         if self.transform is not None:
@@ -376,8 +376,10 @@ class IRRADIANCE(Dataset):
         
         # Remove negative zero values in normals
         data['normals'] += 0.
-        
+        data['x'] += 0.
+
         data['idx'] = idx
+        # data['file'] = file
         
         return data
 

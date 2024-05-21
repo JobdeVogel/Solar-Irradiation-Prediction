@@ -31,6 +31,50 @@ from visualize import from_sample, plot, binned_cm
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+def statistics(sample):
+    print(sample['normals'])
+    print('\n')
+    
+    print('x:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 0])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 0])) + '\n')
+    
+    print('y:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 1])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 1])) + '\n')
+    
+    print('z:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 2])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
+    
+    print('u:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 0])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 0])) + '\n')
+    
+    print('v:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 1])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 1])) + '\n')
+    
+    print('w:')
+    print('min :' + str(torch.min(sample['pos'][:, :, 2])))
+    print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
+    
+    print('targets:')
+    print('min: ' + str(torch.min(sample['y'])))
+    print('max: ' + str(torch.max(sample['y'])))    
+    
+    dmin = cfg.datatransforms.kwargs.irradiance_min
+    dmax = 1
+    
+    if dmin == None: dmin = -1
+    
+    # Standardize logits
+    targets = (sample['y'] - dmin) / (dmax - dmin)
+    
+    print('targets standardized:')
+    print('min: ' + str(torch.min(targets)))
+    print('max: ' + str(torch.max(targets)))    
+    
 def main(gpu, cfg):
     # if cfg.distributed:
     #     if cfg.mp:
@@ -112,7 +156,7 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-    
+        
     # # Save the model in the exchangeable ONNX format        
     # input_names = ['points', 'meta']
     # output_names = ["output", "trans"]
@@ -197,11 +241,10 @@ def main(gpu, cfg):
                                                 datatransforms_cfg=cfg.datatransforms,
                                                 split='train',
                                                 distributed=False,
-                                                )
-      
+                                                )    
+
+    
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
-
-
 
     if not cfg.regression:
         cfg.criterion_args.weight = None
@@ -396,10 +439,6 @@ def standardize(logits, targets, cfg):
 
     # Return in range [0, 1]
     return logits, targets
-    
-    
-    
-    #data['pos'][:, 0:2] = (data['pos'][:, 0:2] - self.dmin) / (self.dmax - self.dmin)  # Normalize to [0, 1]
 
 def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg):
     loss_meter = AverageMeter()
@@ -455,14 +494,13 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             logits = model(data)
             
             logits = logits.squeeze(1)
-            
+                       
             '''
             loss is used for backwards pass
             mse_loss is used for performance comparison
             '''
-
             # Standardize the logits and targets to [0, 1]
-            logits, target = standardize(logits, target, cfg)           
+            # logits, target = standardize(logits, target, cfg)
                  
             if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
                 loss = criterion(logits, target, bins=data['bins'])
@@ -470,7 +508,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
                 loss = criterion(logits, target, data['mask'])
             else:
                 loss = criterion(logits, target)
-                    
+             
             mse_loss = mse_criterion(logits, target)
             
             wandb.log({'Train Loss (non-MSE)': loss})
@@ -478,6 +516,8 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             
             # Compute RMSE with real units
             if cfg.regression:
+                logits, target = standardize(logits, target, cfg)
+                
                 rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
                 rmse_meter.update(rmse.item())
                 
