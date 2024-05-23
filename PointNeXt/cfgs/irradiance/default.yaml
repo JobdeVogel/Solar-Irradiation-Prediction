@@ -7,19 +7,18 @@ dataset:
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
     bins: 10
+    compute_hist: True
   train:
     split: train
     voxel_max: 10000
     loop: 1 # here, the training has been looped 30 times. therefore, the training epochs do not need much.
     presample: True
-    compute_hist: False
     show: False
     _overwrite_dset_size: 0
   val:
     split: val
     voxel_max: null
     presample: True
-    compute_hist: False
     show: False
     _overwrite_dset_size: 0
   test:
