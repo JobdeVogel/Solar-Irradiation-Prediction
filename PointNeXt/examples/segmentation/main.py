@@ -155,10 +155,11 @@ def main(gpu, cfg):
                                             datatransforms_cfg=cfg.datatransforms,
                                             split='test',
                                             distributed=False
-                                            )
-    # # Save the model in the exchangeable ONNX format        
-    # input_names = ['points', 'meta']
-    # output_names = ["output", "trans"]
+                                            )    
+    
+    # Save the model in the exchangeable ONNX format        
+    input_names = ['points', 'meta']
+    output_names = ["output", "trans"]
         
     # torch.onnx.disable_log()
     # torch.onnx.export(model, next(iter(test_loader)), './onnx/model.onnx')
@@ -187,39 +188,6 @@ def main(gpu, cfg):
     cfg.cmap = np.array(val_loader.dataset.cmap) if hasattr(val_loader.dataset, 'cmap') else None
     validate_fn = validate
     
-    """
-    HISTOGRAM
-    
-    # import matplotlib
-    # import matplotlib.pyplot as plt
-    # matplotlib.use('TkAgg')
-    # tensors = []
-    
-    # data = iter(val_loader)
-    # for _ in range(len(data)):
-    #     tensors.append(next(data)['y'].squeeze(0))
-    
-    # tensor = torch.cat(tensors)
-    # tensor = ((tensor + 1) / 2) * 1000
-    
-    # bins = 8
-    # # Creating histogram
-    # histogram = torch.histc(tensor, bins=bins)
-    
-    # # Calculate bin edges
-    # bin_edges = torch.linspace(tensor.min(), tensor.max(), bins+1)
-    # names = [str(int(bin_edges[i].item())) + '-' + str(int(bin_edges[i+1].item())) for i in range(len(bin_edges[:-1]))]
-
-    # # Plotting the histogram
-    # plt.bar(names, histogram)
-    # plt.xlabel('Solar Irradiance [kWh/m2]')
-    # plt.ylabel('Point frequency')
-    # plt.title('Solar irradiance distribution over points')
-    
-    # plt.show()
-    # sys.exit()
-    """
-    
     # optionally resume from a checkpoint
     model_module = model.module if hasattr(model, 'module') else model
     
@@ -242,6 +210,40 @@ def main(gpu, cfg):
                                                 distributed=False,
                                                 )    
 
+    
+    # #HISTOGRAM
+    
+    # import matplotlib
+    # import matplotlib.pyplot as plt
+    # import math
+    # matplotlib.use('TkAgg')
+    # print(test_histogram)
+    # print(val_histogram)
+    # print(train_histogram)    
+    
+    # histogram = train_histogram + val_histogram + test_histogram
+    # print(histogram)
+    # sys.exit()
+    
+    # # Calculate bin edges
+    # bin_edges = torch.linspace(-1, 1, cfg.dataset.common.bins+1)
+    # print(f'{torch.sum(histogram)}')
+    
+    # #targets = (targets - dmin) / (dmax - dmin)
+    # bin_edges = ((bin_edges + 1) / 2) * 1000
+    # bin_edges = [int(math.ceil(edge)) for edge in bin_edges.tolist()]
+    # print(bin_edges)
+    # names = [f'[{bin_edges[i]} - {bin_edges[i+1]})' for i in range(len(bin_edges[:-1]))]
+
+    # # Plotting the histogram
+    # plt.bar(names, histogram)
+    # plt.xlabel('Solar Irradiance [kWh/m2]')
+    # plt.ylabel('Point frequency')
+    # plt.title('Solar irradiance distribution over points')
+    
+    # plt.show()
+    # sys.exit()
+    
     
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
 
@@ -407,23 +409,6 @@ def main(gpu, cfg):
     test(cfg, model, test_loader, image_dir=image_dir)
     
     wandb.finish(exit_code=True)
-    
-    # do not save file to wandb to save wandb space
-    # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.run_name}_ckpt_best.pth'))
-    # Wandb.add_file(os.path.join(cfg.ckpt_dir, f'{cfg.logname}_ckpt_latest.pth'))
-
-    # # validate
-    # with np.printoptions(precision=2, suppress=True):
-    #     if epoch % cfg.val_freq == 0:
-    #         logging.info(
-    #             f'Best ckpt @E{best_epoch},  eval loss {eval_loss:.2f}, train loss {train_loss:.2f}')
-    #     else:
-    #         logging.info(
-    
-    # ! Removed testing with sphere_validation
-
-    # dist.destroy_process_group() # comment this line due to https://github.com/guochengqian/PointNeXt/issues/95
-    wandb.finish(exit_code=True)
 
 def standardize(logits, targets, cfg):
     dmin = cfg.datatransforms.kwargs.irradiance_min
@@ -454,7 +439,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
     rmse = torch.Tensor([0.0])
     mse_loss = torch.Tensor([0.0])
     
-    for idx, data in pbar:        
+    for idx, data in pbar:
         pbar.set_description(f"TRAINING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, MSE: {round(mse_loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
         
@@ -511,23 +496,24 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
              
             mse_loss = mse_criterion(logits, target)
             
-            wandb.log({'Train Loss (non-MSE)': loss})
-            wandb.log({'Train Loss MSE': mse_loss})
+        wandb.log({'Train Loss (non-MSE)': loss})
+        wandb.log({'Train Loss MSE': mse_loss})
             
-            # Compute RMSE with real units
-            if cfg.regression:
-                logits, target = standardize(logits, target, cfg)
-                
+        # Compute RMSE with real units
+        if cfg.regression:
+            logits, target = standardize(logits, target, cfg)
+            
+            with torch.cuda.amp.autocast(enabled=cfg.use_amp):
                 rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
-                rmse_meter.update(rmse.item())
-                
-                wandb.log({'Train Loss RMSE [kWh/m2]': rmse})
-                '''
-                individual_losses = torch.mean(individual_criterion(logits, target), 1)
-                
-                for j, (ind, index) in enumerate(zip(individual_losses, data['idx'])):
-                    writer.add_scalar('mse_per_train_sample', ind, total_iter * cfg.batch_size + j)
-                    writer.add_scalar('sample_idx', index, total_iter * cfg.batch_size + j)
+            rmse_meter.update(rmse.item())
+            
+            wandb.log({'Train Loss RMSE [kWh/m2]': rmse})
+            '''
+            individual_losses = torch.mean(individual_criterion(logits, target), 1)
+            
+            for j, (ind, index) in enumerate(zip(individual_losses, data['idx'])):
+                writer.add_scalar('mse_per_train_sample', ind, total_iter * cfg.batch_size + j)
+                writer.add_scalar('sample_idx', index, total_iter * cfg.batch_size + j)
                 '''
         if cfg.use_amp:
             scaler.scale(loss).backward()
@@ -574,8 +560,6 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
     
     pbar = tqdm(enumerate(val_loader), total=val_loader.__len__(), desc='Val')
     for idx, data in pbar:
-        # if idx == 25:
-        #     break
         
         pbar.set_description(f"VALIDATION --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
@@ -591,21 +575,24 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         data['epoch'] = epoch
         data['iter'] = total_iter
         
-        logits = model(data)
+        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+            logits = model(data)
         
         logits, target = standardize(logits, target, cfg)
         
-        if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
-            loss = criterion(logits, target, bins=data['bins'])
-        elif 'mask' in cfg.criterion_args.NAME.lower():
-            loss = criterion(logits, target, data['mask'])
-        else:
-            loss = criterion(logits, target)
+        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+            if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
+                loss = criterion(logits, target, bins=data['bins'])
+            elif 'mask' in cfg.criterion_args.NAME.lower():
+                loss = criterion(logits, target, data['mask'])
+            else:
+                loss = criterion(logits, target)
         
         loss_meter.update(loss.item())
         
         if cfg.regression:
-            rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
+            with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+                rmse = torch.sqrt(mse_criterion(logits * 1000, target * 1000))
             rmse_meter.update(rmse.item())
     
         all_targets = torch.cat((all_targets, target.view(-1)))
@@ -643,9 +630,17 @@ def test(cfg, model, test_loader, image_dir=''):
     
     pbar = tqdm(enumerate(test_loader), total=test_loader.__len__(), desc='Test')
     
+    inference = 0
+    best_rmse = float('inf')
+    worst_rmse = 0
+    best_sample = None
+    worst_sample = None
+    best_logits = None
+    worst_logits = None
+    
     for idx, data in pbar:
-        # if idx == 25:
-        #     break
+        if idx == 25:
+            break
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
                
@@ -657,18 +652,59 @@ def test(cfg, model, test_loader, image_dir=''):
         targets = data['y'].squeeze(-1)
         
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
-        logits = model(data)   
+        
+        start = time.perf_counter()
+        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+            logits = model(data)
+        end = time.perf_counter()
+        inference += end - start
+        
         logits, targets = standardize(logits, targets, cfg)
 
-        loss = mse_criterion(logits, targets)
-        rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
+        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+            loss = mse_criterion(logits, targets)
+            rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
 
         loss_meter.update(loss.item())
         rmse_meter.update(rmse.item())
         
+        if rmse.item() > worst_rmse:
+            worst_rmse = rmse.item()
+            worst_sample = data
+            worst_logits = logits
+        
+        if rmse.item() < best_rmse:
+            best_rmse = rmse.item()
+            best_sample = data
+            best_logits = logits
+        
         all_targets = torch.cat((all_targets, targets.view(-1)))
         all_logits = torch.cat((all_logits, logits.view(-1)))
-            
+    
+    avg_inference = inference / len(test_loader)
+    wandb.log({"Average Inference": avg_inference})
+    wandb.log({"Best RMSE": best_rmse})
+    wandb.log({"Worst RMSE": worst_rmse})
+    
+    print(f'AVERAGE INFERENCE TIME: {round(avg_inference, 3)}s')
+    print(f'Highest RMSE: {round(worst_rmse, 3)} kWh/m2')
+    print(f'Lowest RMSE: {round(best_rmse, 3)} kWh/m2')
+    
+    worst_logits = worst_logits.cpu().numpy()[0, 0, :]
+    best_logits = best_logits.cpu().numpy()[0, 0, :]
+    
+    for key in worst_sample:
+        worst_sample[key] = worst_sample[key].cpu()
+    
+    for key in best_sample:
+        best_sample[key] = best_sample[key].cpu()
+    
+    from_sample(worst_sample, 0, worst_logits, False, True, 'Highest RMSE Sample', image_dir)
+    from_sample(best_sample, 0, best_logits, False, True, 'Lowest RMSE Sample', image_dir)
+    
+    wandb.log({'Highest RMSE Sample': os.path.join(image_dir, 'Highest RMSE Sample')})
+    wandb.log({'Lowest RMSE Sample': os.path.join(image_dir, 'Lowest RMSE Sample')})        
+         
     all_targets = all_targets * 1000
     all_logits = all_logits * 1000
    
