@@ -74,7 +74,7 @@ def statistics(sample):
     print('targets standardized:')
     print('min: ' + str(torch.min(targets)))
     print('max: ' + str(torch.max(targets)))    
-    
+
 def main(gpu, cfg):
     # if cfg.distributed:
     #     if cfg.mp:
@@ -121,6 +121,32 @@ def main(gpu, cfg):
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
     
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
+    
+    '''
+    data = {'pos': torch.rand(8, 10000, 3), 'normals': torch.rand(8, 10000, 3), 'x': torch.rand(8, 6, 10000), 'y': torch.rand(8, 10000), 'bins': torch.rand(8, 10000), 'idx': torch.tensor([0])}
+
+    # Save the model in the exchangeable ONNX format        
+    input_names = ['points', 'meta']
+    output_names = ["output", "trans"]
+
+    model.cuda()
+    
+    model.train()
+    keys = data.keys() if callable(data.keys) else data.keys
+    
+    # ! Send all data to GPU
+    for key in keys:
+        data[key] = data[key].cuda(non_blocking=True)
+    
+    start = time.perf_counter()
+    model(data)
+    end = time.perf_counter()
+    print(end-start)
+    
+    # torch.onnx.disable_log()
+    # torch.onnx.export(model, data, './test.onnx')
+    # sys.exit()
+    '''
     model_size = cal_model_parm_nums(model)
     
     logging.info(f'Cfg parameters:')
@@ -147,7 +173,7 @@ def main(gpu, cfg):
     # optimizer & scheduler
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
-   
+    
     # build dataset    
     test_loader, test_histogram = build_dataloader_from_cfg(cfg.get('test_batch_size', cfg.batch_size),
                                             cfg.dataset,
@@ -155,16 +181,8 @@ def main(gpu, cfg):
                                             datatransforms_cfg=cfg.datatransforms,
                                             split='test',
                                             distributed=False
-                                            )    
-    
-    # Save the model in the exchangeable ONNX format        
-    input_names = ['points', 'meta']
-    output_names = ["output", "trans"]
-        
-    # torch.onnx.disable_log()
-    # torch.onnx.export(model, next(iter(test_loader)), './onnx/model.onnx')
-    # sys.exit()
-
+                                            )  
+       
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                             cfg.dataset,
@@ -173,6 +191,27 @@ def main(gpu, cfg):
                                             split='val',
                                             distributed=False
                                             )
+    
+    
+    """
+    # all_targets = torch.Tensor()
+    
+    # for data in val_loader:
+    #     targets = data['y']
+    #     targets, targets = standardize(targets, targets, cfg)
+        
+    #     targets *= 1000
+        
+    #     all_targets = torch.cat((all_targets, targets.view(-1)))
+    
+    # name = f'Confusion Matrix Ground Truth'
+    # image_dir = f"C:\\Users\\Job de Vogel\\OneDrive\\Bureaublad"
+        
+    # bins = cfg.dataset.common.bins
+    
+    # _, _, _, image_path = binned_cm(all_targets, all_targets, 0, 1000, bins, name=name, path=image_dir, show=True, save=True)
+    # sys.exit()
+    """
     
     # ! commented
     # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
@@ -200,7 +239,7 @@ def main(gpu, cfg):
     if 'freeze_blocks' in cfg.mode:
         for p in model_module.encoder.blocks.parameters():
             p.requires_grad = False
-
+    
     
     train_loader, train_histogram = build_dataloader_from_cfg(cfg.batch_size,
                                                 cfg.dataset,
@@ -208,11 +247,10 @@ def main(gpu, cfg):
                                                 datatransforms_cfg=cfg.datatransforms,
                                                 split='train',
                                                 distributed=False,
-                                                )    
-
+                                                ) 
     
-    # #HISTOGRAM
-    
+    """
+    #HISTOGRAM
     # import matplotlib
     # import matplotlib.pyplot as plt
     # import math
@@ -223,7 +261,6 @@ def main(gpu, cfg):
     
     # histogram = train_histogram + val_histogram + test_histogram
     # print(histogram)
-    # sys.exit()
     
     # # Calculate bin edges
     # bin_edges = torch.linspace(-1, 1, cfg.dataset.common.bins+1)
@@ -236,14 +273,14 @@ def main(gpu, cfg):
     # names = [f'[{bin_edges[i]} - {bin_edges[i+1]})' for i in range(len(bin_edges[:-1]))]
 
     # # Plotting the histogram
-    # plt.bar(names, histogram)
+    # plt.bar(names, histogram, color='orange')
     # plt.xlabel('Solar Irradiance [kWh/m2]')
     # plt.ylabel('Point frequency')
     # plt.title('Solar irradiance distribution over points')
     
     # plt.show()
     # sys.exit()
-    
+    """
     
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
 
@@ -286,7 +323,7 @@ def main(gpu, cfg):
     
     if cfg.wandb.use_wandb:
         wandb.watch(model, criterion, log="parameters", log_freq=1000)
-        
+
     from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
     image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
     
@@ -324,7 +361,7 @@ def main(gpu, cfg):
         wandb.log({'optim': str(cfg.optimizer.NAME)}, step=0)
         wandb.log({'sched': str(cfg.sched)}, step=0)
         wandb.log({'batchsize': cfg.batch_size}, step=0)
-     
+    
     logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
         # # ! Only important for distributed gpu
@@ -334,12 +371,13 @@ def main(gpu, cfg):
         #     train_loader.dataset.epoch = epoch - 1
         train_loss, train_rmse, total_iter = \
             train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
-        
+
         # ! Log the results from the epoch step
         is_best = False
         
         logging.info(f"Started evalution epoch {epoch}")
         if epoch % cfg.val_freq == 0:
+            
             eval_loss, eval_rmse = validate_fn(model, val_loader, criterion, mse_criterion, cfg, epoch=epoch, total_iter=total_iter, image_dir=image_dir)
             
             if eval_loss < best_val:
@@ -472,7 +510,7 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
         # ! Set the iteration number in the data
         data['iter'] = total_iter 
               
-        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
+        with torch.cuda.amp.autocast(enabled=cfg.use_amp):      
             # ! Cast all the data to the model
             logits = model(data)
             # print(f'max logits: {round(torch.max(logits).item(), 3)} max targets: {round(torch.max(target).item(),3)}')
@@ -624,6 +662,7 @@ def test(cfg, model, test_loader, image_dir=''):
     
     all_targets = torch.Tensor().cuda(non_blocking=True)
     all_logits = torch.Tensor().cuda(non_blocking=True)
+    all_pc_sizes = torch.zeros(len(test_loader)).cuda(non_blocking=True)
     
     loss = torch.Tensor([0.0])
     rmse = torch.Tensor([0.0])
@@ -639,8 +678,6 @@ def test(cfg, model, test_loader, image_dir=''):
     worst_logits = None
     
     for idx, data in pbar:
-        if idx == 25:
-            break
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
         pbar.refresh()
                
