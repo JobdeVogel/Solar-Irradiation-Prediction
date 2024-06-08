@@ -181,7 +181,6 @@ def main(gpu, cfg):
         
         logging.info('Using Distributed Data parallel ...')
 
-    sys.exit()
     # optimizer & scheduler
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
