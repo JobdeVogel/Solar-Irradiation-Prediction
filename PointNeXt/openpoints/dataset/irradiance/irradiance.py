@@ -102,7 +102,7 @@ class IRRADIANCE(Dataset):
         self.compute_hist=compute_hist
         self.show_hist=show
         self._overwrite_dset_size=_overwrite_dset_size
-        
+
         #data_root = 'D:/Master Thesis Data/3SDIS/data/S3DIS/s3disfull'
         
         #raw_root = os.path.join(data_root, 'raw')
@@ -162,7 +162,7 @@ class IRRADIANCE(Dataset):
         elif split == 'test':
             self.data_list = data_list
 
-        processed_root = os.path.join(data_root, 'processed')
+        processed_root = os.path.join(data_root, 'processed_100')
         # processed_root = 'D:\Master Thesis Data\IrradianceNet'
         
         filename = os.path.join(
@@ -179,7 +179,6 @@ class IRRADIANCE(Dataset):
                 data_path = os.path.join(raw_root, item + '.npy')
 
                 cdata = np.load(data_path).astype(np.float32)
-
                 '''
                 Sample is extracted, most likely needs to be preprocessed here
                 '''
@@ -283,6 +282,35 @@ class IRRADIANCE(Dataset):
         
         self.bin_idxs = np.expand_dims(bin_idxs.numpy(), 1)
 
+    @staticmethod
+    def statistics(sample):
+        print(sample['pos'])
+        print('\n')
+        
+        print('x:')
+        print('min :' + str(torch.min(sample['pos'][:, :, 0])))
+        print('max: ' + str(torch.max(sample['pos'][:, :, 0])) + '\n')
+        
+        print('y:')
+        print('min :' + str(torch.min(sample['pos'][:, :, 1])))
+        print('max: ' + str(torch.max(sample['pos'][:, :, 1])) + '\n')
+        
+        print('z:')
+        print('min :' + str(torch.min(sample['pos'][:, :, 2])))
+        print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
+        
+        print('u:')
+        print('min :' + str(torch.min(sample['normals'][:, :, 0])))
+        print('max: ' + str(torch.max(sample['normals'][:, :, 0])) + '\n')
+        
+        print('v:')
+        print('min :' + str(torch.min(sample['normals'][:, :, 1])))
+        print('max: ' + str(torch.max(sample['normals'][:, :, 1])) + '\n')
+        
+        print('w:')
+        print('min :' + str(torch.min(sample['normals'][:, :, 2])))
+        print('max: ' + str(torch.max(sample['normals'][:, :, 2])) + '\n')
+
     def __getitem__(self, idx):
         data_idx = self.data_idx[idx % len(self.data_idx)]
         file = self.data_list[idx]
@@ -295,9 +323,7 @@ class IRRADIANCE(Dataset):
             except:
                 logging.warning(f"Failed to extract data from sample {data_idx}")
                 print(self.data[data_idx])
-            
-            feat = np.hstack((feat, bins))
-            
+            feat = np.hstack((feat, bins))            
             # Scale from [-50, 50] to [0, 100]
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,

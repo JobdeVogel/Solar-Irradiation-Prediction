@@ -61,6 +61,7 @@ def plot(image_name,
     
     
     color_map = plt.get_cmap('coolwarm')
+    
     norm = Normalize(vmin=np.min(targets), vmax=np.max(targets))
     
     colors = color_map(norm(targets))
@@ -168,6 +169,7 @@ def binned_cm(target,
     prediction_idxs = torch.argmax(cumsum, dim=1)
 
     cf_matrix = confusion_matrix(target_idxs, prediction_idxs, labels=range(0, bins))
+    gt_cf_matrix = confusion_matrix(target_idxs, target_idxs, labels=range(0, bins))
     
     df_cm = pd.DataFrame(cf_matrix, columns=np.unique(names), index = np.unique(names))
 
@@ -190,4 +192,5 @@ def binned_cm(target,
         logging.info(f"Saving confusion matrix in {path}")
         image_path = save_img(plt, name, path)
     
-    return cf_matrix, bin_edges, names, image_path
+    plt.cla()
+    return cf_matrix, gt_cf_matrix, bin_edges, names, image_path

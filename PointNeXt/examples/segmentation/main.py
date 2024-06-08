@@ -6,6 +6,7 @@ if you only wana use 1 GPU, set `CUDA_VISIBLE_DEVICES` accordingly
 """
 import sys
 import time
+import math
 from datetime import datetime
 
 import __init__
@@ -84,12 +85,23 @@ def main(gpu, cfg):
     #                             world_size=cfg.world_size,
     #                             rank=cfg.rank)
     #     dist.barrier()
+    if cfg.test:
+        pretrained_path = cfg.pretrained_path
+        
+        path = "\\".join(pretrained_path.split("\\")[:-2]) + "\\cfg.yaml"        
+    
+        with open(path) as f:
+            cfg.update(yaml.load(f, Loader=yaml.Loader))
+        
+        cfg.test = True
+        cfg.pretrained_path = pretrained_path
 
     if cfg.criterion_args.NAME.lower() == 'weightedmse':
         cfg.criterion_args.bins = cfg.dataset.common.bins
         cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
         cfg.criterion_args.max = 1
-        cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]
+        if not hasattr(cfg.criterion_args, 'weights'):
+            cfg.criterion_args.weights = [1] * (cfg.dataset.common.bins - 1) + [0.25]       
     
     if cfg.criterion_args.NAME.lower() == 'deltaloss':
         cfg.criterion_args.delta = 0.8
@@ -100,7 +112,6 @@ def main(gpu, cfg):
         cfg.criterion_args.min = cfg.datatransforms.kwargs.norm_min
         cfg.criterion_args.max = 1
         cfg.criterion_args.reduction = 1
-
 
     # logger
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
@@ -114,14 +125,15 @@ def main(gpu, cfg):
     set_random_seed(cfg.seed, deterministic=cfg.deterministic)
     torch.backends.cudnn.enabled = False
     
+    
     # ! Commented
     #logging.info(cfg)
 
     if cfg.model.get('in_channels', None) is None:
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
-    
+
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
-    
+       
     '''
     data = {'pos': torch.rand(8, 10000, 3), 'normals': torch.rand(8, 10000, 3), 'x': torch.rand(8, 6, 10000), 'y': torch.rand(8, 10000), 'bins': torch.rand(8, 10000), 'idx': torch.tensor([0])}
 
@@ -160,16 +172,16 @@ def main(gpu, cfg):
         
         # ! commented
         # logging.info('Using Synchronized BatchNorm ...')
+       
     if cfg.distributed:
         torch.cuda.set_device(gpu)
         # model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
         logging.info(f"Model is using {cfg.world_size} gpus in DatalParallel mode!")
         model = nn.parallel.DataParallel(model.cuda())
         
-        # ! commented
-        # logging.info('Using Distributed Data parallel ...')
+        logging.info('Using Distributed Data parallel ...')
 
-    
+    sys.exit()
     # optimizer & scheduler
     optimizer = build_optimizer_from_cfg(model, lr=cfg.lr, **cfg.optimizer)    
     scheduler = build_scheduler_from_cfg(cfg, optimizer)  
@@ -182,7 +194,21 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )  
-       
+    
+    if cfg.test:
+        path = cfg.pretrained_path
+        
+        from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+        image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
+        
+        if not os.path.exists(image_dir + '\\analysis'):
+            os.makedirs(image_dir + '\\analysis')
+        
+        print("Loading weights and biases...")
+        load_checkpoint(model, path)
+        
+        test(cfg, model, test_loader, image_dir=image_dir)
+    
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
                                             cfg.dataset,
@@ -191,8 +217,7 @@ def main(gpu, cfg):
                                             split='val',
                                             distributed=False
                                             )
-    
-    
+        
     """
     # all_targets = torch.Tensor()
     
@@ -209,7 +234,7 @@ def main(gpu, cfg):
         
     # bins = cfg.dataset.common.bins
     
-    # _, _, _, image_path = binned_cm(all_targets, all_targets, 0, 1000, bins, name=name, path=image_dir, show=True, save=True)
+    # _, _, _, _, image_path = binned_cm(all_targets, all_targets, 0, 1000, bins, name=name, path=image_dir, show=True, save=True)
     # sys.exit()
     """
     
@@ -646,23 +671,33 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         os.makedirs(image_dir)
     
     bins = cfg.dataset.common.bins
-    _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
+    _, _, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
     wandb.log({f"Validation Confusion matrix": wandb.Image(image_path + '.png')})
     
     return loss_meter.avg, rmse_meter.avg
 
 @torch.no_grad()
-def test(cfg, model, test_loader, image_dir=''):    
+def test(cfg, model, test_loader, image_dir='', normalize_bars=True):    
+    """ Test loop for irradiance prediction, based on a trained
+    model and test_loader.    
+    """
+    
     model.eval()
     
+    # MSE criterion for model comparison
     mse_criterion = torch.nn.MSELoss().cuda()
-    
+
     loss_meter = AverageMeter()
     rmse_meter = AverageMeter()
-    
+
+    # All data for model comparison    
     all_targets = torch.Tensor().cuda(non_blocking=True)
     all_logits = torch.Tensor().cuda(non_blocking=True)
     all_pc_sizes = torch.zeros(len(test_loader)).cuda(non_blocking=True)
+    rmses = []
+    
+    individual_samples = []
+    individual_logits = []
     
     loss = torch.Tensor([0.0])
     rmse = torch.Tensor([0.0])
@@ -671,14 +706,14 @@ def test(cfg, model, test_loader, image_dir=''):
     
     inference = 0
     best_rmse = float('inf')
-    worst_rmse = 0
+    worst_rmse = 0.0
     best_sample = None
     worst_sample = None
     best_logits = None
     worst_logits = None
     
-    for idx, data in pbar:
-        pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2]")
+    for idx, data in pbar:        
+        pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2], Highest RMSE: {round(worst_rmse, 4)} [kWh/m2]")
         pbar.refresh()
                
         keys = data.keys() if callable(data.keys) else data.keys
@@ -687,6 +722,7 @@ def test(cfg, model, test_loader, image_dir=''):
             data[key] = data[key].cuda(non_blocking=True)
             
         targets = data['y'].squeeze(-1)
+        all_pc_sizes[idx] = len(targets)
         
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         
@@ -696,11 +732,16 @@ def test(cfg, model, test_loader, image_dir=''):
         end = time.perf_counter()
         inference += end - start
         
+        individual_logits.append(logits)
+        individual_samples.append(data)
+        
         logits, targets = standardize(logits, targets, cfg)
 
         with torch.cuda.amp.autocast(enabled=cfg.use_amp):
             loss = mse_criterion(logits, targets)
             rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
+
+        rmses.append(rmse)
 
         loss_meter.update(loss.item())
         rmse_meter.update(rmse.item())
@@ -718,35 +759,23 @@ def test(cfg, model, test_loader, image_dir=''):
         all_targets = torch.cat((all_targets, targets.view(-1)))
         all_logits = torch.cat((all_logits, logits.view(-1)))
     
+    print('----------------')
+    print('Processing test results...')
+    
     avg_inference = inference / len(test_loader)
     wandb.log({"Average Inference": avg_inference})
     wandb.log({"Best RMSE": best_rmse})
     wandb.log({"Worst RMSE": worst_rmse})
     
-    print(f'AVERAGE INFERENCE TIME: {round(avg_inference, 3)}s')
+    print(f'Average inference time: {round(avg_inference, 3)}s')
     print(f'Highest RMSE: {round(worst_rmse, 3)} kWh/m2')
-    print(f'Lowest RMSE: {round(best_rmse, 3)} kWh/m2')
-    
-    worst_logits = worst_logits.cpu().numpy()[0, 0, :]
-    best_logits = best_logits.cpu().numpy()[0, 0, :]
-    
-    for key in worst_sample:
-        worst_sample[key] = worst_sample[key].cpu()
-    
-    for key in best_sample:
-        best_sample[key] = best_sample[key].cpu()
-    
-    from_sample(worst_sample, 0, worst_logits, False, True, 'Highest RMSE Sample', image_dir)
-    from_sample(best_sample, 0, best_logits, False, True, 'Lowest RMSE Sample', image_dir)
-    
-    wandb.log({'Highest RMSE Sample': os.path.join(image_dir, 'Highest RMSE Sample')})
-    wandb.log({'Lowest RMSE Sample': os.path.join(image_dir, 'Lowest RMSE Sample')})        
+    print(f'Lowest RMSE: {round(best_rmse, 3)} kWh/m2')        
          
     all_targets = all_targets * 1000
     all_logits = all_logits * 1000
    
     print(f"Test Loss MSE: {loss_meter.avg}")
-    print(f"Test Loss RMSE: {loss_meter.avg} [kWh/m2]")
+    print(f"Test Loss RMSE: {rmse_meter.avg} kWh/m2")
     
     name = f'Confusion matrix test'
     image_dir += 'cm'
@@ -755,9 +784,74 @@ def test(cfg, model, test_loader, image_dir=''):
         os.makedirs(image_dir)
     
     bins = cfg.dataset.common.bins
-    confusion_matrix, _, _, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
+    confusion_matrix, gt_confusion_matrix, _, irr_names, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
     wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
+    # Error distribution analysis
+    if cfg.test:
+        image_dir = image_dir[:-2] + 'analysis'
+        
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        
+        from analysis import evaluate_sample_rmses, evaluate_point_rmses, evaluate_bin_accuracy
+        
+        print("Evaluating sample RMSE\'s...")
+        evaluate_sample_rmses(torch.tensor(rmses), image_dir=image_dir, show=False)        
+        
+        print("Evaluating point RMSE\'s...")
+        plt = evaluate_point_rmses(all_logits, all_targets, image_dir=image_dir, show=False)
+
+        print("Evaluating irradiance bin accuracy\'s...")
+        plt, ax = evaluate_bin_accuracy(confusion_matrix, gt_confusion_matrix, irr_names, image_dir=image_dir, show=False)
+        
+        num_outliers = 5
+        sorted_rmses, sorted_idxs = torch.sort(torch.tensor(rmses))
+        
+        low_outliers = sorted_idxs[:num_outliers]
+        medium_outliers = [sorted_idxs[math.floor(len(sorted_idxs) / 2) - i] for i in range(math.floor(num_outliers/2), 0, -1)]+ [sorted_idxs[math.floor(len(sorted_idxs) / 2)]] + [sorted_idxs[math.floor(len(sorted_idxs) / 2) + i] for i in range(1, math.floor(num_outliers/2) + 1)]
+        high_outliers = sorted_idxs[-num_outliers:]
+        
+        print("Plotting low RMSE samples...")
+        for outlier_idx in low_outliers:
+            sample = individual_samples[outlier_idx]
+            logits = individual_logits[outlier_idx]
+            
+            logits, sample['y'] = standardize(logits, sample['y'], cfg)            
+            
+            values = logits.cpu().numpy()[0, 0, :]
+            
+            for key in sample:
+                sample[key] = sample[key].cpu()
+            
+            from_sample(sample, 0, values, True, False, f'Low outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+        
+        print("Plotting medium RMSE samples...")
+        for outlier_idx in medium_outliers:
+            sample = individual_samples[outlier_idx]
+            logits = individual_logits[outlier_idx]
+            
+            logits, sample['y'] = standardize(logits, sample['y'], cfg)            
+            
+            values = logits.cpu().numpy()[0, 0, :]
+            
+            for key in sample:
+                sample[key] = sample[key].cpu()
+            
+            from_sample(sample, 0, values, True, False, f'Medium outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+        
+        print("Plotting high RMSE samples...")
+        for outlier_idx in high_outliers:
+            sample = individual_samples[outlier_idx]
+            logits = individual_logits[outlier_idx]
+            
+            values = logits.cpu().numpy()[0, 0, :]
+            
+            for key in sample:
+                sample[key] = sample[key].cpu()
+            
+            from_sample(sample, 0, values, True, False, f'High outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+        
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
     
     if cfg.wandb.use_wandb:
