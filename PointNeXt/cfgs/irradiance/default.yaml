@@ -7,7 +7,7 @@ dataset:
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
     bins: 10
-    compute_hist: True
+    compute_hist: False
   train:
     split: train
     voxel_max: 10000
@@ -38,7 +38,8 @@ dataloader:
 
 datatransforms:
   train: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize] 
-  val: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize] 
+  val: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize]
+  test: [PointsToTensor, PointCloudCenterAndNormalize, IrradianceClipNormalize]
   vote: [ChromaticDropGPU]
   kwargs:
     color_drop: 0.2
