@@ -1145,6 +1145,7 @@ if __name__ == "__main__":
         cfg.seed = np.random.randint(1, 10000)
 
     print(cfg.distributed)
+    print(torch.cuda.device_count())
     
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
