@@ -1143,19 +1143,10 @@ if __name__ == "__main__":
 
     if cfg.seed is None:
         cfg.seed = np.random.randint(1, 10000)
-
-    print(cfg.distributed)
-    print(torch.cuda.device_count())
     
     # init distributed env first, since logger depends on the dist info.
     cfg.rank, cfg.world_size, cfg.distributed, cfg.mp = dist_utils.get_dist_info(cfg)
     # cfg.sync_bn = cfg.world_size > 1
-
-    print(cfg.rank)
-    print(cfg.world_size)
-    print(cfg.distributed)
-    print(cfg.mp)
-    sys.exit()
 
     # init log dir
     cfg.task_name = args.cfg.split('.')[-2].split('/')[-2]  # task/dataset name, \eg s3dis, modelnet40_cls
