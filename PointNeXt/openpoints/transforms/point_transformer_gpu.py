@@ -51,7 +51,10 @@ class PointCloudCenterAndNormalize(object):
         self.dmin = dmin
         self.dmax = dmax
 
-    def __call__(self, data):       
+    def __call__(self, data):
+        if self.dmax == None:
+            self.dmax = torch.max(data['pos'])
+        
         if hasattr(data, 'keys'):
             if 'heights' in data.keys():
                 if self.append_xyz:
