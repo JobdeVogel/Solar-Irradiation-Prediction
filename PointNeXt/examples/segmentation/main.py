@@ -134,8 +134,10 @@ def main(gpu, cfg):
 
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
 
+    """
     print('Compiling model...')
     model = torch.compile(model, mode="reduce-overhead")
+    """
 
     '''
     data = {'pos': torch.rand(8, 10000, 3), 'normals': torch.rand(8, 10000, 3), 'x': torch.rand(8, 6, 10000), 'y': torch.rand(8, 10000), 'bins': torch.rand(8, 10000), 'idx': torch.tensor([0])}
@@ -1202,7 +1204,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="disabled", project="Thesis_main_TEST", name=name):
+        with wandb.init(mode="online", project="Thesis_main_TEST", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()
