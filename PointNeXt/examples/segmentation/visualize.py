@@ -152,7 +152,8 @@ def binned_cm(target,
             name='',
             path = '',
             show=False, 
-            save=True
+            save=True,
+            test=False
             ):
     bin_edges = torch.linspace(min, max, steps=bins+1)
 
@@ -193,4 +194,24 @@ def binned_cm(target,
         image_path = save_img(plt, name, path)
     
     plt.cla()
+    
+    if test:
+        name += ' (expected)'
+        df_cm = pd.DataFrame(gt_cf_matrix, columns=np.unique(names), index = np.unique(names))
+
+        sn.heatmap(df_cm, cbar=False, annot=True, square=True, fmt='.0f',
+                    annot_kws={'size': 10}, norm=LogNorm(), linewidths=1, linecolor='black', cmap=cmap, center=0, vmax=10e7)
+        plt.title(name)
+
+        if show:
+            matplotlib.use('TkAgg')
+            plt.show()
+            matplotlib.use('Agg')
+
+        if save:
+            logging.info(f"Saving expected confusion matrix in {path}")
+            image_path = save_img(plt, name, path)
+
+        plt.cla()
+    
     return cf_matrix, gt_cf_matrix, bin_edges, names, image_path
