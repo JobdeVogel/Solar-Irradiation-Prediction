@@ -133,7 +133,10 @@ def main(gpu, cfg):
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
 
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
-       
+
+    print('Compiling model...')
+    model = torch.compile(model, mode="reduce-overhead")
+
     '''
     data = {'pos': torch.rand(8, 10000, 3), 'normals': torch.rand(8, 10000, 3), 'x': torch.rand(8, 6, 10000), 'y': torch.rand(8, 10000), 'bins': torch.rand(8, 10000), 'idx': torch.tensor([0])}
 
@@ -192,7 +195,7 @@ def main(gpu, cfg):
                                             datatransforms_cfg=cfg.datatransforms,
                                             split='test',
                                             distributed=False
-                                            )  
+                                            )
     
     if cfg.test:
         path = cfg.pretrained_path
@@ -204,7 +207,7 @@ def main(gpu, cfg):
             os.makedirs(image_dir + '\\analysis')
         
         print("Loading weights and biases...")
-        load_checkpoint(model, path)
+        load_checkpoint(model, path)        
         
         test(cfg, model, test_loader, image_dir=image_dir)
     
@@ -540,23 +543,23 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
             # print(f'max logits: {round(torch.max(logits).item(), 3)} max targets: {round(torch.max(target).item(),3)}')
             # print(f'min logits {round(torch.min(logits).item(), 3)} min targets: {round(torch.min(target).item(), 3)}')
         
-            logits = logits.squeeze(1)
-                       
-            '''
-            loss is used for backwards pass
-            mse_loss is used for performance comparison
-            '''
-            # Standardize the logits and targets to [0, 1]
-            # logits, target = standardize(logits, target, cfg)
-                 
-            if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
-                loss = criterion(logits, target, bins=data['bins'])
-            elif 'mask' in cfg.criterion_args.NAME.lower():
-                loss = criterion(logits, target, data['mask'])
-            else:
-                loss = criterion(logits, target)
-             
-            mse_loss = mse_criterion(logits, target)
+        logits = logits.squeeze(1)
+                    
+        '''
+        loss is used for backwards pass
+        mse_loss is used for performance comparison
+        '''
+        # Standardize the logits and targets to [0, 1]
+        # logits, target = standardize(logits, target, cfg)
+                
+        if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
+            loss = criterion(logits, target, bins=data['bins'])
+        elif 'mask' in cfg.criterion_args.NAME.lower():
+            loss = criterion(logits, target, data['mask'])
+        else:
+            loss = criterion(logits, target)
+            
+        mse_loss = mse_criterion(logits, target)
             
         wandb.log({'Train Loss (non-MSE)': loss})
         wandb.log({'Train Loss MSE': mse_loss})
@@ -642,13 +645,12 @@ def validate(model, val_loader, criterion, mse_criterion, cfg, num_votes=1, data
         
         logits, target = standardize(logits, target, cfg)
         
-        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
-            if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
-                loss = criterion(logits, target, bins=data['bins'])
-            elif 'mask' in cfg.criterion_args.NAME.lower():
-                loss = criterion(logits, target, data['mask'])
-            else:
-                loss = criterion(logits, target)
+        if cfg.criterion_args.NAME.lower() == 'weightedmse' or cfg.criterion_args.NAME.lower() == 'reductionloss':
+            loss = criterion(logits, target, bins=data['bins'])
+        elif 'mask' in cfg.criterion_args.NAME.lower():
+            loss = criterion(logits, target, data['mask'])
+        else:
+            loss = criterion(logits, target)
         
         loss_meter.update(loss.item())
         
@@ -711,7 +713,7 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     best_logits = None
     worst_logits = None
     
-    for idx, data in pbar:        
+    for idx, data in pbar:          
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2], Highest RMSE: {round(worst_rmse, 4)} [kWh/m2]")
         pbar.refresh()
                
@@ -736,9 +738,8 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
         
         logits, targets = standardize(logits, targets, cfg)
 
-        with torch.cuda.amp.autocast(enabled=cfg.use_amp):
-            loss = mse_criterion(logits, targets)
-            rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
+        loss = mse_criterion(logits, targets)
+        rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
 
         rmses.append(rmse)
 
@@ -783,8 +784,11 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
         os.makedirs(image_dir)
     
     bins = cfg.dataset.common.bins
-    confusion_matrix, gt_confusion_matrix, _, irr_names, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True)
+    confusion_matrix, gt_confusion_matrix, _, irr_names, image_path = binned_cm(all_targets.cpu(), all_logits.cpu(), 0, 1000, bins, name=name, path=image_dir, show=False, save=True, test=True)
     wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
+    
+    name = f'Confusion matrix test (expected)'
+    
     
     # Error distribution analysis
     if cfg.test:
