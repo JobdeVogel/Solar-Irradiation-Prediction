@@ -5,6 +5,9 @@ import numpy as np
 import sys
 import os
 
+def expected_cm(dataloader):
+    pass
+
 def evaluate_sample_rmses(sample_rmses, bin_interval=10, image_dir='', show=False, save=True):
     """ 
     Loop over all samples, plot the RMSE for each individual sample
@@ -28,15 +31,18 @@ def evaluate_sample_rmses(sample_rmses, bin_interval=10, image_dir='', show=Fals
     colors = ['blue' for orange in range(bins)]
     colors[avg_bin] = 'orange'
     
-    plt.bar(err_names, hist, color=colors)
-    plt.xlabel('RMSE [kWh/m2]')
-    plt.ylabel('Sample Frequency')
+    fig, ax = plt.subplots(figsize=(13, 5))
+    ax.bar(err_names, hist, color=colors)
+    ax.set_xlabel('RMSE [kWh/m2]')
+    ax.set_ylabel('Sample Frequency')
+
     plt.title('RMSE Error Distribution over Test Samples')
     
     if save:
         path = os.path.join(image_dir, 'sample_rmses')
     
         plt.savefig(path, dpi=300)
+        print(f"Saved sample rmses figure in {path}")
     
     if show:
         plt.show()
@@ -86,6 +92,7 @@ def evaluate_point_rmses(all_logits, all_targets, bin_interval=50, image_dir='',
         path = os.path.join(image_dir, 'point_rmses')
     
         plt.savefig(path, dpi=300)
+        print(f"Saved point accuracy figure in {path}")
     
     if show:
         plt.show()
@@ -148,6 +155,7 @@ def evaluate_bin_accuracy(confusion_matrix, gt_confusion_matrix, irr_names,  nor
         path = os.path.join(image_dir, 'bin_accuracy')
     
         fig.savefig(path, dpi=300, width=2000)
+        print(f"Saved bin accuracy figure in {path}")
         
     if show:
         plt.show() 
