@@ -31,7 +31,7 @@ def evaluate_sample_rmses(sample_rmses, bin_interval=10, image_dir='', show=Fals
     colors = ['blue' for orange in range(bins)]
     colors[avg_bin] = 'orange'
     
-    fig, ax = plt.subplots(figsize=(13, 5))
+    fig, ax = plt.subplots(figsize=(18, 5))
     ax.bar(err_names, hist, color=colors)
     ax.set_xlabel('RMSE [kWh/m2]')
     ax.set_ylabel('Sample Frequency')
@@ -75,7 +75,7 @@ def evaluate_point_rmses(all_logits, all_targets, bin_interval=50, image_dir='',
     colors = ['blue' for _ in range(bins)]
     colors[avg_bin] = 'orange'
     
-    fig, ax = plt.subplots(figsize=(13, 5))
+    fig, ax = plt.subplots(figsize=(18, 5))
     
     ax.bar(err_names, hist, color=colors)
     ax.set_xlabel('Absolute Error [kWh/m2]')
