@@ -212,6 +212,9 @@ def main(gpu, cfg):
         load_checkpoint(model, path)        
         
         test(cfg, model, test_loader, image_dir=image_dir)
+        wandb.finish(exit_code=True)
+        
+        return
     
     # build dataset
     val_loader, val_histogram = build_dataloader_from_cfg(cfg.get('val_batch_size', cfg.batch_size),
@@ -715,7 +718,7 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     best_logits = None
     worst_logits = None
     
-    for idx, data in pbar:          
+    for idx, data in pbar:
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2], Highest RMSE: {round(worst_rmse, 4)} [kWh/m2]")
         pbar.refresh()
                
@@ -829,7 +832,7 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
             for key in sample:
                 sample[key] = sample[key].cpu()
             
-            from_sample(sample, 0, values, True, False, f'Low outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+            from_sample(sample, 0, values, False, True, f'Low outlier RMSE idx {outlier_idx} loss {round(rmses[outlier_idx].item())} kWh per m2', image_dir)
         
         print("Plotting medium RMSE samples...")
         for outlier_idx in medium_outliers:
@@ -843,7 +846,7 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
             for key in sample:
                 sample[key] = sample[key].cpu()
             
-            from_sample(sample, 0, values, True, False, f'Medium outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+            from_sample(sample, 0, values, False, True, f'Medium outlier RMSE idx {outlier_idx} loss {round(rmses[outlier_idx].item())} kWh per m2', image_dir)
         
         print("Plotting high RMSE samples...")
         for outlier_idx in high_outliers:
@@ -855,7 +858,7 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
             for key in sample:
                 sample[key] = sample[key].cpu()
             
-            from_sample(sample, 0, values, True, False, f'High outlier RMSE {round(rmses[outlier_idx].item())} kWh/m2', image_dir)
+            from_sample(sample, 0, values, False, True, f'High outlier RMSE idx {outlier_idx} loss {round(rmses[outlier_idx].item())} kWh per m2', image_dir)
         
     accuracy, precision, recall, f1_score, micro_avg_accuracy, micro_avg_precision, micro_avg_recall, micro_avg_f1_score, macro_avg_accuracy, macro_avg_precision, macro_avg_recall, macro_avg_f1_score = compute_metrics(confusion_matrix)
     
