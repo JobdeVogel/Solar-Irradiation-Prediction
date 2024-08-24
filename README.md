@@ -47,6 +47,9 @@ General setting for the dataset generation can be changed in `dataset/parameters
 
 Parameters for training, validation and testing can be changed in `cfgs/default`, `cfgs/irradiance/default` and `cfgs/irradiance/ ... .yaml`
 
+#### Interaction model from Grasshopper
+The server code for the Grasshopper interaction model can be found in `examples/segmentation/server.py`.
+
 ## Sources
 Peters, R., Dukai, B., Vitalis, S., van Liempt, J., & Stoter, J. (2022). Automated 3D Reconstruction of
 LoD2 and LoD1 Models for All 10 Million Buildings of the Netherlands. Photogrammetric
