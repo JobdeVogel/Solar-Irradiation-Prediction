@@ -24,8 +24,8 @@ call conda activate %ENV_NAME%
 @REM call git init -y
 
 @REM echo clone
-@REM call git clone https://github.com/JobdeVogel/Graduation-Building-Technology -y -y
-@REM cd Graduation-Building-Technology
+@REM call git clone https://github.com/JobdeVogel/Solar-Irradiation-Prediction -y -y
+@REM cd Solar-Irradiation-Prediction
 
 REM Install packages with conda
 echo Installing packages with conda...
