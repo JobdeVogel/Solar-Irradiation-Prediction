@@ -59,29 +59,28 @@ cd subsampling
 call python setup.py build_ext --inplace
 cd ..
 
-
 REM point transformer library. Necessary only if interested in Point Transformer and Stratified Transformer
 cd pointops/
 call python setup.py install
 cd ..
 
-REM Blow are functions that optional. Necessary only if interested in reconstruction tasks such as completion
+REM Below are functions that optional. Necessary only if interested in reconstruction tasks such as completion
 cd chamfer_dist
 call python setup.py install --user
 cd ../emd
 call python setup.py install --user
 cd ../../../../
 
-@REM REM Install package for dataset generation
-@REM echo Installing dataset generation packages
-@REM cd dataset
-@REM call python -m pip install -r requirements.txt
-@REM call conda install setuptools=59.5.0
+REM Install package for dataset generation
+echo Installing dataset generation packages
+cd dataset
+call python -m pip install -r requirements.txt
+call conda install setuptools=59.5.0
 
-@REM echo Ready to run IrradianceNet!!
-@REM echo Download data using ...
-@REM echo Generate dataset using ...
-@REM cd ../
+echo Ready to run IrradianceNet!!
+echo Download data using ...
+echo Generate dataset using ...
+cd ../
 
-@REM cd pointnext
-@REM echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
+cd pointnext
+echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
