@@ -2,7 +2,7 @@
 dataset:
   common:
     NAME: IRRADIANCE
-    data_root: S:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular #T:\jdevogel\data\dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\dset100_xl_regular
+    data_root: D:\Master Thesis Data\IrradianceNet\dset100_xl_regular
     test_area: 5
     voxel_size: 0.04 #For irradiance
     split_ratio: 0.88889
@@ -17,7 +17,7 @@ dataset:
     _overwrite_dset_size: 0
   val:
     split: val
-    voxel_max: null
+    voxel_max: 28000
     presample: True
     show: False
     _overwrite_dset_size: 0
@@ -25,12 +25,13 @@ dataset:
     split: test
     voxel_max: null
     presample: True
-    data_root: S:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular #T:\jdevogel\data\test_dset100_xl_regular #D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
+    data_root: D:\Master Thesis Data\IrradianceNet\test_dset100_xl_regular
+    shuffle: False
 
 feature_keys: pos,normals
 num_classes: 1
 batch_size: 8
-val_batch_size: 1
+val_batch_size: 8
 test_batch_size: 1
 
 dataloader:
@@ -52,6 +53,9 @@ datatransforms:
     normalize: True
     norm_min: -1 # Minimum value of normalization range for data values (either 0 or -1 or  null)
     irradiance_min: -1
+    dmin: 0
+    dmax: null
+
 
 # ---------------------------------------------------------------------------- #
 # Training cfgs

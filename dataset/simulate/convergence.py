@@ -360,8 +360,8 @@ if __name__=='__main__':
     print('Loading hbjson')
     model = load_hbjson(name, folder)
     print('Finished loading')
+    input_file = r"T:\\jdevogel\\dataset\\simulate\\results.csv"                        
 
-    input_file = r"T:\\jdevogel\\dataset\\simulate\\results.csv"
     output_file = r"T:\\jdevogel\\dataset\\simulate\\results_flipped.csv"
     
     from parameters import arguments

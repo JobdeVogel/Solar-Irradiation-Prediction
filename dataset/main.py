@@ -367,7 +367,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
             
             return None, 2
 
-        # Compute the sensors
+        # Compute the sensors           
         logger.info(f'Computing sensors for mesh patch[{sample.idx}]')
         sample.compute_sensors()
 
@@ -379,8 +379,8 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
             
-            # sample.to_hbjson(0, "C:\\Users\\Job de Vogel\\Desktop")
-            
+            sample.to_hbjson(0, "C:\\Users\\Job de Vogel\\Desktop")
+            sys.exit()
             logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
             
             sample.simulate(idx)

@@ -5,10 +5,21 @@ import sys
 import time
 from zipfile import ZipFile 
 
+VERSION = 'v20230809'
+
+# Maximum number of files to download within the map
+max_urls=100
+
+# Minimum and maximum coordinates from the 3D BAG map
+x_min=272
+x_max=332
+y_min=488
+y_max=532
+
 def generate_url(id):
     items = id.split("-")
 
-    url = f'https://data.3dbag.nl/obj/v20230809/tiles/{items[0]}/{items[1]}/{items[2]}/{id}-obj.zip'
+    url = f'https://data.3dbag.nl/obj/{VERSION}/tiles/{items[0]}/{items[1]}/{items[2]}/{id}-obj.zip'
     
     return url
 
@@ -114,6 +125,6 @@ directory = str(input('Path to save bag data: '))
 
 directory = r'D:\\graduation_jobdevogel\\Graduation-Building-Technology\\dataset\\data\\bag'
 
-download(directory)
+download(directory, max_urls=max_urls, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
 print(f'Downloaded all requested files!')

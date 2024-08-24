@@ -106,7 +106,7 @@ class ReductionLoss(torch.nn.Module):
             temp_target = torch.cat((temp_target, bin_targets))
         
         # Compute the mse
-        mse = ((temp_target - temp_pred) ** 2).mean()
+        mse = F.mse_loss(temp_target, temp_pred)
         
         return mse
 

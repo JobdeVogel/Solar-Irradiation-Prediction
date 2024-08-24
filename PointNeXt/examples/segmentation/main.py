@@ -32,69 +32,33 @@ from visualize import from_sample, plot, binned_cm
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-def statistics(sample):
-    print(sample['normals'])
-    print('\n')
-    
-    print('x:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 0])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 0])) + '\n')
-    
-    print('y:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 1])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 1])) + '\n')
-    
-    print('z:')
-    print('min :' + str(torch.min(sample['pos'][:, :, 2])))
-    print('max: ' + str(torch.max(sample['pos'][:, :, 2])) + '\n')
-    
-    print('u:')
-    print('min :' + str(torch.min(sample['normals'][:, :, 0])))
-    print('max: ' + str(torch.max(sample['normals'][:, :, 0])) + '\n')
-    
-    print('v:')
-    print('min :' + str(torch.min(sample['normals'][:, :, 1])))
-    print('max: ' + str(torch.max(sample['normals'][:, :, 1])) + '\n')
-    
-    print('w:')
-    print('min :' + str(torch.min(sample['normals'][:, :, 2])))
-    print('max: ' + str(torch.max(sample['normals'][:, :, 2])) + '\n')
-    
-    print('targets:')
-    print('min: ' + str(torch.min(sample['y'])))
-    print('max: ' + str(torch.max(sample['y'])))    
-    
-    dmin = cfg.datatransforms.kwargs.irradiance_min
-    dmax = 1
-    
-    if dmin == None: dmin = -1
-    
-    # Standardize logits
-    targets = (sample['y'] - dmin) / (dmax - dmin)
-    
-    print('targets standardized:')
-    print('min: ' + str(torch.min(targets)))
-    print('max: ' + str(torch.max(targets)))    
-
 def main(gpu, cfg):
-    # if cfg.distributed:
-    #     if cfg.mp:
-    #         cfg.rank = gpu
-    #     dist.init_process_group(backend=cfg.dist_backend,
-    #                             init_method=cfg.dist_url,
-    #                             world_size=cfg.world_size,
-    #                             rank=cfg.rank)
-    #     dist.barrier()
     if cfg.test:
+        # Overwrite cfg parameters based on pretrained path
+        # Mainly important for model parameters
+        dataset_path = cfg.dataset.common.data_root
+        test_dataset_path = cfg.dataset.test.data_root
+        
         pretrained_path = cfg.pretrained_path
         
-        path = "\\".join(pretrained_path.split("\\")[:-2]) + "\\cfg.yaml"        
-    
-        with open(path) as f:
+        cfg_path = cfg.pretrained_path.split("checkpoint")[0]
+        pretrained_cfg_path = cfg_path + 'cfg' + '.yaml'
+        
+        with open(pretrained_cfg_path) as f:
             cfg.update(yaml.load(f, Loader=yaml.Loader))
         
-        cfg.test = True
+        # Reset the pretrained_pat
         cfg.pretrained_path = pretrained_path
+        
+        # Reset the dataset paths
+        cfg.dataset.common.data_root = dataset_path
+        cfg.dataset.test.data_root = test_dataset_path
+        
+        # Set test to True
+        cfg.test = True
+        
+        # Set distributed to False
+        cfg.distributed = False
 
     if cfg.criterion_args.NAME.lower() == 'weightedmse':
         cfg.criterion_args.bins = cfg.dataset.common.bins
@@ -116,71 +80,26 @@ def main(gpu, cfg):
     # logger
     setup_logger_dist(cfg.log_path, cfg.rank, name=cfg.dataset.common.NAME)
     
-    # if cfg.rank == 0:
-    #     #if not cfg.wandb.sweep:        
-    #     #Wandb.launch(cfg, cfg.wandb.use_wandb)
-    #     writer = SummaryWriter(log_dir=cfg.run_dir) if cfg.is_training else None
-    # else:
-    #     writer = None
     set_random_seed(cfg.seed, deterministic=cfg.deterministic)
     torch.backends.cudnn.enabled = False
-    
-    
-    # ! Commented
-    #logging.info(cfg)
 
     if cfg.model.get('in_channels', None) is None:
         cfg.model.in_channels = cfg.model.encoder_args.in_channels
 
     model = build_model_from_cfg(cfg.model).to(cfg.rank)
-
-    """
-    print('Compiling model...')
-    model = torch.compile(model, mode="reduce-overhead")
-    """
-
-    '''
-    data = {'pos': torch.rand(8, 10000, 3), 'normals': torch.rand(8, 10000, 3), 'x': torch.rand(8, 6, 10000), 'y': torch.rand(8, 10000), 'bins': torch.rand(8, 10000), 'idx': torch.tensor([0])}
-
-    # Save the model in the exchangeable ONNX format        
-    input_names = ['points', 'meta']
-    output_names = ["output", "trans"]
-
-    model.cuda()
-    
-    model.train()
-    keys = data.keys() if callable(data.keys) else data.keys
-    
-    # ! Send all data to GPU
-    for key in keys:
-        data[key] = data[key].cuda(non_blocking=True)
-    
-    start = time.perf_counter()
-    model(data)
-    end = time.perf_counter()
-    print(end-start)
-    
-    # torch.onnx.disable_log()
-    # torch.onnx.export(model, data, './test.onnx')
-    # sys.exit()
-    '''
     model_size = cal_model_parm_nums(model)
     
     logging.info(f'Cfg parameters:')
     logging.info(cfg)
     
-    # logging.info(model)
+    logging.info(model)
     logging.info('Number of params: %.4f M' % (model_size / 1e6))
 
     if cfg.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        
-        # ! commented
-        # logging.info('Using Synchronized BatchNorm ...')
        
     if cfg.distributed:
         torch.cuda.set_device(gpu)
-        # model = nn.parallel.DistributedDataParallel(model.cuda(), device_ids=[cfg.rank], output_device=cfg.rank)
         logging.info(f"Model is using {cfg.world_size} gpus in DatalParallel mode!")
         model = nn.parallel.DataParallel(model.cuda())
         
@@ -198,19 +117,17 @@ def main(gpu, cfg):
                                             split='test',
                                             distributed=False
                                             )
-    
-    if cfg.test:
-        path = cfg.pretrained_path
-        
+    if cfg.test:        
         from_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
         image_dir = f'.\\data\\images\\{cfg.cfg_basename}\\{from_date}\\'
         
         if not os.path.exists(image_dir + '\\analysis'):
-            os.makedirs(image_dir + '\\analysis')
+            os.makedirs(image_dir + '\\analysis')                       
         
+
         print("Loading weights and biases...")
-        load_checkpoint(model, path)        
-        
+        load_checkpoint(model, cfg.pretrained_path)
+
         test(cfg, model, test_loader, image_dir=image_dir)
         wandb.finish(exit_code=True)
         
@@ -224,36 +141,12 @@ def main(gpu, cfg):
                                             split='val',
                                             distributed=False
                                             )
-        
-    """
-    # all_targets = torch.Tensor()
     
-    # for data in val_loader:
-    #     targets = data['y']
-    #     targets, targets = standardize(targets, targets, cfg)
-        
-    #     targets *= 1000
-        
-    #     all_targets = torch.cat((all_targets, targets.view(-1)))
-    
-    # name = f'Confusion Matrix Ground Truth'
-    # image_dir = f"C:\\Users\\Job de Vogel\\OneDrive\\Bureaublad"
-        
-    # bins = cfg.dataset.common.bins
-    
-    # _, _, _, _, image_path = binned_cm(all_targets, all_targets, 0, 1000, bins, name=name, path=image_dir, show=True, save=True)
-    # sys.exit()
-    """
-    
-    # ! commented
-    # logging.info(f"length of validation dataset: {len(val_loader.dataset)}")
     num_classes = val_loader.dataset.num_classes if hasattr(val_loader.dataset, 'num_classes') else None
     
     if num_classes is not None:
         assert cfg.num_classes == num_classes
     
-    # ! commented
-    # logging.info(f"number of classes of the dataset: {num_classes}")
     cfg.classes = val_loader.dataset.classes if hasattr(val_loader.dataset, 'classes') else np.arange(num_classes)
     
     cfg.cmap = np.array(val_loader.dataset.cmap) if hasattr(val_loader.dataset, 'cmap') else None
@@ -272,7 +165,6 @@ def main(gpu, cfg):
         for p in model_module.encoder.blocks.parameters():
             p.requires_grad = False
     
-    
     train_loader, train_histogram = build_dataloader_from_cfg(cfg.batch_size,
                                                 cfg.dataset,
                                                 cfg.dataloader,
@@ -280,39 +172,6 @@ def main(gpu, cfg):
                                                 split='train',
                                                 distributed=False,
                                                 ) 
-    
-    """
-    #HISTOGRAM
-    # import matplotlib
-    # import matplotlib.pyplot as plt
-    # import math
-    # matplotlib.use('TkAgg')
-    # print(test_histogram)
-    # print(val_histogram)
-    # print(train_histogram)    
-    
-    # histogram = train_histogram + val_histogram + test_histogram
-    # print(histogram)
-    
-    # # Calculate bin edges
-    # bin_edges = torch.linspace(-1, 1, cfg.dataset.common.bins+1)
-    # print(f'{torch.sum(histogram)}')
-    
-    # #targets = (targets - dmin) / (dmax - dmin)
-    # bin_edges = ((bin_edges + 1) / 2) * 1000
-    # bin_edges = [int(math.ceil(edge)) for edge in bin_edges.tolist()]
-    # print(bin_edges)
-    # names = [f'[{bin_edges[i]} - {bin_edges[i+1]})' for i in range(len(bin_edges[:-1]))]
-
-    # # Plotting the histogram
-    # plt.bar(names, histogram, color='orange')
-    # plt.xlabel('Solar Irradiance [kWh/m2]')
-    # plt.ylabel('Point frequency')
-    # plt.title('Solar irradiance distribution over points')
-    
-    # plt.show()
-    # sys.exit()
-    """
     
     logging.info(f"length of training dataset: {len(train_loader.dataset)}")
 
@@ -330,7 +189,6 @@ def main(gpu, cfg):
         if train_histogram == None:
             print("Reduction loss requires a valid train histogram, which is only available when dataset preprocessing is enabled.")
             raise RuntimeError
-    
     
     criterion = build_criterion_from_cfg(cfg.criterion_args).cuda()
     
@@ -396,11 +254,6 @@ def main(gpu, cfg):
     
     logging.info(f'Started training {cfg.cfg_basename} with criterion {cfg.criterion_args.NAME}, voxelsize {cfg.dataset.train.voxel_max}, batchsize {cfg.batch_size}...')
     for epoch in range(cfg.start_epoch, cfg.epochs + 1):
-        # # ! Only important for distributed gpu
-        # if cfg.distributed:
-        #     train_loader.sampler.set_epoch(epoch)
-        # if hasattr(train_loader.dataset, 'epoch'):  # some dataset sets the dataset length as a fixed steps.
-        #     train_loader.dataset.epoch = epoch - 1
         train_loss, train_rmse, total_iter = \
             train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, scheduler, scaler, epoch, total_iter, cfg)
 
@@ -453,8 +306,6 @@ def main(gpu, cfg):
             wandb.log({'Evaluation Loss (mse)': eval_loss})
             wandb.log({'Evaluation Loss (rmse) [kWh/m2]': eval_rmse})
         
-        # writer.add_scalar('train_loss', train_loss, epoch)
-        # writer.add_scalar('RMSE per train step [kWh/m2]', train_rmse, epoch)
         wandb.log({'Learning Rate': lr})
          # ! Update the optimizer with scheduler
         if cfg.sched_on_epoch:
@@ -545,8 +396,6 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
         with torch.cuda.amp.autocast(enabled=cfg.use_amp):      
             # ! Cast all the data to the model
             logits = model(data)
-            # print(f'max logits: {round(torch.max(logits).item(), 3)} max targets: {round(torch.max(target).item(),3)}')
-            # print(f'min logits {round(torch.min(logits).item(), 3)} min targets: {round(torch.min(target).item(), 3)}')
         
         logits = logits.squeeze(1)
                     
@@ -608,9 +457,6 @@ def train_one_epoch(model, train_loader, criterion, mse_criterion, optimizer, sc
                     scheduler.step(epoch)
                 else:
                     scheduler.step(epoch, metric=loss)
-            
-            # mem = torch.cuda.max_memory_allocated() / 1024. / 1024.
-            # print(f"Memory after backward is {mem}")
         
         loss_meter.update(loss.item())      
     
@@ -697,8 +543,8 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     rmse_meter = AverageMeter()
 
     # All data for model comparison    
-    all_targets = torch.Tensor().cuda(non_blocking=True)
-    all_logits = torch.Tensor().cuda(non_blocking=True)
+    all_targets = torch.Tensor()
+    all_logits = torch.Tensor()
     all_pc_sizes = torch.zeros(len(test_loader)).cuda(non_blocking=True)
     rmses = []
     
@@ -713,10 +559,6 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     inference = 0
     best_rmse = float('inf')
     worst_rmse = 0.0
-    best_sample = None
-    worst_sample = None
-    best_logits = None
-    worst_logits = None
     
     for idx, data in pbar:
         pbar.set_description(f"TESTING --- Average loss: {format(round(loss_meter.avg, 4), '.4f')}, Average RMSE: {format(round(rmse_meter.avg, 4), '.4f')} [kWh/m2], Loss: {round(loss.item(), 4)}, RMSE: {round(rmse.item(), 4)} [kWh/m2], Highest RMSE: {round(worst_rmse, 4)} [kWh/m2]")
@@ -732,19 +574,32 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
         
         data['x'] = get_features_by_keys(data, cfg.feature_keys)
         
-        start = time.perf_counter()
+        start = time.perf_counter()        
         with torch.cuda.amp.autocast(enabled=cfg.use_amp):
             logits = model(data)
+            
+        torch.cuda.synchronize()
+        
         end = time.perf_counter()
         inference += end - start
         
+        
+        
         individual_logits.append(logits)
         individual_samples.append(data)
-        
-        logits, targets = standardize(logits, targets, cfg)
 
-        loss = mse_criterion(logits, targets)
-        rmse = torch.sqrt(mse_criterion(logits* 1000, targets* 1000))
+        logits, targets = standardize(logits, data['y'], cfg)
+        
+        for key in data:
+            data[key] = data[key].cpu()
+
+        values = logits.cpu().numpy()[0, 0, :]
+        
+        targets = targets.cpu() * 1000
+        values *= 1000
+
+        loss = mse_criterion(logits.cpu(), targets/1000)
+        rmse = torch.sqrt(mse_criterion(logits.cpu() * 1000, targets))
 
         rmses.append(rmse)
 
@@ -753,16 +608,12 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
         
         if rmse.item() > worst_rmse:
             worst_rmse = rmse.item()
-            worst_sample = data
-            worst_logits = logits
         
         if rmse.item() < best_rmse:
             best_rmse = rmse.item()
-            best_sample = data
-            best_logits = logits
         
-        all_targets = torch.cat((all_targets, targets.view(-1)))
-        all_logits = torch.cat((all_logits, logits.view(-1)))
+        all_targets = torch.cat((all_targets, targets.cpu().view(-1)))
+        all_logits = torch.cat((all_logits, logits.cpu().view(-1)))
     
     print('----------------')
     print('Processing test results...')
@@ -776,7 +627,6 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     print(f'Highest RMSE: {round(worst_rmse, 3)} kWh/m2')
     print(f'Lowest RMSE: {round(best_rmse, 3)} kWh/m2')        
          
-    all_targets = all_targets * 1000
     all_logits = all_logits * 1000
    
     print(f"Test Loss MSE: {loss_meter.avg}")
@@ -793,7 +643,6 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
     wandb.log({f"Test Confusion matrix": wandb.Image(image_path + '.png')})
     
     name = f'Confusion matrix test (expected)'
-    
     
     # Error distribution analysis
     if cfg.test:
@@ -826,6 +675,8 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
             logits = individual_logits[outlier_idx]
             
             logits, sample['y'] = standardize(logits, sample['y'], cfg)            
+            logits *= 1000
+            sample['y'] *= 1000
             
             values = logits.cpu().numpy()[0, 0, :]
             
@@ -839,7 +690,9 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
             sample = individual_samples[outlier_idx]
             logits = individual_logits[outlier_idx]
             
-            logits, sample['y'] = standardize(logits, sample['y'], cfg)            
+            logits, sample['y'] = standardize(logits, sample['y'], cfg)
+            logits *= 1000
+            sample['y'] *= 1000        
             
             values = logits.cpu().numpy()[0, 0, :]
             
@@ -852,6 +705,10 @@ def test(cfg, model, test_loader, image_dir='', normalize_bars=True):
         for outlier_idx in high_outliers:
             sample = individual_samples[outlier_idx]
             logits = individual_logits[outlier_idx]
+            
+            logits, sample['y'] = standardize(logits, sample['y'], cfg)
+            logits *= 1000
+            sample['y'] *= 1000        
             
             values = logits.cpu().numpy()[0, 0, :]
             
@@ -975,66 +832,6 @@ def eval_image(model, sample, idx, name, path, cfg):
     
     return os.path.join(path, name)
 
-"""
-@torch.no_grad()
-def evaluate_file(model_path, data_path, cfg):
-    '''
-    Load the model
-    '''
-    model = build_model_from_cfg(cfg.model)
-    load_checkpoint(model, model_path)
-    
-    model.eval()
-    
-    '''
-    # Load the data
-    # Set data in correct format
-    # Transform data
-    '''
-    data = np.load(data_path).astype(np.float32)
-    
-    # Remove the None values (points that should not be included)
-    nan_mask = np.isnan(data).any(axis=1)
-    data = data[~nan_mask]
-            
-    # Build sample in format
-    pos, normals, targets = data[:,0:3], data[:, 3:-1], data[:, -1] 
-    data = {'pos': pos, 'normals': normals, 'x': normals, 'y': targets}
-    
-    # Transform the data
-    data_transform = build_transforms_from_cfg('val', cfg.datatransforms)
-    data = data_transform(data)
-    
-    # Make negative 0 positive
-    data['normals'] += 0.
-
-    data['normals'] = data['normals'].unsqueeze(0)
-    data['pos'] = data['pos'].unsqueeze(0)
-
-    data['x'] = get_features_by_keys(data, cfg.feature_keys)
-
-    # ! Send all data to CPU
-    for key in data.keys():
-        data[key] = data[key].to("cuda")
-
-    model.cuda()
-
-    '''
-    Compute the irradiance
-    '''
-    
-    start = time.perf_counter()
-    irradiance = model(data).cpu().numpy()[0, 0, :]
-    timing = time.perf_counter() - start
-    
-    irradiance = ((irradiance + 1) / 2) * 1000
-    
-    for key in data.keys():
-        data[key] = data[key].to("cpu")
-    
-    return data, list(irradiance)
-"""
-
 def traverse_root(root):
     res = []
     for (dir_path, _, file_names) in os.walk(root):
@@ -1140,7 +937,7 @@ if __name__ == "__main__":
     parser.add_argument('--sweep', required=False, action='store_true', default=False, help='set to True to profile speed')
     args, opts = parser.parse_known_args()       
         
-    name = sys.argv[2].split("/")[3][:-5] + "_" + "_".join(sys.argv[3:][1::2])
+    name = sys.argv[2].split("/")[2][:-5] + "_" + "_".join(sys.argv[3:][1::2])
     cfg = EasyConfig()
     
     cfg.load(args.cfg, recursive=True)
@@ -1207,7 +1004,7 @@ if __name__ == "__main__":
     if cfg.wandb.sweep:
         sweep(cfg)
     else:
-        with wandb.init(mode="online", project="Thesis_main_TEST", name=name):
+        with wandb.init(mode="disabled", project="Thesis_main_TEST", name=name):
             # multi processing
             if cfg.mp:
                 port = find_free_port()

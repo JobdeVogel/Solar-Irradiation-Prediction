@@ -3,6 +3,7 @@ import os
 import shutil
 import random
 import tqdm
+import sys
 
 random.seed(12345)
 
@@ -24,6 +25,9 @@ files = traverse_root(args.path)
 num_files = len(files)
 
 factor = 0.1
+
+print(len(set(sorted(random.sample(range(0, num_files), int(factor * num_files))))))
+sys.exit()
 test_idxs = random.sample(range(0, num_files), int(factor * num_files))
 
 for idx in tqdm.tqdm(test_idxs):

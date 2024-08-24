@@ -117,7 +117,7 @@ class IRRADIANCE(Dataset):
         
         # TODO: include        
         split_index = int(len(data_list) * split_ratio)
-               
+        
         if len(data_list) == 0:
             print(f'WARNING: number of available samples in {self.raw_root} is 0, it is not possible to generate a dataset')
             sys.exit()
@@ -162,12 +162,12 @@ class IRRADIANCE(Dataset):
         elif split == 'test':
             self.data_list = data_list
 
-        processed_root = os.path.join(data_root, 'processed_100')
-        # processed_root = 'D:\Master Thesis Data\IrradianceNet'
+        processed_root = os.path.join(data_root, 'processed_random_100')
+        # processed_root = 'D:\Master Thesis Data\IrradianceNet\\100_regular'
         
         filename = os.path.join(
             processed_root, f'irradiance_{split}_{voxel_size:.3f}_{str(voxel_max)}_{str(self.bins)}.pkl')
-        
+                
         self.bin_edges = torch.linspace(0, 1000, steps=self.bins+1).unsqueeze(0)        
         
         if presample and not os.path.exists(filename):
@@ -220,7 +220,8 @@ class IRRADIANCE(Dataset):
                 self.data = pickle.load(f)
                 print(f"{filename} load successfully")
         
-        histograms = torch.zeros((len(self.data_list) * self.loop, self.bins)).long()
+        if self.compute_hist:
+            histograms = torch.zeros((len(self.data_list) * self.loop, self.bins)).long()
         
         if presample:
             if self.compute_hist:
@@ -311,23 +312,23 @@ class IRRADIANCE(Dataset):
         print('min :' + str(torch.min(sample['normals'][:, :, 2])))
         print('max: ' + str(torch.max(sample['normals'][:, :, 2])) + '\n')
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):      
         data_idx = self.data_idx[idx % len(self.data_idx)]
-        file = self.data_list[idx]
-        
+        file = self.data_list[idx]        
+
         # If I have turned presample off, then there is no self.data
         # else there is self.data        
         if self.presample:
             try:
-                coord, feat, label, bins = np.split(self.data[data_idx], [3, 6, 7], axis=1)  
+                coord, feat, label, bins = np.split(self.data[data_idx], [3, 6, 7], axis=1)    
             except:
                 logging.warning(f"Failed to extract data from sample {data_idx}")
-                print(self.data[data_idx])
-            feat = np.hstack((feat, bins))            
+            feat = np.hstack((feat, bins))
+            
             # Scale from [-50, 50] to [0, 100]
             coord, feat, label = crop_pc(
                 coord, feat, label, self.split, self.voxel_size, self.voxel_max,
-                downsample=False, variable=self.variable, shuffle=self.shuffle)
+                downsample=False, variable=self.variable, shuffle=self.shuffle)     
             
             feat, bins = np.split(feat, [3], axis=1)    
         else:          
@@ -347,7 +348,7 @@ class IRRADIANCE(Dataset):
             
             '''cdata[:, :3] -= np.min(cdata[:, :3], 0)'''
             try:
-                coord, feat, label, bins = np.split(cdata, [3, 6, 7], axis=1)         
+                coord, feat, label, bins = np.split(cdata, [3, 6, 7], axis=1)       
             except:
                 logging.warning(f"Failed to extract data from sample {data_idx}")
                 print(self.data[data_idx])
@@ -387,7 +388,7 @@ class IRRADIANCE(Dataset):
             * REMOVE?: PointCloudJitter: Add noise to the pos
             * REMOVE: ChromaticDropGPU: Remove colors?
             * REMOVE: ChromaticNormalize: Seems to be related to color
-        '''
+        '''       
         # pre-process. 
         # Currently  pointstotensor, normalize and centering included
         if self.transform is not None:
