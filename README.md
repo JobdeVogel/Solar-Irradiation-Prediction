@@ -5,13 +5,15 @@ This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG
 * Prediction: Python code based on PointNeXt which is used to predict irradiation on point clouds from the preprocessed geometry.
 
 ### Installation
-Gneral prerequisites:
+General prerequisites:
 * Dedicated Nividia GPU;
 * Windows Home/Pro operating system.
 
 Prerequisites for dataset generation:
 * Valid installation of McNeel Rhino 7;
 * Radiance or AcceleRad (https://nljones.github.io/Accelerad/)
+
+WARNING: installing multiple versions of Radiance (e.g. due to different lbt libaries in Grasshopper/Python) can lead to problems.
 
 Prerequisites for irradiation prediction:
 * Visual Studio 19 Enterprise (https://visualstudio.microsoft.com/vs/older-downloads/)
