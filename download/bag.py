@@ -19,7 +19,7 @@ y_max=532
 def generate_url(id):
     items = id.split("-")
 
-    url = f'https://data.3dbag.nl/obj/{VERSION}/tiles/{items[0]}/{items[1]}/{items[2]}/{id}-obj.zip'
+    url = f'https://data.3dbag.nl/{VERSION}/tiles/{items[0]}/{items[1]}/{items[2]}/{id}-obj.zip'
     
     return url
 
