@@ -12,7 +12,7 @@ This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG
 ## Prerequisites
 General prerequisites:
 * Dedicated Nividia GPU;
-* Windows Home/Pro operating system.
+* Windows Home/Pro operating system (does not work with Windows Server).
 * Anaconda/Miniconda (https://docs.anaconda.com/miniconda/)
 
 Prerequisites for dataset generation:
