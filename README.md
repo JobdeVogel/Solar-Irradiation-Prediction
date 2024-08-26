@@ -1,4 +1,7 @@
 ## IrradianceNet: *Towards Solar Irradiation Prediction on 3D Urban Geometry using Deep Neural Networks*
+<p align="center">
+<img src="docs/cover.png" width=85% height=85% class="center">
+</p>
 This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG data. This code consists of four steps:
 * Download: a webscraper which downloads and extracts online 3D BAG files;
 * Dataset: a Python package which preprocesses 3D BAG geometry to a format which can be used for irradiation prediction;
@@ -53,7 +56,7 @@ General setting for the dataset generation can be changed in `dataset/parameters
 Parameters for training, validation and testing can be changed in `cfgs/default`, `cfgs/irradiance/default` and `cfgs/irradiance/ ... .yaml`
 
 <p align="center">
-<img src="example.png" width=85% height=85% class="center">
+<img src="docs/example.png" width=85% height=85% class="center">
 </p>
 
 #### Interaction model from Grasshopper
