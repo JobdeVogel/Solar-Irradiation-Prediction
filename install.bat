@@ -5,7 +5,7 @@ echo ------------
 
 REM Define variables
 set ENV_NAME=IrradianceNet310
-set PYTHON_VERSION=3.10
+set PYTHON_VERSION=3.10.10
 
 REM Create conda environment with specific Python version
 echo Creating Anaconda environment...
@@ -31,7 +31,6 @@ REM Install packages with conda
 echo Installing packages with conda...
 call conda install numpy numba -y
 call conda install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-@REM call conda install conda-forge::cxx-compiler -y
 
 REM Go back to package in case compiler install fails
 call cd %CD%
@@ -82,5 +81,5 @@ echo Download data using ...
 echo Generate dataset using ...
 cd ../
 
-cd pointnext
-echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
+@REM cd pointnext
+@REM echo Train model using python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml
