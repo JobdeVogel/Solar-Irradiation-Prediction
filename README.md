@@ -8,18 +8,19 @@ This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG
 General prerequisites:
 * Dedicated Nividia GPU;
 * Windows Home/Pro operating system.
+* Anaconda/Miniconda (https://docs.anaconda.com/miniconda/)
 
 Prerequisites for dataset generation:
 * Valid installation of McNeel Rhino 7;
-* Radiance or AcceleRad (https://nljones.github.io/Accelerad/)
+* Radiance 5.4a(2021-3-28) optionally with AcceleRad (https://nljones.github.io/Accelerad/)
 
 WARNING: installing multiple versions of Radiance (e.g. due to different lbt libaries in Grasshopper/Python) can lead to problems.
 
 Prerequisites for irradiation prediction:
 * Visual Studio 19 Enterprise (https://visualstudio.microsoft.com/vs/older-downloads/)
-* Nvidia CUDA Driver 11.3
+* Nvidia CUDA Driver 11.7 or 11.8
 
-It is highly recommended to use (Mini)conda for the installation of this Python package (https://docs.anaconda.com/miniconda/)
+Having multiple version of Visual Studio may lead to issues in building the required modules.
 
 Install IrradianceNet on Windows by running:
 `install.bat`
