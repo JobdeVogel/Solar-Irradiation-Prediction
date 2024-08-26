@@ -2,6 +2,7 @@
 <p align="center">
 <img src="docs/cover.png" width=85% height=85% class="center">
 </p>
+
 This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG data. This code consists of four steps:
 * Download: a webscraper which downloads and extracts online 3D BAG files;
 * Dataset: a Python package which preprocesses 3D BAG geometry to a format which can be used for irradiation prediction;
