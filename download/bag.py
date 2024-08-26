@@ -5,7 +5,7 @@ import sys
 import time
 from zipfile import ZipFile 
 
-VERSION = 'v20230809'
+VERSION = 'v20240420'
 
 # Maximum number of files to download within the map
 max_urls=100
@@ -122,8 +122,6 @@ def download(directory, max_urls=100, x_min=272, x_max=332, y_min=488, y_max=532
                 sys.exit()
 
 directory = str(input('Path to save bag data: '))
-
-directory = r'D:\\graduation_jobdevogel\\Graduation-Building-Technology\\dataset\\data\\bag'
 
 download(directory, max_urls=max_urls, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
