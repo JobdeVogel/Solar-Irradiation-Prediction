@@ -7,3 +7,4 @@ Requests==2.31.0
 Rhino==0.0.5
 rhinoinside==0.6.0
 tqdm==4.65.0
+open3d==0.18.0
