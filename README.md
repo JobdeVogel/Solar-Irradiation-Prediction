@@ -36,7 +36,8 @@ Having multiple version of Visual Studio may lead to issues in building the requ
 `cd download`
 `python bag.py`
 
-If the scraper is unable to fetch data, this may be caused by a newer version of the 3D BAG. In that case, please overwrite the VERSION global parameter accordingly
+If the scraper is unable to fetch data, this may be caused by a newer version of the 3D BAG. In that case, please overwrite the VERSION global parameter accordingly.
+The download script will ask the user for a path to save the data in. It is recommended to save the data in dataset/data/bag to make sure the next step runs automatically.
 
 #### Run the dataset generation sequentially:
 `cd dataset`
