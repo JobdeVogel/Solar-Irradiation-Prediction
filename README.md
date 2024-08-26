@@ -1,10 +1,11 @@
 ## IrradianceNet: *Towards Solar Irradiation Prediction on 3D Urban Geometry using Deep Neural Networks*
-This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG data. This code consists of three steps:
+This code aims to predict solar irradiation on 3D urban geometry based on 3D BAG data. This code consists of four steps:
 * Download: a webscraper which downloads and extracts online 3D BAG files;
 * Dataset: a Python package which preprocesses 3D BAG geometry to a format which can be used for irradiation prediction;
 * Prediction: Python code based on PointNeXt which is used to predict irradiation on point clouds from the preprocessed geometry.
+* Interaction: A Grasshopper Server-Client system to predict irradiation in McNeel Rhino based on 3D BAG data.
 
-### Installation
+### Prerequisites
 General prerequisites:
 * Dedicated Nividia GPU;
 * Windows Home/Pro operating system.
@@ -22,8 +23,9 @@ Prerequisites for irradiation prediction:
 
 Having multiple version of Visual Studio may lead to issues in building the required modules.
 
-Install IrradianceNet on Windows by running:
-`install.bat`
+### Installation
+* Download the zip file or pull this repo with git.
+* Install IrradianceNet on Windows by running: `install.bat`
 
 ### How to run?
 #### Download a 3DBAG dataset:
