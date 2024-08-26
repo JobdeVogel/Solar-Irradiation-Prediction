@@ -378,9 +378,7 @@ def task(patch_outline, all_building_outlines, all_heights, idx, logger, geometr
         for idx in range(sample.count):                       
             logger.info(f'Generating model for mesh patch[{sample.idx}] augmentation {idx}')
             sample.add_model(idx)
-            
-            sample.to_hbjson(0, "C:\\Users\\Job de Vogel\\Desktop")
-            sys.exit()
+
             logger.info(f'Simulating irradiance model for mesh patch[{sample.idx}] augmentation {idx}')
             
             sample.simulate(idx)
