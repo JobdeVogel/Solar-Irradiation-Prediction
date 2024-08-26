@@ -17,7 +17,6 @@ parameters/__pycache__/params.cpython-37.pyc
 input_output/__pycache__/save.cpython-37.pyc
 load_3dbag/__pycache__/file.cpython-37.pyc
 load_3dbag/__pycache__/outlines.cpython-37.pyc
-log/logs
 .vscode/
 pointnet/__pycache__/
 pointnet/pointnet/__pycache__/
@@ -46,7 +45,6 @@ input_output/__pycache__/save.cpython-37.pyc
 helpers/__pycache__/mesh.cpython-37.pyc
 PointNeXt/images/
 visualize/__pycache__/
-dataset/log/logs/
 log/irradiance/IrradianceNet-irradiance-train-20240219-115300-Ps5UgmXLLodCrWNAcGC9yX/cfg.yaml
 log/irradiance/IrradianceNet-irradiance-train-20240219-115300-Ps5UgmXLLodCrWNAcGC9yX/IrradianceNet-irradiance-train-20240219-115300-Ps5UgmXLLodCrWNAcGC9yX.log
 log/irradiance/IrradianceNet-irradiance-train-20240219-115300-Ps5UgmXLLodCrWNAcGC9yX/irradiancenet-s.yaml
@@ -121,7 +119,6 @@ dataset/data/simulation/d256e904-750d-4d6d-b585-761fa0a87ace/d256e904-750d-4d6d-
 dataset/data/simulation/f9be8fe9-53a5-42a5-b1f4-40a9d028f158/AMSTERDAM_0_8759.wea
 dataset/data/simulation/f9be8fe9-53a5-42a5-b1f4-40a9d028f158/cumulative_radiation_inputs.json
 dataset/data/simulation/f9be8fe9-53a5-42a5-b1f4-40a9d028f158/f9be8fe9-53a5-42a5-b1f4-40a9d028f158.hbjson
-dataset/data/wea/NLD_Amsterdam.062400_IWEC.epw
 dataset/augment/__pycache__/augmentation.cpython-310.pyc
 dataset/__pycache__/main.cpython-310.pyc
 dataset/__pycache__/main.cpython-37.pyc
