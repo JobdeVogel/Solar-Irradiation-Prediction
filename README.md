@@ -41,21 +41,21 @@ The download script will ask the user for a path to save the data in. It is reco
 
 #### Run the dataset generation sequentially:
 `cd dataset`
-`python main.py -std`
+`python main.py -std -b path_to_bag_file`
 
-The `-std` paramameter indicates that the logs should be printed to stdout. When using parallel mode, this should be avoided, because multiple processes will send logs to stdout simultaneously
+The `-std` paramameter indicates that the logs should be printed to stdout. When using parallel mode, this should be avoided, because multiple processes will send logs to stdout simultaneously.
 
 #### Run the dataset generation in parallel:
 `cd dataset`
 `python run.py`
 
-General setting for the dataset generation can be changed in `dataset/parameters/params`
+General setting for the dataset generation can be changed in `dataset/parameters/params`. By default, the input bag data is in `dataset/data/bag` and the output folder should be `dataset/data/raw`.
 
 #### Train a neural network for solar irradiation prediction.
 `cd pointnext`
 `python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml --dataset.common.data_root path_to_dataset`
 
-Parameters for training, validation and testing can be changed in `cfgs/default`, `cfgs/irradiance/default` and `cfgs/irradiance/ ... .yaml`
+Parameters for training, validation and testing can be changed in `cfgs/default`, `cfgs/irradiance/default` and `cfgs/irradiance/ ... .yaml`. The `path_to_dataset` should be `dataset/data/raw` if parameters are not changed for the dataset generation.
 
 <p align="center">
 <img src="docs/example.png" width=85% height=85% class="center">
