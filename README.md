@@ -35,9 +35,8 @@ Having multiple version of Visual Studio may lead to issues in building the requ
 #### Download a 3DBAG dataset:
 `cd download`
 `python bag.py`
-
 If the scraper is unable to fetch data, this may be caused by a newer version of the 3D BAG. In that case, please overwrite the VERSION global parameter accordingly.
-The download script will ask the user for a path to save the data in. It is recommended to save the data in dataset/data/bag to make sure the next step runs automatically.
+The download script will ask the user for a path to save the data in. It is recommended to save the data in `dataset/data/bag` to make sure the next step runs automatically, without altering the parameters.
 
 #### Run the dataset generation sequentially:
 `cd dataset`
@@ -48,7 +47,6 @@ The `-std` paramameter indicates that the logs should be printed to stdout. When
 #### Run the dataset generation in parallel:
 `cd dataset`
 `python run.py`
-
 General setting for the dataset generation can be changed in `dataset/parameters/params`. By default, the input bag data is in `dataset/data/bag` and the output folder should be `dataset/data/raw`.
 
 #### Train a neural network for solar irradiation prediction.
