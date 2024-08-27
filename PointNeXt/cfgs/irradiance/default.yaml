@@ -17,7 +17,7 @@ dataset:
     _overwrite_dset_size: 0
   val:
     split: val
-    voxel_max: 28000
+    voxel_max: 10000
     presample: True
     show: False
     _overwrite_dset_size: 0
