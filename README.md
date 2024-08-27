@@ -33,7 +33,7 @@ Having multiple version of Visual Studio may lead to issues in building the requ
 
 ### How to run?
 #### Download a 3DBAG dataset:
-`cd download`
+`cd download`\
 `python bag.py`
 
 WARNING: If the scraper is unable to fetch data, this may be caused by a newer version of the 3D BAG. In that case, please overwrite the VERSION global parameter accordingly, in the `bag.py` script.
@@ -41,19 +41,19 @@ WARNING: If the scraper is unable to fetch data, this may be caused by a newer v
 RECOMMENDED: The download script will ask the user for a path to save the data in. It is recommended to save the data in `dataset/data/bag` to make sure the next step runs automatically, without altering the parameters.
 
 #### Run the dataset generation sequentially:
-`cd dataset`
+`cd dataset`\
 `python main.py -std -b path_to_bag_file`
 
 The `-std` paramameter indicates that the logs should be printed to stdout. When using parallel mode, this should be avoided, because multiple processes will send logs to stdout simultaneously.
 
 #### Run the dataset generation in parallel:
-`cd dataset`
+`cd dataset`\
 `python run.py`
 
 General setting for the dataset generation can be changed in `dataset/parameters/params`. By default, the input bag data is in `dataset/data/bag` and the output folder should be `dataset/data/raw`.
 
 #### Train a neural network for solar irradiation prediction.
-`cd pointnext`
+`cd pointnext`\
 `python examples/segmentation/main.py --cfg cfgs/irradiance/irradiancenet-l.yaml --dataset.common.data_root path_to_dataset`
 
 Parameters for training, validation and testing can be changed in `cfgs/default`, `cfgs/irradiance/default` and `cfgs/irradiance/ ... .yaml`. The `path_to_dataset` should be `dataset/data/raw` if parameters are not changed for the dataset generation.
