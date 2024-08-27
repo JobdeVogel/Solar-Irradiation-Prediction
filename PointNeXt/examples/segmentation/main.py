@@ -201,6 +201,10 @@ def main(gpu, cfg):
         scaler = None
     best_val, best_epoch = float('inf'), 0
     test_array = iter(val_loader)
+
+    if len(test_array) < 5:
+        logging.critical(f'ALPHA bug: Training was not possible due to the fact that there are not enough validation samples (size: {len(val_loader)}). Please lower the batch_size of the validation dataset, or lower the split ratio.')
+        sys.exit()
     
     evaluation_test_array_0 = next(test_array)
     evaluation_test_array_1 = next(test_array)
